@@ -9,22 +9,16 @@ Text will be dynamically pushed to the display via REST, MQTT, or Telegram APIs.
 
 # PHYSICAL DESIGN
 ## Hardware
-* Three cascaded [MAX7219 dot matrix module][08] purchased from [Banggood][07].
+* Four cascaded [MAX7219 dot matrix module][08] purchased from [Banggood][07].
 * [HiLetgo New Version ESP8266 NodeMCU][02] purchased from [Amazon][01].
 
 ## Wiring
-* Connect display's backpack I2C clock pin "C" (SCL) with NodeMCU D1 pin
-* Connect display's backpack I2C data pin "D" (SDA) pin with NodeMCU D2 pin
-* Connect display's backpack GND pin "-" with with NodeMCU GND
-* Connect display's backpack VCC pin "+" with NodeMCU Vin (5V)
-* Connect display's backpack pin "IO" with with NodeMCU 3.3V
-
 Connections for ESP8266 hardware SPI are:
 
 | MAX72XX Pin    | ESP8266 Pin  | Notes / Comments |
 |:--------------:|:------------:|:---------------------------------:|
-| Vcc            | 3v3          | LED matrices seem to work at 3.3V |
-| GND            | GND          | GND |
+| Vcc            | 3v3          | Power (seem to work at 3.3V) |
+| GND            | GND          | Ground |
 | DIN            | D7           | HSPID or HMOSI |
 | CS or LD       | D8           | HSPICS or HCS |
 | CLK            | D5           | CLK or HCLK |
