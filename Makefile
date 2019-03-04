@@ -1,4 +1,7 @@
 #
+# Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+# Version:      0.0.1
+#
 # Using https://github.com/plerup/makeEspArduino
 #
 # makefile syntax
@@ -18,12 +21,14 @@ ROOT := $(THIS_DIR)/..
 #	$(ESP_LIBS)/Wire \
 #	$(ESP_LIBS)/ESP8266WiFi \
 #	$(ESP_LIBS)/ESP8266WebServer \
-#	$(ESP_LIBS)/DNSServer \
+#	$(ESP_LIBS)/DNSServer
 #LIBS += $(ARDUINO_LIBS)/PersWiFiManager
 LIBS = $(ESP_LIBS)/SPI \
-	$(ESP_LIBS)/ESP8266WiFi \
+	$(ESP_LIBS)/ESP8266WiFi
 LIBS += $(ARDUINO_LIBS)/MD_MAX72XX \
 	$(ARDUINO_LIBS)/MD_Parola
+#	$(ARDUINO_LIBS)/MD_MAX72XX/examples \
+#	$(ARDUINO_LIBS)/Adafruit_GFX_Library \
 
 # directory with source files for SPIFFS filesystem
 FS_DIR = ./data

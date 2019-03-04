@@ -1,4 +1,7 @@
 //
+// Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+// Version:      0.0.1
+//
 // Hello World program to demonstrate the MD_Parola library
 //
 // MD_MAX72XX library can be found at https://github.com/MajicDesigns/MD_MAX72XX
@@ -16,8 +19,8 @@
 //
 
 // ESP8266 libraries
-#include "ESP8266WiFi.h"
 #include <SPI.h>
+#include "ESP8266WiFi.h"
 
 // Arduino libraries
 #include <MD_Parola.h>
@@ -42,6 +45,7 @@ MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 void setup(void) {
     P.begin();
     P.displayText("Hello", PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
+    //P.displayScroll("Hello.....", PA_CENTER, PA_PRINT, 1);
 }
 
 void loop(void) {

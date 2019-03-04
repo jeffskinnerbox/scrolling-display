@@ -1,3 +1,7 @@
+<!--
+Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+Version:      0.0.1
+-->
 
 ![work-in-progress](http://worktrade.eu/img/uc.gif "These materials require additional work and are not ready for general use.")
 
@@ -48,6 +52,15 @@ I specific used the MAX7219 Dot Matrix Module 4-in-1 Display
 (at [Amazon][06] or much cheaper at [Banggood][07] and where I got mine).
 
 The key tool to drive this display is the [Marco Colli's MajicDesigns MD_Parola][09] library.
+
+# Build
+```bash
+# compile the program
+arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 ~/src/scrolling-display
+
+# flash the board
+arduino-cli upload --fqbn esp8266:esp8266:nodemcuv2 --port /dev/ttyUSB0 ~/src/scrolling-display
+```
 
 
 
