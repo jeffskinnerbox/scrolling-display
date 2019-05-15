@@ -1,6 +1,7 @@
-#
+
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      0.0.1
+# Version:      0.1.0
+
 #
 # Using https://github.com/plerup/makeEspArduino
 #
@@ -10,6 +11,17 @@
 #    := set variable as the output an executed shell script
 #    += is used for appending more text to variables
 #
+# To build the executable
+# 	make
+#
+# To flash the device
+# 	make upload
+#
+# To monitor the device
+#   To monitor the the device while operating, use:
+#       screen /dev/ttyUSB0 9600,cs8
+#   To terminate monitoring, enter:
+#       Cntr-a :quit
 
 THIS_DIR := $(realpath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 ROOT := $(THIS_DIR)/..
@@ -23,12 +35,6 @@ ROOT := $(THIS_DIR)/..
 #	$(ESP_LIBS)/ESP8266WebServer \
 #	$(ESP_LIBS)/DNSServer
 #LIBS += $(ARDUINO_LIBS)/PersWiFiManager
-LIBS = $(ESP_LIBS)/SPI \
-	$(ESP_LIBS)/ESP8266WiFi
-LIBS += $(ARDUINO_LIBS)/MD_MAX72XX \
-	$(ARDUINO_LIBS)/MD_Parola
-#	$(ARDUINO_LIBS)/MD_MAX72XX/examples \
-#	$(ARDUINO_LIBS)/Adafruit_GFX_Library \
 
 # directory with source files for SPIFFS filesystem
 FS_DIR = ./data
