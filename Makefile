@@ -1,6 +1,6 @@
 
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      0.1.0
+# Version:      0.0.2
 
 #
 # Using https://github.com/plerup/makeEspArduino
