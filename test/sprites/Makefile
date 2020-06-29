@@ -1,5 +1,5 @@
 # programs name
-PROG = scrolling-display
+PROG = sprites
 
 # fully qualified board name (FQBN)
 FQBN = esp8266:esp8266:nodemcuv2
@@ -31,5 +31,5 @@ erase:                                          # erase the entire flash
 size:                                           # determine the flash size
 	$(ESPTOOL) --port $(PORT) flash_id
 
-clean:                                          # delete all binaries and object viles
+clean:                                          # delete binaries and object files
 	rm --force $(PROG).$(VAR).bin $(PROG).$(VAR).elf

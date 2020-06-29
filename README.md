@@ -3,13 +3,23 @@ Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      0.0.2
 -->
 
-![work-in-progress](http://worktrade.eu/img/uc.gif "These materials require additional work and are not ready for general use.")
+
+<div align="center">
+<img src="http://www.foxbyrd.com/wp-content/uploads/2018/02/file-4.jpg" title="These materials require additional work and are not ready for general use." align="center">
+</div>
+
 
 ---
 
 # DESCRIPTION
 Test program for ESP8266 NodeMCU + cascaded MAX7219 dot matrix modules to create a scrolling text display.
 Text will be dynamically pushed to the display via REST, MQTT, or Telegram APIs.
+
+Make the display accessible and controlable via:
+* MQTT - e.g. data sent to a MQTT broker
+* Network Attached - e.g. `echo -n "24,116" | nc -b -w 0 -u 192.168.1.196 1337`
+* Web Accessible - e.g. via a we browser interface
+
 
 # PHYSICAL DESIGN
 ## Hardware
@@ -19,9 +29,9 @@ Text will be dynamically pushed to the display via REST, MQTT, or Telegram APIs.
 ## Wiring
 Connections for ESP8266 hardware SPI are:
 
-| MAX72XX Pin    | ESP8266 Pin  | Notes / Comments |
-|:--------------:|:------------:|:---------------------------------:|
-| Vcc            | 3v3          | Power (seem to work at 3.3V) |
+|   MAX72XX Pin  | ESP8266 Pin  |       Notes / Comments       |
+|:--------------:|:------------:|:----------------------------:|
+| Vcc            | Vin          | Power  |
 | GND            | GND          | Ground |
 | DIN            | D7           | HSPID or HMOSI |
 | CS or LD       | D8           | HSPICS or HCS |
@@ -62,6 +72,112 @@ arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 ~/src/scrolling-display
 arduino-cli upload --fqbn esp8266:esp8266:nodemcuv2 --port /dev/ttyUSB0 ~/src/scrolling-display
 ```
 
+### Step 1: Load Needed Libraries - DONE
+The scrolling-display
+requires several additional libraries which are not
+pre-installed in the Arduino IDE or the `arduino-cli`.
+I show below how to do a library install via a`arduino-cli`,
+and they will be place in `$HOME/src/arduino/sketechbooks/libraries`
+
+>**NOTE:** You could have install this libary within the Arduino IDE, for example,
+>via **Tools** > **Manage Libraries...** > enter "arduino-timer" and install.
+>That will work with the Adruino IDE but would **not** have worked with `ardunio-cli`.
+>You must use `arduino-cli lib install <library-name>`.
+
+The libraries to be installed are Parola and MAX72xx.
+let's first search for them to get the libaries exaqct names
+
+```bash
+# search for a library with parola
+$ arduino-cli lib search parola
+Name: "MD_Parola"
+  Author: majicDesigns
+  Maintainer: marco_c <8136821@gmail.com>
+  Sentence: LED matrix text display special effects
+  Paragraph: Implemented using the MD_MAX72xx library for hardware control. Provides functions to simplify the implementation of text special effects on the LED matrix.
+  Website: https://github.com/MajicDesigns/MD_Parola
+  Category: Display
+  Architecture: *
+  Types: Contributed
+  Versions: [2.2.0, 2.5.0, 2.6.1, 2.6.2, 2.6.4, 2.6.5, 2.6.6, 2.7.0, 2.7.1, 2.7.2, 2.7.3, 2.7.4, 3.0.0, 3.0.1, 3.0.2, 3.1.0, 3.1.1, 3.2.0, 3.3.0]
+
+# search for a library with max72xx
+$ arduino-cli lib search max72xx
+Name: "MD_MAX72XX"
+  Author: majicDesigns
+  Maintainer: marco_c <8136821@gmail.com>
+  Sentence: Implements functions that allow the MAX72xx (eg, MAX7219) to be used for LED matrices (64 individual LEDs)
+  Paragraph: Allows the programmer to use the LED matrix as a pixel addressable display.
+  Website: https://github.com/MajicDesigns/MD_MAX72XX
+  Category: Device Control
+  Architecture: *
+  Types: Contributed
+  Versions: [2.6.0, 2.10.0, 3.0.0, 3.0.1, 3.0.2, 3.1.0, 3.2.0, 3.2.1]
+Name: "MD_MAXPanel"
+  Author: majicDesigns
+  Maintainer: marco_c <8136821@gmail.com>
+  Sentence: Implements functions to manage a panel of MAX72xx based LED modules
+  Paragraph: Allows the programmer to use the LED matrix panel as a pixel addressable display for graphics and text.
+  Website: https://github.com/MajicDesigns/MD_MAXPanel
+  Category: Device Control
+  Architecture: *
+  Types: Contributed
+  Versions: [1.0.0, 1.0.1, 1.1.0, 1.1.1, 1.2.1, 1.2.2, 1.2.3]
+Name: "MD_Parola"
+  Author: majicDesigns
+  Maintainer: marco_c <8136821@gmail.com>
+  Sentence: LED matrix text display special effects
+  Paragraph: Implemented using the MD_MAX72xx library for hardware control. Provides functions to simplify the implementation of text special effects on the LED matrix.
+  Website: https://github.com/MajicDesigns/MD_Parola
+  Category: Display
+  Architecture: *
+  Types: Contributed
+  Versions: [2.2.0, 2.5.0, 2.6.1, 2.6.2, 2.6.4, 2.6.5, 2.6.6, 2.7.0, 2.7.1, 2.7.2, 2.7.3, 2.7.4, 3.0.0, 3.0.1, 3.0.2, 3.1.0, 3.1.1, 3.2.0, 3.3.0]
+```
+
+Now let's install the required libraries.
+
+>**NOTE:** I selected these specific versions of MD_MAX72XX
+>and MD_Parola because of compatibility issues.
+>Otherwise I got a dependency error when installing MD_Parola.
+
+```bash
+# install the desired library
+arduino-cli lib install MD_MAX72XX@3.2.0
+arduino-cli lib install MD_Parola@3.1.1
+#arduino-cli lib install MD_UISwitch
+
+# check if it installed
+$ arduino-cli lib list
+Name                          Installed Available Location
+Adafruit_GFX_Library          1.7.5     -         user
+WiFi                          1.2.7     -         user
+Time                          1.6       -         user
+Timezone                      1.2.4     -         user
+Adafruit_STMPE610             1.1.0     -         user
+Adafruit_TouchScreen          1.0.4     -         user
+Ethernet                      2.0.0     -         user
+ArduinoOTA                    1.0.3     -         user
+arduino-timer                 2.0.1     -         user
+Adafruit_LED_Backpack_Library 1.1.6     -         user
+Servo                         1.1.6     -         user
+USBHost                       1.0.5     -         user
+Adafruit_ILI9341              1.5.4     -         user
+MD_Parola                     3.1.1     3.3.0     user
+MD_MAX72XX                    3.2.0     3.2.1     user
+```
+
+### Step 2: Compiling the Sketch
+Now use the `arduino-cli` and Makefile tools, compile the sketch.
+
+```bash
+# compile the sketch
+make
+
+# upload the sketch
+make upload
+```
+
 
 
 [01]:https://www.amazon.com/gp/product/B010O1G1ES
@@ -74,4 +190,14 @@ arduino-cli upload --fqbn esp8266:esp8266:nodemcuv2 --port /dev/ttyUSB0 ~/src/sc
 [08]:https://www.openimpulse.com/blog/products-page/product-category/max7219-led-dot-matrix-module/
 [09]:https://github.com/MajicDesigns/MD_Parola
 [10]:https://www.youtube.com/watch?v=i_8tvPwT6OE
+[11]:
+[12]:
+[13]:
+[14]:
+[15]:
+[16]:
+[17]:
+[18]:
+[19]:
+[20]:
 

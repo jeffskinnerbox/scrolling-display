@@ -1,8 +1,12 @@
 # programs name
-PROG = scrolling-display
+PROG = hello-world-3
+
+# type of ESP chip and board in use
+CHIP = esp8266
+BOARD = nodemcuv2
 
 # fully qualified board name (FQBN)
-FQBN = esp8266:esp8266:nodemcuv2
+FQBN = $(CHIP):$(CHIP):$(BOARD)
 
 # serial port used by the board
 PORT = /dev/ttyUSB0
@@ -17,12 +21,16 @@ CC = arduino-cli compile --fqbn $(FQBN)
 UPLOAD = arduino-cli upload --fqbn $(FQBN) --port $(PORT)
 
 
-.PHONY: build upload clean erase
+.PHONY: build upload clean erase size
 
-build:                                          # build the binary executable
-	$(CC) $(CURDIR)
+all: build upload
 
-upload:                                         # up load the binary executable
+build: $(PROG).$(VAR).bin
+
+$(PROG).$(VAR).bin: $(PROG).ino
+	$(CC) $(CURDIR)                             # build the binary executable
+
+upload: $(PROG).$(VAR).bin                      # up load the binary executable
 	$(UPLOAD) $(CURDIR)
 
 erase:                                          # erase the entire flash
@@ -31,5 +39,5 @@ erase:                                          # erase the entire flash
 size:                                           # determine the flash size
 	$(ESPTOOL) --port $(PORT) flash_id
 
-clean:                                          # delete all binaries and object viles
+clean:                                          # delete all binaries and object files
 	rm --force $(PROG).$(VAR).bin $(PROG).$(VAR).elf

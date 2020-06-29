@@ -1,0 +1,1 @@
+/home/jeff/blogging/content/ideas/microcontroller-displays.md

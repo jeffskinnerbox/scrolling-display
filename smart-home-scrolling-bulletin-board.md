@@ -1,0 +1,1 @@
+/home/jeff/blogging/content/ideas/smart-home-scrolling-bulletin-board.md

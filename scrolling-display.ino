@@ -28,7 +28,7 @@ PHYSICAL DESIGN:
         CLK              D5            CLK or HCLK
 
 MONITOR:
-    screen /dev/ttyUSB0 57600,cs8
+    screen /dev/ttyUSB0 9600,cs8
     to terminate Cntr-a :quit
 
 TESTING:
@@ -91,10 +91,10 @@ uint8_t frameDelay = FRAMEDELAY;
 textEffect_t scrollEffect = PA_SCROLL_LEFT;
 
 // Parola object constructor for SPI hardware interface
-MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+//MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
-// Parola object constructor for arbitrary hardware interface
-//MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
+// Parola object constructor for software SPI connection
+MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
 
 
@@ -104,8 +104,7 @@ MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 //const char *ssid = "<my-wifi-ssid>";
 //const char *pass = "<my-wifi-password>";
 const char *ssid = "74LL5";
-//const char *password = "1CyberPhysicalSystems2";
-const char *password = "???";
+const char *password = "1CyberPhysicalSystems2";
 
 
 // WiFi Server object and parameters
@@ -225,7 +224,6 @@ void errorHandler(int error) {
         }
         yield();    // prevent the watchdog timer doing a reboot
     }
-
 
     Serial.flush();
 
