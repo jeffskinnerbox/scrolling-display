@@ -7,33 +7,44 @@
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 
-// set to 1 to turn on debug statements to the serial output
+// debugging routings print trace messages on serial port, enable with value 'true'
 // using F() to load strings in flash memory, not RAM
 #define DEBUG true
 #if DEBUG
-    #define PRINT(s, x) { Serial.print(F(s)); Serial.println(x); }
-    #define PRINTS(x) Serial.println(F(x))
-    #define PRINTX(x) Serial.println(x, HEX)
+#define PRINT(s)      { Serial.print(F(s)); }                             // Print a string
+#define PRINTD(s, v)  { Serial.print(F(s)); Serial.println(v, DEC); }     // Print a string followed by decimal
+#define PRINTX(s, v)  { Serial.print(F(s)); Serial.println(v, HEX); }     // Print a string followed by hex
+#define PRINTB(s, v)  { Serial.print(F(s)); Serial.println(v, BIN); }     // Print a string followed by binary
+#define PRINTC(s, v)  { Serial.print(F(s)); Serial.println((char)v); }    // Print a string followed by char
+#define PRINTS(s, v)  { Serial.print(F(s)); Serial.println(v); }          // Print a string followed by string
 #else
-    #define PRINT(s, x)
-    #define PRINTS(x)
-    #define PRINTX(x)
+#define PRINT(s)
+#define PRINTD(s, v)
+#define PRINTX(s, v)
+#define PRINTB(s, v)
+#define PRINTC(s, v)
+#define PRINTS(s, v)
 #endif
 
-#define ONE_SECOND        1000UL        // milliseconds in one second
-#define TWO_SECOND        2000UL        // milliseconds in two second
-#define ONE_MINUTE        60000UL       // milliseconds in one minute
-#define ONE_HOUR          3600000UL     // milliseconds in one hour
-#define ONE_DAY           85400000UL    // milliseconds in one day
-#define WIFITIME          10000         // attempt to connect with wifi for 10 seconds then abandon
+#define ONE_SECOND    1000UL        // milliseconds in one second
+#define TWO_SECOND    2000UL        // milliseconds in two second
+#define ONE_MINUTE    60000UL       // milliseconds in one minute
+#define ONE_HOUR      3600000UL     // milliseconds in one hour
+#define ONE_DAY       85400000UL    // milliseconds in one day
+#define WIFITIME      10000         // attempt to connect with wifi for 10 seconds then abandon
+
+// display speeds, intensity, etc.
+#define MAX_DEVICES   24    // number of dot matrix modules
+#define PAUSE_TIME    TWO_SECOND
+#define SCROLL_SPEED  50    // lower the number the faster the animation; 0 to run as fast as possible
+#define FRAMEDELAY   200    // frame delay value min=10 (fast)  max=200 (slow)
+#define INTENSITY      0    // set intensity of the display (0-15)
+#define SPACING        0    // distance between the end of one message and the start of the next (0 = off display)
 
 // Define the number of devices we have in the chain and the hardware interface
 // NOTE: These pin numbers are for ESO8266 hardware SPI
 //#define HARDWARE_TYPE MD_MAX72XX::PAROLA_HW
 #define HARDWARE_TYPE MD_MAX72XX::ICSTATION_HW    // values are: PAROLA, GENERIC, ICSTATION, FC16
-//#define MAX_DEVICES 24  // number of dot matrix modules
-#define MAX_DEVICES 12  // number of dot matrix modules
-#define FRAMEDELAY 50   // default frame delay value min=10 (fast)  max=200 (slow)
 #define CLK_PIN   D5    // or SCK
 #define DATA_PIN  D7    // or MOSI
 #define CS_PIN    D8    // or SS
@@ -48,6 +59,13 @@
 // Parola object constructor for arbitrary hardware interface
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
+// display text effects
+const textPosition_t scrollAlign = PA_CENTER;        // how to align the text (e.g. PA_LEFT)
+const textEffect_t scrollEffectIn = PA_SCROLL_UP;    // direction of scrolling (e.g. PA_SCROLL_LEFT)
+const textEffect_t scrollEffectOut = PA_DISSOLVE;    // special effects when scrolling (e.g. PA_RANDOM)
+const uint8_t intensity = INTENSITY;                 // intensity of matrix LEDs
+const uint8_t scrollSpeed = SCROLL_SPEED;            // frame delay value
+const uint16_t scrollPause = TWO_SECOND;             // ms of pause after finished displaying message
 
 
 //------------------------------- WiFi Parameters ------------------------------
@@ -65,7 +83,6 @@ const char *password = "1CyberPhysicalSystems2";
 
 int MessageInQueue = 0;
 char curMessage[QUEUE_SIZE][BUF_SIZE];
-char newMessage[BUF_SIZE];
 
 
 
@@ -74,22 +91,13 @@ char newMessage[BUF_SIZE];
 
 // handle errors by displaying a code and then restart
 void errorHandler(int error) {
-    textPosition_t scrollAlign = PA_LEFT;
-    uint8_t scrollSpeed = 25;                      // default frame delay value
-    uint16_t scrollPause = TWO_SECOND;             // in milliseconds
-    textEffect_t scrollEffectIn = PA_SCROLL_LEFT;
-    textEffect_t scrollEffectOut = PA_NO_EFFECT;
     int i = 0;
     unsigned long tout;
-
-    sprintf(curMessage[0], "Can't go on without WiFi connection.");
-    sprintf(curMessage[1], "Press reset twice to fix.");
-    MessageInQueue = 2;
 
     tout = ONE_MINUTE + millis();                // milliseconds of time given to making connection attempt
     while (millis() < tout) {
         if (P.displayAnimate()) {
-            Serial.println("Inside errorHandler");
+            PRINT("Inside errorHandler\n\r");
             P.displayText(curMessage[i], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
             i++;
             if (i == MessageInQueue) i = 0;
@@ -98,8 +106,7 @@ void errorHandler(int error) {
         yield();    // prevent the watchdog timer doing a reboot
     }
 
-    Serial.flush();
-
+    PRINT("\nDoing an automatic restart\n\r");
     ESP.reset();                     // nothing can be done so restart
 }
 
@@ -109,28 +116,22 @@ bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) 
     unsigned long tout;
 
     // attempt first connect to a WiFi network
-    Serial.print("\nAttempting connection to WiFi SSID ");
-    Serial.println(ssid);
+    PRINTS("\nAttempting connection to WiFi SSID ", ssid);
     WiFi.begin(ssid, password);
 
     // make subsequent connection attempts to wifi
     tout = timeout + millis();                // milliseconds of time given to making connection attempt
     while(WiFi.status() != WL_CONNECTED) {
-        Serial.print(".");
+        PRINT(".");
         if (millis() > tout) {
-            Serial.print("Failed to connect to WiFi!  ");
-            Serial.print("WiFi status exit code is ");
-            Serial.println(WiFi.status());
+            PRINTD("\n\rFailed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
         delay(500);
     }
 
-    Serial.print("Successfully connected to WiFi!  ");
-    Serial.print("IP address is ");
-    Serial.println(WiFi.localIP());
-    Serial.print("WiFi status exit code is ");
-    Serial.println(WiFi.status());
+    PRINTS("\n\rSuccessfully connected to WiFi!  IP address is ", WiFi.localIP());
+    PRINTD("WiFi status exit code is ", WiFi.status());
 
     return true;
 }
@@ -138,87 +139,74 @@ bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) 
 
 // scan for nearby networks
 void scanNetworks() {
-    Serial.println("\nStarting Network Scan");
+    PRINT("\nStarting Network Scan\n\r");
     byte numSsid = WiFi.scanNetworks();
 
     // print the list of networks seen
-    Serial.print("SSID List:");
-    Serial.println(numSsid);
+    PRINTD("Total number of SSID found: ", numSsid);
 
-    // print the network number and name for each network found
+    // print the name of each network found
     for (int thisNet = 0; thisNet<numSsid; thisNet++) {
-        Serial.print("   ");
-        Serial.print(thisNet);
-        Serial.print(") Network: ");
-        Serial.println(WiFi.SSID(thisNet));
+        PRINTS("   ", WiFi.SSID(thisNet));
     }
 
-    Serial.println("Network Scan Completed");
-    Serial.println("\n-------------------------------------------------------");
+    PRINT("Network Scan Completed\n\r");
+    PRINT("\n-------------------------------------------------------\n\r");
 }
 
 
 void setup() {
-    textPosition_t scrollAlign = PA_LEFT;
-    uint8_t scrollSpeed = 25;                      // default frame delay value
-    uint16_t scrollPause = TWO_SECOND;             // in milliseconds
-    textEffect_t scrollEffectIn = PA_SCROLL_LEFT;
-    textEffect_t scrollEffectOut = PA_NO_EFFECT;
 
     Serial.begin(9600);
-    PRINTS("\nInitializing scrolling display.");
+    PRINT("\n\n\rInitializing scrolling display.\n\r");
 
     // initialize all your display messages to null
-    newMessage[0] = '\0';
     MessageInQueue = 0;
     for (int j = 0; j < QUEUE_SIZE; j++)
             curMessage[0][j] = '\0';
 
-    P.begin();                     // initialize the object data
-    P.displayClear();              // clear all the zones in the current display
-/*
-    P.displaySuspend(false);       // start the current display animation, true = suspend, false = resume
-    P.displayScroll(curMessage, PA_LEFT, scrollEffect, frameDelay);
-*/
+    P.begin();                                           // initialize the display and data object
+    P.setIntensity(intensity);                           // set intensity of the display
+    P.setTextAlignment(scrollAlign);                     // set the text alignment
+    P.setTextEffect(scrollEffectIn, scrollEffectOut);    // special effects when scrolling
+    P.setScrollSpacing(SPACING);                         // columns between messages
+    P.setSpeed(scrollSpeed);                             // frame delay value
+    P.setPause(scrollPause);                             // ms of pause after finished displaying message
+    P.displayClear();                                    // clear the display
 
-    // scan for wifi access point and print what you find (useful for trouble shouting wifi)
-    scanNetworks();                           // scan for wifi access points
+    scanNetworks();               // scan for wifi access points (useful for trouble shouting wifi)
 
     // Connect to and initialise WiFi network
-    PRINT("\nConnecting to ", ssid);
-
-    //WiFi.begin(ssid, password);
-    if (wifiConnect(ssid, password, WIFITIME)) {  // connect to wifi
+    if (wifiConnect(ssid, password, WIFITIME)) {         // connect to wifi
     } else {
-        Serial.println("Can't go on without WiFi connection.  Press reset twice to fix.");
+        PRINT("\n\nCan't go on without WiFi connection.  Press reset twice to fix.\n\r");
+        sprintf(curMessage[0], "Can't go on without WiFi connection.");
+        sprintf(curMessage[1], "Press reset twice to fix.");
+        MessageInQueue = 2;
         errorHandler(1);
     }
 
     // set up first message as the IP address
     MessageInQueue++;
     sprintf(curMessage[MessageInQueue - 1], "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-    PRINT("\ncurMessage[%0] = ", curMessage[MessageInQueue - 1]);
+    PRINTS("\ncurMessage[0] = ", curMessage[MessageInQueue - 1]);
 
     // 2nd message
     MessageInQueue++;
     sprintf(curMessage[MessageInQueue - 1], "the rain falls mainly on the plane in spain");
-    PRINT("\ncurMessage[1] = ", curMessage[MessageInQueue - 1]);
+    PRINTS("curMessage[1] = ", curMessage[MessageInQueue - 1]);
 
     P.displayText(curMessage[MessageInQueue - 1], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
 }
 
 
 void loop() {
-    textPosition_t scrollAlign = PA_LEFT;
-    uint8_t scrollSpeed = 25;                      // default frame delay value
-    uint16_t scrollPause = TWO_SECOND;             // in milliseconds
-    textEffect_t scrollEffectIn = PA_SCROLL_LEFT;
-    textEffect_t scrollEffectOut = PA_NO_EFFECT;
+
     int i = 0;
 
-    Serial.println("Outside the loop");
+    //PRINT("Outside the loop\n\r");
     if (P.displayAnimate()) {
-        Serial.println("Inside the loop");
+        //PRINT("Inside the loop\n\r");
         P.displayText(curMessage[i], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
         i++;
         if (i == MessageInQueue) i = 0;

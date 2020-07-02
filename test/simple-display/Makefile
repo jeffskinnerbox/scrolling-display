@@ -19,6 +19,8 @@ UPLOAD = arduino-cli upload --fqbn $(FQBN) --port $(PORT)
 
 .PHONY: build upload clean erase
 
+all: build upload
+
 build:                                          # build the binary executable
 	$(CC) $(CURDIR)
 
