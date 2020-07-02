@@ -122,12 +122,6 @@ void setup() {
 void loop() {
     static uint8_t cycle = 0;                            // message number being displayed
 
-    //const textPosition_t scrollAlign = PA_CENTER;        // how to align the text (e.g. PA_LEFT)
-    //const textEffect_t scrollEffectIn = PA_SCROLL_UP;    // direction of scrolling
-    //const textEffect_t scrollEffectOut = PA_DISSOLVE;    // special effects when scrolling
-    //const uint8_t scrollSpeed = SCROLL_SPEED;            // frame delay value
-    //const uint16_t scrollPause = TWO_SECOND;             // ms of pause after finished displaying message
-
     if (P.displayAnimate()) {
         PRINT("Displaying message #", cycle);
 
