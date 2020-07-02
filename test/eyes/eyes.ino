@@ -1,16 +1,18 @@
-
+//
+// Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+// Version:      0.1.0
+//
 // taken from https://github.com/MajicDesigns/MD_MAX72XX/tree/master/examples/MD_MAX72xx_Eyes
-
-
+//
 // Program to exercise the MD_MAX72XX library
+//     Uses the graphics functions to animate a pair of eyes on 2 matrix modules.
+//     Eyes are coordinated to work together.
+//     Eyes are created to fill all available modules.
 //
-// Uses the graphics functions to animate a pair of eyes on 2 matrix modules.
-// Eyes are coordinated to work together.
-// Eyes are created to fill all available modules.
-//
-//
-#include <MD_MAX72xx.h>
+
+
 #include <SPI.h>
+#include <MD_MAX72xx.h>
 #include "eyepair.h"
 
 // Define the number of devices we have in the chain and the hardware interface
@@ -33,24 +35,24 @@ MD_MAX72XX M = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 //MD_MAX72XX M = MD_MAX72XX(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
 // Define the eyes!
-#define MAX_EYE_PAIR (MAX_DEVICES/2)
+//#define MAX_EYE_PAIR (MAX_DEVICES/2)
+#define MAX_EYE_PAIR 12
 
 MD_EyePair E[MAX_EYE_PAIR];
 
 // Miscellaneous defines
 #define	DELAYTIME  500  // in milliseconds
 
-void setup()
-{
-  M.begin();
 
-  // initialize the eye view
-  for (uint8_t i=0; i<MAX_EYE_PAIR; i++)
-    E[i].begin(i*2, &M, DELAYTIME);
+void setup() {
+    M.begin();
+
+    // initialize the eye view
+    for (uint8_t i=0; i<MAX_EYE_PAIR; i++)
+        E[i].begin(i*2, &M, DELAYTIME);
 }
 
-void loop()
-{
-  for (uint8_t i=0; i<MAX_EYE_PAIR; i++)
-    E[i].animate();
+void loop() {
+    for (uint8_t i=0; i<MAX_EYE_PAIR; i++)
+        E[i].animate();
 }

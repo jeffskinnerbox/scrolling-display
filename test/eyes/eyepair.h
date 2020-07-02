@@ -1,5 +1,13 @@
+//
+// Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+// Version:      0.1.0
+//
+// taken from https://github.com/MajicDesigns/MD_MAX72XX/tree/master/examples/MD_MAX72xx_Eyes
+//
 // Implements a class to draw and animate a pair of eyes
-#pragma once
+
+
+#pragma once                 // compiler to skip subsequent includes of this file
 
 #include <MD_MAX72xx.h>
 

@@ -1,6 +1,28 @@
+
+#-------------------------------------------------------------------------------
+# Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+# Version:      0.1.0
 #
-# help from - https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
+# USAGE
+#	To build the executable
+#	    make build
 #
+#	To flash the device
+#	    make upload
+#
+#	makefile syntax
+#	    = set the varialbe
+#	    ?= set the variable only if it's not set/doesn't have a value
+#	    := set variable as the output an executed shell script
+#	    += is used for appending more text to variables
+#
+# SOURCES
+#   The Makefile was created with the help of this website:
+#   https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
+#
+# DOCUMENTATION
+#   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#-------------------------------------------------------------------------------
 
 # name of program being created
 PROG = eyes
