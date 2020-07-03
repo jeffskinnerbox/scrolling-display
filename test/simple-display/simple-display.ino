@@ -1,11 +1,39 @@
 
-//
-// Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-// Version:      0.1.0
-//
-// simple scrolling display with wifi and error handling
-//
+/*------------------------------------------------------------------------------
+Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+Version:      0.1.0
 
+DESCRIPTION:
+    Demonstration program showing the the use of the MD_Parola library, WiFi, and error handling.
+    scrolling features.
+
+PHYSICAL DESIGN:
+    Hardware
+        MAX7219 Dot Matrix Module 4-in-1 Display - https://www.banggood.com/3Pcs-MAX7219-Dot-Matrix-Module-4-in-1-Display-Screen-For-Arduino-p-1230975.html
+        HiLetgo New Version ESP8266 NodeMCU LUA CP2102 ESP-12E - https://www.amazon.com/gp/product/B010O1G1ES
+
+    Wiring
+        Connections for ESP8266 hardware SPI are:
+        MAX72XX Pin    ESP8266 Pin    Notes / Comments
+        Vcc              3v3           LED matrices seem to work at 3.3V
+        GND              GND           GND
+        DIN              D7            HSPID or HMOSI
+        CS or LD         D8            HSPICS or HCS
+        CLK              D5            CLK or HCLK
+
+MONITOR:
+    screen /dev/ttyUSB0 9600,cs8
+    to terminate Cntr-a :quit
+
+REFERENCE MATERIALS:
+    * MD_MAX72XX library can be found at https://github.com/MajicDesigns/MD_MAX72XX
+
+SOURCES:
+    Code adapted from https://github.com/MajicDesigns/MD_Parola/tree/master/examples/Parola_Scrolling_ESP8266
+
+CREATED BY:
+    jeffskinnerbox@yahoo.com
+------------------------------------------------------------------------------*/
 
 // ESP8266 libraries
 #include <SPI.h>
@@ -22,6 +50,7 @@
 
 #define ONE_SECOND    1000UL        // milliseconds in one second
 #define TWO_SECOND    2000UL        // milliseconds in two second
+#define THREE_SECOND  3000UL        // milliseconds in three second
 #define ONE_MINUTE    60000UL       // milliseconds in one minute
 #define ONE_HOUR      3600000UL     // milliseconds in one hour
 #define ONE_DAY       85400000UL    // milliseconds in one day
@@ -59,7 +88,7 @@ const textEffect_t scrollEffectIn = PA_SCROLL_UP;    // direction of scrolling (
 const textEffect_t scrollEffectOut = PA_DISSOLVE;    // special effects when scrolling (e.g. PA_RANDOM)
 const uint8_t intensity = INTENSITY;                 // intensity of matrix LEDs
 const uint8_t scrollSpeed = SCROLL_SPEED;            // frame delay value
-const uint16_t scrollPause = TWO_SECOND;             // ms of pause after finished displaying message
+const uint16_t scrollPause = PAUSE_TIME;             // ms of pause after finished displaying message
 
 
 // credentials for wifi network
@@ -71,33 +100,7 @@ const char *password = WIFIPASS;
 #define QUEUE_SIZE  5         // number of messages stored in a queue
 #define BUF_SIZE    512       // max number of characters in a message
 
-int MessageInQueue = 0;
-char curMessage[QUEUE_SIZE][BUF_SIZE];
-
-
-
-//--------------------- Error Message Handler for Display ----------------------
-
-// handle errors by displaying a code and then restart
-void errorHandler(int error) {
-    int i = 0;
-    unsigned long tout;
-
-    tout = ONE_MINUTE + millis();                // milliseconds of time given to making connection attempt
-    while (millis() < tout) {
-        if (P.displayAnimate()) {
-            PRINT("Inside errorHandler\n\r");
-            P.displayText(curMessage[i], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
-            i++;
-            if (i == MessageInQueue) i = 0;
-            P.displayReset();        // reset the animation back to the beginning
-        }
-        yield();    // prevent the watchdog timer doing a reboot
-    }
-
-    PRINT("\nDoing an automatic restart\n\r");
-    ESP.reset();                     // nothing can be done so restart
-}
+char msg[QUEUE_SIZE][BUF_SIZE];
 
 
 
@@ -129,8 +132,18 @@ bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) 
 }
 
 
+// terminate the wifi connect
+void wifiTerminate() {
+    PRINTS("\nDisconnecting from WiFi with SSID ", WiFi.SSID());
+
+    WiFi.disconnect();
+
+    PRINT("\n-------------------------------------------------------\n\r");
+}
+
+
 // scan for nearby networks
-void scanNetworks() {
+void wifiScan() {
     PRINT("\nStarting Network Scan\n\r");
     byte numSsid = WiFi.scanNetworks();
 
@@ -148,18 +161,126 @@ void scanNetworks() {
 
 
 
+//------------------------ Display Messages Management -------------------------
+
+// initialize all your display messages to null
+void clearMsg() {
+    for (int i = 0; i < QUEUE_SIZE; i++)
+        msg[i][0] = '\0';
+}
+
+
+// return index of next empty message in queue, return -1 if queue is full
+int indexMsg() {
+
+    for (int i = 0; i < QUEUE_SIZE; i++)
+        if (msg[i][0] == '\0') {
+            return i;
+        }
+
+    return -1;
+}
+
+
+// return the number of messages in queue
+int countMsg() {
+    int i = 0;
+
+    for (i = 0; i < QUEUE_SIZE; i++)
+        if (msg[i][0] == '\0') {
+            return i;
+        }
+
+    return QUEUE_SIZE;
+}
+
+
+// put a message on the bottom of the msg queue
+bool putMsg(char *str) {
+    int index;
+
+    index = indexMsg();
+
+    if (index < 0) {
+        PRINT("\nFailed to add message to queue. Queue is full.\n\r");
+        return false;
+    } else {
+        PRINT("\nSuccessfully adding message to queue.\n\r");
+        sprintf(msg[index], str);
+        return true;
+    }
+}
+
+
+// print all the messages
+void printMsg() {
+    int index;
+
+    index = countMsg();
+
+    if (index == 0) {
+        PRINT("\nMessage queue is empty.\n\r");
+    } else {
+        PRINTD("Messages in msg queue: ", countMsg());
+        for (int i = 0; i < index; i++)
+            PRINTS("\t", msg[i]);
+    }
+}
+
+
+
+//--------------------- Error Message Handler for Display ----------------------
+
+// handle errors by displaying a code and then restart
+void errorHandler(int error) {
+    int i = 0;
+    unsigned long tout;                           // time-out time
+    uint8_t cycle = 0;                            // message number being displayed
+
+    switch(error) {
+        case 1:
+            PRINT("\n\nCan't go on without WiFi connection.  Press reset twice to fix.\n\r");
+            clearMsg();
+            putMsg("Can't go on without WiFi connection.");
+            putMsg("Press reset twice to fix.");
+
+            tout = ONE_MINUTE + millis();         // milliseconds of time to display message
+            while (millis() < tout) {
+                if (P.displayAnimate()) {
+                    if (msg[cycle][0] != '\0')
+                        P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+
+                    cycle = (cycle + 1) % ARRAY_SIZE(msg); // prepare index into msg[] for next pass
+                }
+                yield();                          // prevent the watchdog timer doing a reboot
+            }
+
+            PRINT("\nNothing can be done.  Doing an automatic restart\n\r");
+            ESP.reset();                          // nothing can be done so restart
+            break;
+        default:                                  // nothing can be done so restart
+            PRINTD("Unknown error code in errorHandler: ", error);
+            PRINT("\nNothing can be done.  Doing an automatic restart\n\r");
+            ESP.reset();
+    }
+}
+
+
+
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
+    char string[BUF_SIZE];
+    unsigned long tout;                           // time-out time
+    uint8_t cycle = 0;                            // message number being displayed
 
     Serial.begin(9600);
-    PRINT("\n\n\rInitializing scrolling display.\n\r");
+    PRINT("\n\n\rInitializing scrolling display...\n\r");
 
     // initialize all your display messages to null
-    MessageInQueue = 0;
-    for (int j = 0; j < QUEUE_SIZE; j++)
-            curMessage[0][j] = '\0';
+    clearMsg();
 
+    // initialize the display
     P.begin();                                           // initialize the display and data object
     P.setIntensity(intensity);                           // set intensity of the display
     P.setTextAlignment(scrollAlign);                     // set the text alignment
@@ -169,42 +290,75 @@ void setup() {
     P.setPause(scrollPause);                             // ms of pause after finished displaying message
     P.displayClear();                                    // clear the display
 
-    scanNetworks();               // scan for wifi access points (useful for trouble shouting wifi)
-
-    // Connect to and initialise WiFi network
-    if (wifiConnect(ssid, password, WIFITIME)) {         // connect to wifi
-    } else {
-        PRINT("\n\nCan't go on without WiFi connection.  Press reset twice to fix.\n\r");
-        sprintf(curMessage[0], "Can't go on without WiFi connection.");
-        sprintf(curMessage[1], "Press reset twice to fix.");
-        MessageInQueue = 2;
-        errorHandler(1);
+    tout = ONE_SECOND + millis();                        // milliseconds of time to display message
+    while (millis() < tout) {
+        if (P.displayAnimate())
+            P.displayText("Stand-By!!", scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+        yield();                                         // prevent the watchdog timer doing a reboot
     }
 
-    // set up first message as the IP address
-    MessageInQueue++;
-    sprintf(curMessage[MessageInQueue - 1], "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-    PRINTS("\ncurMessage[0] = ", curMessage[MessageInQueue - 1]);
+    // scan for wifi access points
+    PRINT("\n\n\rInitializing WiFi...\n\r");
+    wifiScan();
 
-    // 2nd message
-    MessageInQueue++;
-    sprintf(curMessage[MessageInQueue - 1], "the rain falls mainly on the plane in spain");
-    PRINTS("curMessage[1] = ", curMessage[MessageInQueue - 1]);
+    // attempt to connect and initialise WiFi network
+    if (wifiConnect(ssid, password, WIFITIME)) {         // connect to wifi
+        clearMsg();
+        sprintf(string, "WiFi connected successfully to SSID %s.", ssid);
+        putMsg(string);
+        //tout = THREE_SECOND + millis();                  // milliseconds of time to display message
+        tout = ONE_SECOND + millis();                  // milliseconds of time to display message
+        while (millis() < tout) {
+            if (P.displayAnimate()) {
+                if (msg[cycle][0] != '\0')
+                    P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+                 cycle = (cycle + 1) % ARRAY_SIZE(msg);  // prepare index into msg[] for next pass
+            }
+            yield();                                     // prevent the watchdog timer doing a reboot
+        }
+    } else
+        errorHandler(1);
 
-    P.displayText(curMessage[MessageInQueue - 1], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+    // clear all old messages
+    PRINT("\n\n\rPopulating message queue with messages...\n\r");
+    clearMsg();
+    printMsg();
+
+    // 1st message is the wifi IP address
+    sprintf(string, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+    putMsg(string);
+    printMsg();
+
+    // 2nd message is gibberish
+    putMsg("The rain falls mainly on the plane in Spain");
+    printMsg();
+
+    // 3rd message is gibberish
+    putMsg("What is the weather outside right now?  What about inside?");
+    printMsg();
+
+    // 4th message is gibberish
+    putMsg("short message");
+    printMsg();
+
+    // 5th message is gibberish
+    putMsg("loooooooooooong message");
+    printMsg();
+
+    // 6th message is gibberish
+    putMsg("this message should fail to load");
+    printMsg();
 }
 
 
 void loop() {
 
-    int i = 0;
+    static uint8_t cycle = 0;                            // message number being displayed
 
-    //PRINT("Outside the loop\n\r");
     if (P.displayAnimate()) {
-        //PRINT("Inside the loop\n\r");
-        P.displayText(curMessage[i], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
-        i++;
-        if (i == MessageInQueue) i = 0;
-        P.displayReset();        // reset the animation back to the beginning
+        if (msg[cycle][0] != '\0')
+            P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+        cycle = (cycle + 1) % ARRAY_SIZE(msg);    // prepare index into msg[] for next pass
     }
+
 }
