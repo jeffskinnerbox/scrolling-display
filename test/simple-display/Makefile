@@ -46,16 +46,19 @@ FQBN = $(PACKAGE):$(ARCH):$(BOARD)
 # location of the esptool used for flashing
 ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/2.6.1/esptool.py
 
-# string within names give to .bin and .elf files
+# string within names given to .bin and .elf files
 VAR = $(shell echo $(FQBN) | tr ':' '.')
 
 # path for temp-storage of binary, object, and core.a files
 BUILD = /tmp/$(PROG)
 BUILD_PATH = $(BUILD)/build
 
+# paths to libraries and include files
+LIBS = "/home/jeff/src/arduino/sketchbooks/libraries"
+
 # compiler and compiler flags
 CC = arduino-cli compile
-CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-cache-path=$(BUILD) --build-path=$(BUILD_PATH)
+CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-path=$(BUILD) --libraries $(LIBS)
 
 # firmware flasher and flags
 UPLOAD = arduino-cli upload
