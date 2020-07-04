@@ -48,11 +48,11 @@ CREATED BY:
 ------------------------------------------------------------------------------*/
 
 
-// ESP8266 libraries
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
 #include "ESP8266WiFi.h"
 
-// Arduino libraries
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 
