@@ -103,6 +103,8 @@ const char *password = WIFIPASS;
 #define BUF_SIZE    512       // max number of characters in a message
 
 char msg[QUEUE_SIZE][BUF_SIZE];
+//msg = MessageStore();
+//msg = MessageStore(QUEUE_SIZE, STORE_SIZE, BUF_SIZE);
 
 
 
