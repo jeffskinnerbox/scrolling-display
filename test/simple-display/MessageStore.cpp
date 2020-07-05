@@ -9,6 +9,7 @@ DESCRIPTION:
 
 REFERENCE MATERIALS:
     * https://www.geeksforgeeks.org/circular-queue-set-1-introduction-array-implementation/
+    * https://stackoverflow.com/questions/1403150/how-do-you-dynamically-allocate-a-matrix
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
@@ -17,61 +18,112 @@ CREATED BY:
 #pragma once                 // compiler to skip subsequent includes of this file
 
 #include <Arduino.h>
-//#include <stdio.h>
-//#include <stdlib.h>
 
 #define QUEUE_SIZE  5         // number of messages stored in a queue
+#define STORE_SIZE  5         // number of messages stored in a queue
 #define BUF_SIZE    512       // max number of characters in a message
 
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
 
 
-class CircularQueue {
+class MessageStore {
   private:
     // Circular Queue
-    int cir_size;                          // size of the circular queue
-    int cir_rear, cir_front;               // indexes to front and rear of the circular queue
-    char cir_array[QUEUE_SIZE][BUF_SIZE];
+    int cir_size;                                   // size of the circular queue
+    int cir_rear, cir_front;                        // indexes to front and rear of the circular queue
+    //char cir_array[QUEUE_SIZE][BUF_SIZE];
+    char **cir_array = NULL;
 
     // Simple Store
-    char array[QUEUE_SIZE][BUF_SIZE];
+    char array[STORE_SIZE][BUF_SIZE];
     int indexStore(void);
     int countStore(void);
 
   public:
-    CircularQueue(void);                   // This is the constructor
+    // constructors & destructors for the class
+    MessageStore(void);
+    ~MessageStore(void);
+    //MessageStore(int queue_size, int store_size, int buf_size);
 
     // Circular Queue
     void clearQueue();
     void printQueue();
     void addQueue(char *);
-    //void Delete(int);
+    char *getQueue(int);
 
     // Simple Store
     void clearStore();
     void printStore();
     bool addStore(char *);
     bool addStore(char *, int);
+    char *getStore(int);
     bool deleteStore(int);
 };
 
 
 
-// -------------------------------- Constructors -------------------------------
+// ------------------------ Constructors & Destructors -------------------------
 
-// Function to create Circular queue
-CircularQueue::CircularQueue(void) {
+/*
+// Constructor to create Circular queue
+MessageStore::MessageStore(void) {
+
     cir_front = cir_rear = -1;
     cir_size = 0;
-    //cir_array = new int[s];
+
+    cir_array = new char*[QUEUE_SIZE];
+    for (int i = 0; i < QUEUE_SIZE; i++)
+        cir_array[i] = new char[BUF_SIZE];
+
+}
+
+
+// Destructor to create Circular queue
+MessageStore::~MessageStore(void) {
+
+    for (int i = 0; i < QUEUE_SIZE; i++)
+        delete [] cir_array[i];
+    delete [] cir_array;
+}
+*/
+
+
+// Constructor to create Circular queue
+MessageStore::MessageStore(void) {
+
+    int rows = QUEUE_SIZE;
+    int cols = BUF_SIZE;
+
+    cir_front = cir_rear = -1;
+    cir_size = 0;
+
+    char** cir_array = new char*[rows];
+    if (rows) {
+        cir_array[0] = new char[rows * cols];
+        for (int i = 1; i < rows; ++i)
+            cir_array[i] = cir_array[0] + i * cols;
+    }
+
+}
+
+
+// Destructor to create Circular queue
+MessageStore::~MessageStore(void) {
+
+    int rows = QUEUE_SIZE;
+    int cols = BUF_SIZE;
+
+    if (rows) delete [] cir_array[0];
+    delete [] cir_array;
+
 }
 
 
 // ------------------------ Methods for Circular Queue -------------------------
 
 // Function to clear the contents of the circular queue
-void CircularQueue::clearQueue(void) {
+void MessageStore::clearQueue(void) {
     for (int i = 0; i < QUEUE_SIZE; i++)
         cir_array[i][0] = '\0';
 
@@ -81,7 +133,7 @@ void CircularQueue::clearQueue(void) {
 
 
 // Function prints the elements of Circular Queue
-void CircularQueue::printQueue(void) {
+void MessageStore::printQueue(void) {
 
     // print headings
     if (cir_front == -1) {
@@ -110,7 +162,7 @@ void CircularQueue::printQueue(void) {
 
 
 // Function to add element to Circular Queue
-void CircularQueue::addQueue(char *value) {
+void MessageStore::addQueue(char *value) {
 
     if ((cir_front == 0 && cir_rear == cir_size-1) || (cir_rear == (cir_front-1)%(cir_size-1))) {
         PRINT("Circular Queue is full. Removing element from end of message queue.\n\r");
@@ -129,48 +181,33 @@ void CircularQueue::addQueue(char *value) {
 }
 
 
-/*
-// Function to delete element from Circular Queue
-void CircularQueue::Delete(int i) {
+char *MessageStore::getQueue(int index) {
 
-    if (cir_front == -1) {
-        PRINT("Circular Queue is empty\n\r");
-        return INT_MIN;
-    }
+    if (index < 0 || index >= QUEUE_SIZE)
+        return NULL;
 
-    int data = cir_array[cir_front];
-    cir_array[cir_front] = -1;
-
-    if (cir_front == cir_rear) {
-        cir_front = cir_rear = -1;
-    } else if (cir_front == cir_size-1) {
-        cir_front = 0;
-    } else {
-        cir_front++;
-    }
-
+    return cir_array[index];
 }
-*/
 
 
 // -------------------------- Methods for Simple Store -------------------------
 
 // Function to clear the contents of the simple store
-void CircularQueue::clearStore(void) {
+void MessageStore::clearStore(void) {
 
-    for (int i = 0; i < QUEUE_SIZE; i++)
+    for (int i = 0; i < STORE_SIZE; i++)
         array[i][0] = '\0';
 
 }
 
 
 // Function prints the elements of simple store
-void CircularQueue::printStore(void) {
+void MessageStore::printStore(void) {
     int i, cnt;
 
     //count non-null elements
     cnt = 0;
-    for (i = 0; i < QUEUE_SIZE; i++)
+    for (i = 0; i < STORE_SIZE; i++)
         if (array[i][0] != '\0')
                 cnt++;
 
@@ -178,14 +215,14 @@ void CircularQueue::printStore(void) {
     PRINTD("Elements in Simple Store are: ", cnt);
 
     // print the simple store contents
-    for (int i = 0; i < QUEUE_SIZE; i++)
+    for (int i = 0; i < STORE_SIZE; i++)
         if (array[i][0] != '\0')
             PRINTS("\t", array[i]);
 }
 
 
 // Function to add element to simple store
-bool CircularQueue::addStore(char *str) {
+bool MessageStore::addStore(char *str) {
 
     int index = indexStore();
 
@@ -201,9 +238,9 @@ bool CircularQueue::addStore(char *str) {
 
 
 // Function to add element to simple store
-bool CircularQueue::addStore(char *str, int index) {
+bool MessageStore::addStore(char *str, int index) {
 
-    if (index < 0 || index > QUEUE_SIZE) {
+    if (index < 0 || index > STORE_SIZE) {
         PRINT("\nFailed to add message to Store. Bad index.\n\r");
         return false;
     } else {
@@ -215,9 +252,9 @@ bool CircularQueue::addStore(char *str, int index) {
 
 
 // Function to delete element from simple store
-bool CircularQueue::deleteStore(int index) {
+bool MessageStore::deleteStore(int index) {
 
-    if (index < 0 || index > QUEUE_SIZE) {
+    if (index < 0 || index > STORE_SIZE) {
         PRINT("\nFailed to delete message from Store. Bad index.\n\r");
         return false;
     } else {
@@ -229,9 +266,9 @@ bool CircularQueue::deleteStore(int index) {
 
 
 // return index of next empty message in store, return -1 if simple store is full
-int CircularQueue::indexStore() {
+int MessageStore::indexStore() {
 
-    for (int i = 0; i < QUEUE_SIZE; i++)
+    for (int i = 0; i < STORE_SIZE; i++)
         if (array[i][0] == '\0') {
             return i;
         }
@@ -241,14 +278,23 @@ int CircularQueue::indexStore() {
 
 
 // return the number of messages in simple store
-int CircularQueue::countStore() {
+int MessageStore::countStore() {
     int i = 0;
 
-    for (i = 0; i < QUEUE_SIZE; i++)
+    for (i = 0; i < STORE_SIZE; i++)
         if (array[i][0] == '\0') {
             return i;
         }
 
-    return QUEUE_SIZE;
+    return STORE_SIZE;
+}
+
+
+char *MessageStore::getStore(int index) {
+
+    if (index < 0 || index >= STORE_SIZE)
+        return NULL;
+
+    return array[index];
 }
 
