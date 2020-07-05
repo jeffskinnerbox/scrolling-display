@@ -35,15 +35,17 @@ CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
 
-// ESP8266 libraries
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
 #include <ESP8266WiFi.h>
 
-// Arduino libraries
+// Arduino libraries (~/src/arduino/libraries)
+
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 
-// this project's include files
+// simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
 #include "credentials.h"
 
