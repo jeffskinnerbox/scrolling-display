@@ -280,6 +280,8 @@ void setup() {
     uint8_t cycle = 0;                            // message number being displayed
 
     Serial.begin(9600);
+    PRINT("\n-------------------------------------------------------\n\r");
+    INFO("Entered setup()...\n\r");
     INFO("Initializing scrolling display...\n\r");
 
     // initialize all your display messages to null
@@ -354,6 +356,9 @@ void setup() {
     putMsg("this message should fail to load");
     printMsg();
 
+    INFO("Exiting setup()...\n\r");
+    PRINT("\n-------------------------------------------------------\n\r");
+
 }
 
 
@@ -362,8 +367,10 @@ void loop() {
     static uint8_t cycle = 0;                            // message number being displayed
 
     if (P.displayAnimate()) {
-        if (msg[cycle][0] != '\0')
+        if (msg[cycle][0] != '\0') {
             P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+            INFOS("Message on Display: ", msg[cycle]);
+        }
         cycle = (cycle + 1) % ARRAY_SIZE(msg);    // prepare index into msg[] for next pass
     }
 
