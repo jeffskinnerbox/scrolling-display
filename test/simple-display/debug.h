@@ -1,56 +1,62 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.1.0
+Version:      0.2.0
 
-debugging routings that print trace messages on serial port
+DESCRIPTION:
+    Debugging routings that print trace messages on serial port
 
-The ANSI escape sequences set screen attributes, such as bold text,
-and color of foreground and background.
+REFERENCE MATERIALS:
+    The ANSI escape sequences set screen attributes, such as bold text,
+    and color of foreground and background.
 
-# Standard Colors
-'e[0;30m'           # Black
-'e[0;31m'           # Red
-'e[0;32m'           # Green
-'e[0;33m'           # Yellow
-'e[0;34m'           # Blue
-'e[0;35m'           # Purple
-'e[0;36m'           # Cyan
-'e[0;37m'           # White
+    Standard Colors
+        'e[0;30m'           # Black
+        'e[0;31m'           # Red
+        'e[0;32m'           # Green
+        'e[0;33m'           # Yellow
+        'e[0;34m'           # Blue
+        'e[0;35m'           # Purple
+        'e[0;36m'           # Cyan
+        'e[0;37m'           # White
 
-# Bold Colors
-'e[1;30m'           # Bold Black
-'e[1;31m'           # Bold Red
-'e[1;32m'           # Bold Green
-'e[1;33m'           # Bold Yellow
-'e[1;34m'           # Bold Blue
-'e[1;35m'           # Bold Purple
-'e[1;36m'           # Bold Cyan
-'e[1;37m'           # Bold White
+    Bold Colors
+        'e[1;30m'           # Bold Black
+        'e[1;31m'           # Bold Red
+        'e[1;32m'           # Bold Green
+        'e[1;33m'           # Bold Yellow
+        'e[1;34m'           # Bold Blue
+        'e[1;35m'           # Bold Purple
+        'e[1;36m'           # Bold Cyan
+        'e[1;37m'           # Bold White
 
-# Underline
-'e[4;30m'           # Underline Black
-'e[4;31m'           # Underline Red
-'e[4;32m'           # Underline Green
-'e[4;33m'           # Underline Yellow
-'e[4;34m'           # Underline Blue
-'e[4;35m'           # Underline Purple
-'e[4;36m'           # Underline Cyan
-'e[4;37m'           # Underline White
+    Underline
+        'e[4;30m'           # Underline Black
+        'e[4;31m'           # Underline Red
+        'e[4;32m'           # Underline Green
+        'e[4;33m'           # Underline Yellow
+        'e[4;34m'           # Underline Blue
+        'e[4;35m'           # Underline Purple
+        'e[4;36m'           # Underline Cyan
+        'e[4;37m'           # Underline White
 
-# Background Colors
-'e[40m'             # Background Black
-'e[41m'             # Background Red
-'e[42m'             # Background Green
-'e[43m'             # Background Yellow
-'e[44m'             # Background Blue
-'e[45m'             # Background Purple
-'e[46m'             # Background Cyan
-'e[47m'             # Background White
+    Background Colors
+        'e[40m'             # Background Black
+        'e[41m'             # Background Red
+        'e[42m'             # Background Green
+        'e[43m'             # Background Yellow
+        'e[44m'             # Background Blue
+        'e[45m'             # Background Purple
+        'e[46m'             # Background Cyan
+        'e[47m'             # Background White
 
-'\e[m'              # Color Reset
+    Other
+        '\e[m'              # Color Reset
+        '\e[1;37m\e[41m'    # Bold White on Red Background
 
-'\e[1;37m\e[41m'    # Bold White on Red Background
+CREATED BY:
+    jeffskinnerbox@yahoo.com
+
 ----------------------------------------------------------------------------- */
 
 #pragma once                 // compiler to skip subsequent includes of this file
