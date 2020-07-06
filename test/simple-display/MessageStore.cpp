@@ -30,10 +30,9 @@ CREATED BY:
 class MessageStore {
   private:
     // Circular Queue
-    int cir_size;                                   // size of the circular queue
-    int cir_rear, cir_front;                        // indexes to front and rear of the circular queue
-    //char cir_array[QUEUE_SIZE][BUF_SIZE];
-    char **cir_array = NULL;
+    int str_size, str_rear, str_front;       // size of and indexes for front & rear of the simple store
+    int cir_size, cir_rear, cir_front;       // size of and indexes for front & rear of the circular queue
+    char **cir_array = NULL;                 // memory used to store massages
 
     // Simple Store
     char array[STORE_SIZE][BUF_SIZE];
@@ -43,8 +42,8 @@ class MessageStore {
   public:
     // constructors & destructors for the class
     MessageStore(void);
-    ~MessageStore(void);
     //MessageStore(int queue_size, int store_size, int buf_size);
+    ~MessageStore(void);
 
     // Circular Queue
     void clearQueue();
@@ -97,6 +96,9 @@ MessageStore::MessageStore(void) {
 
     cir_front = cir_rear = -1;
     cir_size = 0;
+
+    str_front = str_rear = -1;
+    str_size = 0;
 
     char** cir_array = new char*[rows];
     if (rows) {
