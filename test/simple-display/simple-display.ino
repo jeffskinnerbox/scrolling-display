@@ -115,7 +115,7 @@ bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) 
     unsigned long tout;
 
     // attempt first connect to a WiFi network
-    PRINTS("\nAttempting connection to WiFi SSID ", ssid);
+    INFOS("Attempting connection to WiFi SSID ", ssid);
     WiFi.begin(ssid, password);
 
     // make subsequent connection attempts to wifi
@@ -123,14 +123,15 @@ bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) 
     while(WiFi.status() != WL_CONNECTED) {
         PRINT(".");
         if (millis() > tout) {
-            PRINTD("\n\rFailed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
+            ERRORD("Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
         delay(500);
     }
+    PRINT("\n\r");
 
-    PRINTS("\n\rSuccessfully connected to WiFi!  IP address is ", WiFi.localIP());
-    PRINTD("WiFi status exit code is ", WiFi.status());
+    INFOS("Successfully connected to WiFi!  IP address is ", WiFi.localIP());
+    INFOD("WiFi status exit code is ", WiFi.status());
 
     return true;
 }
@@ -138,7 +139,7 @@ bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) 
 
 // terminate the wifi connect
 void wifiTerminate() {
-    PRINTS("\nDisconnecting from WiFi with SSID ", WiFi.SSID());
+    INFOS("\nDisconnecting from WiFi with SSID ", WiFi.SSID());
 
     WiFi.disconnect();
 
@@ -148,18 +149,18 @@ void wifiTerminate() {
 
 // scan for nearby networks
 void wifiScan() {
-    PRINT("\nStarting Network Scan\n\r");
+    INFO("Starting Network Scan\n\r");
     byte numSsid = WiFi.scanNetworks();
 
     // print the list of networks seen
-    PRINTD("Total number of SSID found: ", numSsid);
+    INFOD("Total number of SSID found: ", numSsid);
 
     // print the name of each network found
     for (int thisNet = 0; thisNet<numSsid; thisNet++) {
-        PRINTS("   ", WiFi.SSID(thisNet));
+        INFOS("   ", WiFi.SSID(thisNet));
     }
 
-    PRINT("Network Scan Completed\n\r");
+    INFO("Network Scan Completed\n\r");
     PRINT("\n-------------------------------------------------------\n\r");
 }
 
@@ -206,10 +207,10 @@ bool putMsg(char *str) {
     index = indexMsg();
 
     if (index < 0) {
-        PRINT("\nFailed to add message to queue. Queue is full.\n\r");
+        WARNING("Failed to add message to queue. Queue is full.\n\r");
         return false;
     } else {
-        PRINT("\nSuccessfully adding message to queue.\n\r");
+        INFO("Successfully adding message to queue.\n\r");
         sprintf(msg[index], str);
         return true;
     }
@@ -223,11 +224,11 @@ void printMsg() {
     index = countMsg();
 
     if (index == 0) {
-        PRINT("\nMessage queue is empty.\n\r");
+        INFO("Message queue is empty.\n\r");
     } else {
-        PRINTD("Messages in msg queue: ", countMsg());
+        INFOD("Messages in msg queue: ", countMsg());
         for (int i = 0; i < index; i++)
-            PRINTS("\t", msg[i]);
+            INFOS("\t", msg[i]);
     }
 }
 
@@ -243,7 +244,7 @@ void errorHandler(int error) {
 
     switch(error) {
         case 1:
-            PRINT("\n\nCan't go on without WiFi connection.  Press reset twice to fix.\n\r");
+            ERROR("Can't go on without WiFi connection.  Press reset twice to fix.\n\r");
             clearMsg();
             putMsg("Can't go on without WiFi connection.");
             putMsg("Press reset twice to fix.");
@@ -259,12 +260,12 @@ void errorHandler(int error) {
                 yield();                          // prevent the watchdog timer doing a reboot
             }
 
-            PRINT("\nNothing can be done.  Doing an automatic restart\n\r");
+            ERROR("Nothing can be done.  Doing an automatic restart\n\r");
             ESP.reset();                          // nothing can be done so restart
             break;
         default:                                  // nothing can be done so restart
-            PRINTD("Unknown error code in errorHandler: ", error);
-            PRINT("\nNothing can be done.  Doing an automatic restart\n\r");
+            ERRORD("Unknown error code in errorHandler: ", error);
+            ERROR("Nothing can be done.  Doing an automatic restart\n\r");
             ESP.reset();
     }
 }
@@ -279,7 +280,7 @@ void setup() {
     uint8_t cycle = 0;                            // message number being displayed
 
     Serial.begin(9600);
-    PRINT("\n\n\rInitializing scrolling display...\n\r");
+    INFO("Initializing scrolling display...\n\r");
 
     // initialize all your display messages to null
     clearMsg();
@@ -302,7 +303,7 @@ void setup() {
     }
 
     // scan for wifi access points
-    PRINT("\n\n\rInitializing WiFi...\n\r");
+    INFO("Initializing WiFi...\n\r");
     wifiScan();
 
     // attempt to connect and initialise WiFi network
@@ -324,7 +325,7 @@ void setup() {
         errorHandler(1);
 
     // clear all old messages
-    PRINT("\n\n\rPopulating message queue with messages...\n\r");
+    INFO("Populating message queue with messages...\n\r");
     clearMsg();
     printMsg();
 
@@ -352,6 +353,7 @@ void setup() {
     // 6th message is gibberish
     putMsg("this message should fail to load");
     printMsg();
+
 }
 
 
