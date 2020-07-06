@@ -334,28 +334,23 @@ void setup() {
     // 1st message is the wifi IP address
     sprintf(string, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     putMsg(string);
-    printMsg();
 
     // 2nd message is gibberish
     putMsg("The rain falls mainly on the plane in Spain");
-    printMsg();
 
     // 3rd message is gibberish
     putMsg("What is the weather outside right now?  What about inside?");
-    printMsg();
 
     // 4th message is gibberish
     putMsg("short message");
-    printMsg();
 
     // 5th message is gibberish
     putMsg("loooooooooooong message");
-    printMsg();
 
     // 6th message is gibberish
     putMsg("this message should fail to load");
-    printMsg();
 
+    printMsg();
     INFO("Exiting setup()...\n\r");
     PRINT("\n-------------------------------------------------------\n\r");
 
