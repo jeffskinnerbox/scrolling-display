@@ -48,6 +48,7 @@ CREATED BY:
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
 #include "credentials.h"
+#include "MessageStore.h"
 
 
 #define ONE_SECOND    1000UL        // milliseconds in one second
@@ -102,9 +103,9 @@ const char *password = WIFIPASS;
 #define QUEUE_SIZE  5         // number of messages stored in a queue
 #define BUF_SIZE    512       // max number of characters in a message
 
-char msg[QUEUE_SIZE][BUF_SIZE];
-//msg = MessageStore();
-//msg = MessageStore(QUEUE_SIZE, STORE_SIZE, BUF_SIZE);
+//char msg[QUEUE_SIZE][BUF_SIZE];
+MessageStore Msg = MessageStore();
+//Msg = MessageStore(QUEUE_SIZE, STORE_SIZE, BUF_SIZE);
 
 
 
@@ -123,6 +124,7 @@ bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) 
     while(WiFi.status() != WL_CONNECTED) {
         PRINT(".");
         if (millis() > tout) {
+            PRINT("\n\r");
             ERRORD("Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
@@ -166,70 +168,45 @@ void wifiScan() {
 
 
 
-//------------------------ Display Messages Management -------------------------
+//------------------------------ Helper Routines -------------------------------
 
-// initialize all your display messages to null
-void clearMsg() {
-    for (int i = 0; i < QUEUE_SIZE; i++)
-        msg[i][0] = '\0';
-}
+void loadmsg(void) {
 
+    char string[BUF_SIZE];
 
-// return index of next empty message in queue, return -1 if queue is full
-int indexMsg() {
+    // clear all old messages
+    INFO("Populating message queue with messages...\n\r");
+    Msg.clearStore();
+    Msg.printStore();
 
-    for (int i = 0; i < QUEUE_SIZE; i++)
-        if (msg[i][0] == '\0') {
-            return i;
-        }
+    // 1st message is the wifi IP address
+    sprintf(string, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+    Msg.addStore(string, 0);
+    Msg.printStore();
 
-    return -1;
-}
+    // 2nd message is gibberish
+    Msg.addStore("The rain falls mainly on the plane in Spain", 1);
+    Msg.printStore();
 
+    // 3rd message is gibberish
+    Msg.addStore("What is the weather outside right now?  What about inside?", 2);
+    Msg.printStore();
 
-// return the number of messages in queue
-int countMsg() {
-    int i = 0;
+    // 4th message is gibberish
+    Msg.addStore("short message", 3);
+    Msg.printStore();
 
-    for (i = 0; i < QUEUE_SIZE; i++)
-        if (msg[i][0] == '\0') {
-            return i;
-        }
+    // 5th message is gibberish
+    Msg.addStore("loooooooooooong message", 4);
+    Msg.printStore();
 
-    return QUEUE_SIZE;
-}
+    // 6th message is gibberish
+    Msg.addStore("this message should fail to load", 5);
+    Msg.printStore();
 
+    INFO("Exiting setup()...\n\r");
+    PRINT("\n-------------------------------------------------------\n\r");
 
-// put a message on the bottom of the msg queue
-bool putMsg(char *str) {
-    int index;
-
-    index = indexMsg();
-
-    if (index < 0) {
-        WARNING("Failed to add message to queue. Queue is full.\n\r");
-        return false;
-    } else {
-        INFO("Successfully adding message to queue.\n\r");
-        sprintf(msg[index], str);
-        return true;
-    }
-}
-
-
-// print all the messages
-void printMsg() {
-    int index;
-
-    index = countMsg();
-
-    if (index == 0) {
-        INFO("Message queue is empty.\n\r");
-    } else {
-        INFOD("Messages in msg queue: ", countMsg());
-        for (int i = 0; i < index; i++)
-            INFOS("\t", msg[i]);
-    }
 }
 
 
@@ -241,31 +218,33 @@ void errorHandler(int error) {
     int i = 0;
     unsigned long tout;                           // time-out time
     uint8_t cycle = 0;                            // message number being displayed
+    int size = Msg.sizeStore();
 
     switch(error) {
         case 1:
-            ERROR("Can't go on without WiFi connection.  Press reset twice to fix.\n\r");
-            clearMsg();
-            putMsg("Can't go on without WiFi connection.");
-            putMsg("Press reset twice to fix.");
+            FATAL("Can't go on without WiFi connection.  Press reset twice to fix.\n\r");
+            Msg.clear();
+            Msg.addStore("Can't go on without WiFi connection.", 0);
+            Msg.addStore("Press reset twice to fix.", 1);
 
             tout = ONE_MINUTE + millis();         // milliseconds of time to display message
             while (millis() < tout) {
                 if (P.displayAnimate()) {
-                    if (msg[cycle][0] != '\0')
-                        P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
-
-                    cycle = (cycle + 1) % ARRAY_SIZE(msg); // prepare index into msg[] for next pass
+                    if (Msg.getStore(cycle)[0] != '\0')
+                        P.displayText(Msg.getStore(cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+                    cycle = (cycle + 1) % size; // prepare index into msg[] for next pass
                 }
                 yield();                          // prevent the watchdog timer doing a reboot
             }
 
-            ERROR("Nothing can be done.  Doing an automatic restart\n\r");
-            ESP.reset();                          // nothing can be done so restart
+            // nothing can be done so restart
+            FATAL("Nothing can be done.  Doing an automatic restart.\n\r");
+            ESP.reset();
             break;
-        default:                                  // nothing can be done so restart
+        default:
+            // nothing can be done so restart
             ERRORD("Unknown error code in errorHandler: ", error);
-            ERROR("Nothing can be done.  Doing an automatic restart\n\r");
+            FATAL("Nothing can be done.  Doing an automatic restart.\n\r");
             ESP.reset();
     }
 }
@@ -278,6 +257,7 @@ void setup() {
     char string[BUF_SIZE];
     unsigned long tout;                           // time-out time
     uint8_t cycle = 0;                            // message number being displayed
+    int size = Msg.sizeStore();
 
     Serial.begin(9600);
     PRINT("\n-------------------------------------------------------\n\r");
@@ -285,7 +265,7 @@ void setup() {
     INFO("Initializing scrolling display...\n\r");
 
     // initialize all your display messages to null
-    clearMsg();
+    Msg.clearStore();
 
     // initialize the display
     P.begin();                                           // initialize the display and data object
@@ -310,63 +290,48 @@ void setup() {
 
     // attempt to connect and initialise WiFi network
     if (wifiConnect(ssid, password, WIFITIME)) {         // connect to wifi
-        clearMsg();
+        Msg.clearStore();
         sprintf(string, "WiFi connected successfully to SSID %s.", ssid);
-        putMsg(string);
+        Msg.addStore(string, 0);
         //tout = THREE_SECOND + millis();                  // milliseconds of time to display message
         tout = ONE_SECOND + millis();                  // milliseconds of time to display message
         while (millis() < tout) {
             if (P.displayAnimate()) {
+                if (Msg.getStore(cycle)[0] != '\0')
+                    P.displayText(Msg.getStore(cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+                cycle = (cycle + 1) % size; // prepare index into msg[] for next pass
+/*
                 if (msg[cycle][0] != '\0')
                     P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
                  cycle = (cycle + 1) % ARRAY_SIZE(msg);  // prepare index into msg[] for next pass
+*/
             }
             yield();                                     // prevent the watchdog timer doing a reboot
         }
     } else
         errorHandler(1);
 
-    // clear all old messages
-    INFO("Populating message queue with messages...\n\r");
-    clearMsg();
-    printMsg();
-
-    // 1st message is the wifi IP address
-    sprintf(string, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-    putMsg(string);
-
-    // 2nd message is gibberish
-    putMsg("The rain falls mainly on the plane in Spain");
-
-    // 3rd message is gibberish
-    putMsg("What is the weather outside right now?  What about inside?");
-
-    // 4th message is gibberish
-    putMsg("short message");
-
-    // 5th message is gibberish
-    putMsg("loooooooooooong message");
-
-    // 6th message is gibberish
-    putMsg("this message should fail to load");
-
-    printMsg();
-    INFO("Exiting setup()...\n\r");
-    PRINT("\n-------------------------------------------------------\n\r");
-
+    loadmsg();
 }
 
 
 void loop() {
 
     static uint8_t cycle = 0;                            // message number being displayed
+    static int size = Msg.sizeStore();
 
     if (P.displayAnimate()) {
+/*
         if (msg[cycle][0] != '\0') {
             P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
             INFOS("Message on Display: ", msg[cycle]);
         }
         cycle = (cycle + 1) % ARRAY_SIZE(msg);    // prepare index into msg[] for next pass
+*/
+        if (Msg.getStore(cycle)[0] != '\0')
+            P.displayText(Msg.getStore(cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+        cycle = (cycle + 1) % size; // prepare index into msg[] for next pass
+        //cycle = (cycle + 1) % Msg.sizeStore(); // prepare index into msg[] for next pass
     }
 
 }

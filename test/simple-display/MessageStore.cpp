@@ -17,179 +17,160 @@ CREATED BY:
 
 #pragma once                 // compiler to skip subsequent includes of this file
 
-#include <Arduino.h>
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
 
-#define QUEUE_SIZE  5         // number of messages stored in a queue
-#define STORE_SIZE  5         // number of messages stored in a queue
-#define BUF_SIZE    512       // max number of characters in a message
+// Arduino libraries (~/src/arduino/libraries)
+#include <Arduino.h>
 
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
+#include "MessageStore.h"
+
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 
-class MessageStore {
-  private:
-    // Circular Queue
-    int str_size, str_rear, str_front;       // size of and indexes for front & rear of the simple store
-    int cir_size, cir_rear, cir_front;       // size of and indexes for front & rear of the circular queue
-    char **cir_array = NULL;                 // memory used to store massages
-
-    // Simple Store
-    char array[STORE_SIZE][BUF_SIZE];
-    int indexStore(void);
-    int countStore(void);
-
-  public:
-    // constructors & destructors for the class
-    MessageStore(void);
-    //MessageStore(int queue_size, int store_size, int buf_size);
-    ~MessageStore(void);
-
-    // Circular Queue
-    void clearQueue();
-    void printQueue();
-    void addQueue(char *);
-    char *getQueue(int);
-
-    // Simple Store
-    void clearStore();
-    void printStore();
-    bool addStore(char *);
-    bool addStore(char *, int);
-    char *getStore(int);
-    bool deleteStore(int);
-};
+#define QUEUE_SIZE  5         // defult size of message queue
+#define STORE_SIZE  5         // defult size of message store
+#define BUF_SIZE    80        // defult max number of characters of a message
 
 
 
 // ------------------------ Constructors & Destructors -------------------------
 
-/*
-// Constructor to create Circular queue
+
+// Constructor to create MessageStore
 MessageStore::MessageStore(void) {
 
-    cir_front = cir_rear = -1;
-    cir_size = 0;
+    int rows = STORE_SIZE + QUEUE_SIZE;
+    int cols = BUF_SIZE + 1;               // adding 1 to include null character at end of string
 
-    cir_array = new char*[QUEUE_SIZE];
-    for (int i = 0; i < QUEUE_SIZE; i++)
-        cir_array[i] = new char[BUF_SIZE];
+    msg_size = BUF_SIZE;
+    store_size = STORE_SIZE;
+    store_top = 0;           // simple store indexes from 0 to store_size
 
-}
+    queue_size = QUEUE_SIZE;
+    queue_top = STORE_SIZE;           // queue indexes from queue_top to store_size + queue_size
+    queue_front = queue_rear = -1;
 
-
-// Destructor to create Circular queue
-MessageStore::~MessageStore(void) {
-
-    for (int i = 0; i < QUEUE_SIZE; i++)
-        delete [] cir_array[i];
-    delete [] cir_array;
-}
-*/
-
-
-// Constructor to create Circular queue
-MessageStore::MessageStore(void) {
-
-    int rows = QUEUE_SIZE;
-    int cols = BUF_SIZE;
-
-    cir_front = cir_rear = -1;
-    cir_size = 0;
-
-    str_front = str_rear = -1;
-    str_size = 0;
-
-    char** cir_array = new char*[rows];
+    // create array used to store and queue messages
+    array = new char*[rows];
     if (rows) {
-        cir_array[0] = new char[rows * cols];
+        array[0] = new char[rows * cols];
         for (int i = 1; i < rows; ++i)
-            cir_array[i] = cir_array[0] + i * cols;
+            array[i] = array[0] + i * cols;
     }
 
 }
 
 
-// Destructor to create Circular queue
+// Destructor to delete MessageStore
 MessageStore::~MessageStore(void) {
 
-    int rows = QUEUE_SIZE;
-    int cols = BUF_SIZE;
+    int rows = store_size + queue_size;
 
-    if (rows) delete [] cir_array[0];
-    delete [] cir_array;
+    // delete array used to store and queue messages
+    if (rows) delete [] array[0];
+    delete [] array;
 
 }
+
 
 
 // ------------------------ Methods for Circular Queue -------------------------
 
 // Function to clear the contents of the circular queue
 void MessageStore::clearQueue(void) {
-    for (int i = 0; i < QUEUE_SIZE; i++)
-        cir_array[i][0] = '\0';
+    for (int i = queue_top; i < queue_top + queue_size; i++)
+        array[i][0] = '\0';
 
-    cir_size = 0;
-    cir_front = cir_rear = -1;
+    queue_front = queue_rear = -1;
+}
+
+
+// return index of next empty message in queue, return -1 if queue is full
+int MessageStore::indexQueue() {
+
+    for (int i = queue_top; i < queue_top + queue_size; i++)
+        if (array[i][0] == '\0') {
+            return i;
+        }
+
+    return -1;
 }
 
 
 // Function prints the elements of Circular Queue
 void MessageStore::printQueue(void) {
 
-    // print headings
-    if (cir_front == -1) {
-        PRINTD("No elements in Circular Queue: ", cir_size);
-    } else
-        PRINTD("Elements in Circular Queue are: ", cir_size);
+    int cnt;
+
+    // count non-null elements
+    cnt = 0;
+    for (int i = queue_top; i < queue_top + queue_size; i++)
+        if (array[i][0] != '\0')
+                cnt++;
 
     // print controlling parameters
-    PRINTD("\tcir_size = ", cir_size);
-    PRINTD("\tcir_front = ", cir_front);
-    PRINTD("\tcir_rear = ", cir_rear);
+    INFOD("Number of elements in Queue are: ", cnt);
+    INFOD("\tqueue_top = ", queue_top);
+    INFOD("\tqueue_size = ", queue_size);
+    INFOD("\tqueue_front = ", queue_front);
+    INFOD("\tqueue_rear = ", queue_rear);
 
-    // print the circular queue contents
-    if (cir_front == -1)                               // circular queue is empty
-        ;
-    else if (cir_rear >= cir_front) {                  // circular queue doesn't loop
-        for (int i = cir_front; i <= cir_rear; i++)
-            PRINTS("\t",cir_array[i]);
-    } else {                                           // circular queue loop around
-        for (int i = cir_front; i < cir_size; i++)
-            PRINTS("\t", cir_array[i]);
-        for (int i = 0; i <= cir_rear; i++)
-            PRINTS("\t", cir_array[i]);
-    }
+    // print the queue contents
+    for (int i = queue_top; i < queue_top + queue_size; i++)
+        if (array[i][0] != '\0')
+            INFOS("\t", array[i]);
 }
 
 
 // Function to add element to Circular Queue
-void MessageStore::addQueue(char *value) {
+bool MessageStore::addQueue(char *str) {
 
-    if ((cir_front == 0 && cir_rear == cir_size-1) || (cir_rear == (cir_front-1)%(cir_size-1))) {
-        PRINT("Circular Queue is full. Removing element from end of message queue.\n\r");
-        return;
-    } else if (cir_front == -1) {     // (room in queue) queue is empty, so insert into first element
-        cir_front = cir_rear = 0;
-        sprintf(cir_array[cir_front], value);
-    } else if (cir_rear == cir_size-1 && cir_front != 0) {   // (room in queue) rear is at bottom but front is > 0
-        cir_rear = 0;
-        sprintf(cir_array[cir_rear], value);
-    } else {
-        cir_rear++;
-        sprintf(cir_array[cir_rear], value);
+    // check size of message
+    if (int size = strlen(str) > msg_size) {
+        ERRORD("Attempting to add message longer than message buffer. size = ", size);
+        INFOD("Message buffer size: msg_size = ", msg_size);
+        return false;
     }
 
+    if ((queue_front == queue_top && queue_rear == queue_size - 1) || (queue_rear == (queue_front - 1)%(queue_size - 1))) {
+        INFO("Circular Queue is full. Removing element from end of message queue.\n\r");
+    } else if (queue_front == -1) {     // (room in queue) queue is empty, so insert into first element
+        queue_front = queue_rear = queue_top;
+        sprintf(array[queue_front], str);
+    } else if (queue_rear == queue_size - 1 && queue_front != queue_top) {   // (room in queue) rear is at bottom but front is > 0
+        queue_rear = queue_top;
+        sprintf(array[queue_rear], str);
+    } else {
+        queue_rear++;
+        sprintf(array[queue_rear], str);
+    }
+
+    return true;
+
 }
 
 
-char *MessageStore::getQueue(int index) {
+// return the number of messages in queue
+int MessageStore::countQueue() {
 
-    if (index < 0 || index >= QUEUE_SIZE)
-        return NULL;
+    int cnt = 0;
 
-    return cir_array[index];
+    for (int i = queue_top; i < queue_top + queue_size; i++)
+        if (array[i][0] != '\0') {
+            cnt++;
+        }
+
+    return cnt;
 }
+
+
+int MessageStore::sizeQueue() {
+
+    return queue_size;
+}
+
 
 
 // -------------------------- Methods for Simple Store -------------------------
@@ -197,9 +178,21 @@ char *MessageStore::getQueue(int index) {
 // Function to clear the contents of the simple store
 void MessageStore::clearStore(void) {
 
-    for (int i = 0; i < STORE_SIZE; i++)
+    for (int i = store_top; i < store_top + store_size; i++)
         array[i][0] = '\0';
 
+}
+
+
+// return index of next empty message in store, return -1 if simple store is full
+int MessageStore::indexStore() {
+
+    for (int i = store_top; i < store_top + store_size; i++)
+        if (array[i][0] == '\0') {
+            return i;
+        }
+
+    return -1;
 }
 
 
@@ -209,94 +202,158 @@ void MessageStore::printStore(void) {
 
     //count non-null elements
     cnt = 0;
-    for (i = 0; i < STORE_SIZE; i++)
+    for (i = store_top; i < store_top + store_size; i++)
         if (array[i][0] != '\0')
                 cnt++;
 
     // print headings
-    PRINTD("Elements in Simple Store are: ", cnt);
+    INFOD("Number of elements in Simple Store are: ", cnt);
+    INFOD("\tstore_top = ", store_top);
+    INFOD("\tstore_size = ", store_size);
 
     // print the simple store contents
-    for (int i = 0; i < STORE_SIZE; i++)
+    for (int i = store_top; i < store_top + store_size; i++)
         if (array[i][0] != '\0')
-            PRINTS("\t", array[i]);
+            INFOS("\t", array[i]);
 }
 
 
-// Function to add element to simple store
+// Function to add element anywhere into simple store
 bool MessageStore::addStore(char *str) {
 
     int index = indexStore();
 
-    if (index < 0) {
-        PRINT("\nFailed to add message to Store. Queue is full.\n\r");
+    // check size of message
+    if (int size = strlen(str) > msg_size) {
+        ERRORD("Attempting to add message longer than message buffer. size = ", size);
+        INFOD("Message buffer size: msg_size = ", msg_size);
+        return false;
+    }
+
+    if (index < store_top || index > store_top + store_size - 1) {
+        ERRORD("Failed to add message to Store. Bad index.  index = ", index);
+        return false;
+    } else if (index < 0) {
+        INFO("Failed to add message to Store. Store is full.\n\r");
         return false;
     } else {
-        PRINT("\nSuccessfully adding message to Store.\n\r");
+        INFO("Successfully adding message to Store.\n\r");
         sprintf(array[index], str);
-        return true;
     }
+
+    //EXEC(printStore())
+    return true;
 }
 
 
-// Function to add element to simple store
+// Function to add element to specific index of simple store
 bool MessageStore::addStore(char *str, int index) {
 
-    if (index < 0 || index > STORE_SIZE) {
-        PRINT("\nFailed to add message to Store. Bad index.\n\r");
+    // check size of message
+    if (int size = strlen(str) > msg_size) {
+        ERRORD("Attempting to add message longer than message buffer. size = ", size);
+        INFOD("Message buffer size: msg_size = ", msg_size);
+        return false;
+    }
+
+    if (index < store_top || index > store_top + store_size - 1) {
+        ERRORD("Failed to add message to Store. Bad index.  index = ", index);
         return false;
     } else {
-        PRINT("\nSuccessfully adding message to Store.\n\r");
+        INFO("Successfully adding message to Store.\n\r");
         sprintf(array[index], str);
-        return true;
     }
+
+    //EXEC(printStore())
+    return true;
+
 }
 
 
 // Function to delete element from simple store
 bool MessageStore::deleteStore(int index) {
 
-    if (index < 0 || index > STORE_SIZE) {
-        PRINT("\nFailed to delete message from Store. Bad index.\n\r");
+    if (index < store_top || index > store_top + store_size) {
+        ERRORD("Failed to delete message from Store. Bad index. index = ", index);
         return false;
     } else {
-        PRINT("\nSuccessfully deleted message from Store.\n\r");
+        INFO("Successfully deleted message from Store.\n\r");
         array[index][0] = '\0';
         return true;
     }
 }
 
 
-// return index of next empty message in store, return -1 if simple store is full
-int MessageStore::indexStore() {
-
-    for (int i = 0; i < STORE_SIZE; i++)
-        if (array[i][0] == '\0') {
-            return i;
-        }
-
-    return -1;
-}
-
 
 // return the number of messages in simple store
 int MessageStore::countStore() {
-    int i = 0;
 
-    for (i = 0; i < STORE_SIZE; i++)
-        if (array[i][0] == '\0') {
-            return i;
+    int cnt = 0;
+
+    for (int i = store_top; i < store_top + store_size; i++)
+        if (array[i][0] != '\0') {
+            cnt++;
         }
 
-    return STORE_SIZE;
+    return cnt;
 }
 
 
 char *MessageStore::getStore(int index) {
 
-    if (index < 0 || index >= STORE_SIZE)
+    if (index < store_top || index >= store_top + store_size) {
+        ERRORD("Failed to get message from Store. Bad index. index = ", index);
         return NULL;
+    }
 
     return array[index];
+}
+
+
+int MessageStore::sizeStore() {
+
+    return store_size;
+}
+
+
+
+// --------------------- Methods for Simple Store and Queue --------------------
+
+int MessageStore::size(void) {
+    return store_size + queue_size;
+}
+
+
+void MessageStore::clear(void) {
+    for (int i = store_top; i < store_size + queue_size; i++)
+        array[i][0] = '\0';
+
+    queue_front = queue_rear = -1;
+}
+
+
+void MessageStore::print(void) {
+
+    int cnt;
+
+    // count non-null elements
+    cnt = 0;
+    for (int i = store_top; i < store_size + queue_size; i++)
+        if (array[i][0] != '\0')
+                cnt++;
+
+    // print controlling parameters
+    INFOD("Number of elements in MessageStore are: ", cnt);
+    INFOD("\tstore_top = ", store_top);
+    INFOD("\tstore_size = ", store_size);
+    INFOD("\tqueue_top = ", queue_top);
+    INFOD("\tqueue_size = ", queue_size);
+    INFOD("\tqueue_front = ", queue_front);
+    INFOD("\tqueue_rear = ", queue_rear);
+
+    // print the queue contents
+    for (int i = store_top; i < store_size + queue_size; i++)
+        if (array[i][0] != '\0')
+            INFOS("\t", array[i]);
 }
 

@@ -73,6 +73,9 @@ CREATED BY:
     #define PRINTC(s, v)   { Serial.print(F(s)); Serial.println((char)v); }    // Print a string followed by char
     #define PRINTS(s, v)   { Serial.print(F(s)); Serial.println(v); }          // Print a string followed by string
 
+    #define EXEC(s)        { s; }
+    #define FATAL(s)       { Serial.print(F("\e[1;37m\e[41mFATAL:   \e[m")); PRINT(s) }
+
     #define INFO(s)        { Serial.print(F("\e[1;32mINFO:    \e[m")); PRINT(s) }
     #define ERROR(s)       { Serial.print(F("\e[1;31mERROR:   \e[m")); PRINT(s) }
     #define WARNING(s)     { Serial.print(F("\e[1;33mWARNING: \e[m")); PRINT(s) }
@@ -103,6 +106,9 @@ CREATED BY:
     #define PRINTB(s, v)
     #define PRINTC(s, v)
     #define PRINTS(s, v)
+
+    #define EXEC(s)
+    #define FATAL(s)
 
     #define INFO(s)
     #define ERROR(s)
