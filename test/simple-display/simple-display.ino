@@ -100,12 +100,11 @@ const char *password = WIFIPASS;
 
 
 // Global message buffers shared by Wifi and Scrolling functions
-#define QUEUE_SIZE  5         // number of messages stored in a queue
-#define BUF_SIZE    512       // max number of characters in a message
+//#define QUEUE_SIZE  5         // number of messages stored in a queue
+//#define BUF_SIZE    512       // max number of characters in a message
 
-//char msg[QUEUE_SIZE][BUF_SIZE];
 MessageStore Msg = MessageStore();
-//Msg = MessageStore(QUEUE_SIZE, STORE_SIZE, BUF_SIZE);
+//MessageStore Msg = MessageStore(5, 5, 80);
 
 
 
@@ -170,6 +169,7 @@ void wifiScan() {
 
 //------------------------------ Helper Routines -------------------------------
 
+/*
 void loadmsg(void) {
 
     char string[BUF_SIZE];
@@ -208,30 +208,32 @@ void loadmsg(void) {
     PRINT("\n-------------------------------------------------------\n\r");
 
 }
-
+*/
 
 
 //--------------------- Error Message Handler for Display ----------------------
 
 // handle errors by displaying a code and then restart
 void errorHandler(int error) {
+
     int i = 0;
     unsigned long tout;                           // time-out time
-    uint8_t cycle = 0;                            // message number being displayed
-    int size = Msg.sizeStore();
+    int cycle = 0;
+    int top = Msg.topQueue();
+    int size = Msg.sizeQueue();
 
     switch(error) {
         case 1:
             FATAL("Can't go on without WiFi connection.  Press reset twice to fix.\n\r");
             Msg.clear();
-            Msg.addStore("Can't go on without WiFi connection.", 0);
-            Msg.addStore("Press reset twice to fix.", 1);
+            Msg.addQueue("Can't go on without WiFi connection.");
+            Msg.addQueue("Press reset twice to fix.");
 
             tout = ONE_MINUTE + millis();         // milliseconds of time to display message
             while (millis() < tout) {
                 if (P.displayAnimate()) {
-                    if (Msg.getStore(cycle)[0] != '\0')
-                        P.displayText(Msg.getStore(cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+                    if (Msg.getQueue(top + cycle)[0] != '\0')
+                        P.displayText(Msg.getQueue(top + cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
                     cycle = (cycle + 1) % size; // prepare index into msg[] for next pass
                 }
                 yield();                          // prevent the watchdog timer doing a reboot
@@ -250,14 +252,68 @@ void errorHandler(int error) {
 }
 
 
+void loadmsg(void) {
+
+    char string[BUF_SIZE];
+
+    // clear all old messages
+    INFO("Populating message queue with messages...\n\r");
+    Msg.clearQueue();
+    Msg.printQueue();
+
+    // 1st message in simple store is the wifi IP address
+    sprintf(string, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+    Msg.addStore(string);
+    Msg.printStore();
+
+    // 1st message is gibberish
+    Msg.addQueue("#1 message in circular queue!!");
+    Msg.printQueue();
+
+    // 2nd message is gibberish
+    Msg.addQueue("#2 The rain falls mainly on the plane in Spain");
+    Msg.printQueue();
+
+    // 3rd message is gibberish
+    Msg.addQueue("#3 What is the weather outside right now?  What about inside?");
+    Msg.printQueue();
+    delay(2000);
+
+    // 4th message is gibberish
+    Msg.addQueue("#4 short message");
+    Msg.printQueue();
+    delay(2000);
+
+    // 5th message is gibberish
+    Msg.addQueue("#5 loooooooooooong message");
+    Msg.printQueue();
+    delay(2000);
+
+    // 6th message is gibberish
+    Msg.addQueue("#6 Push off the oldest message");
+    Msg.printQueue();
+    delay(2000);
+
+    // 7th message is gibberish
+    Msg.addQueue("#7 This message should push off the next oldest message");
+    Msg.printQueue();
+    delay(2000);
+
+    INFO("Exiting setup()...\n\r");
+    PRINT("\n-------------------------------------------------------\n\r");
+
+}
+
+
 
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
     char string[BUF_SIZE];
     unsigned long tout;                           // time-out time
-    uint8_t cycle = 0;                            // message number being displayed
-    int size = Msg.sizeStore();
+    int cycle = 0;                                // message number being displayed
+    int top = Msg.topQueue();
+    int size = Msg.sizeQueue();
 
     Serial.begin(9600);
     PRINT("\n-------------------------------------------------------\n\r");
@@ -265,7 +321,7 @@ void setup() {
     INFO("Initializing scrolling display...\n\r");
 
     // initialize all your display messages to null
-    Msg.clearStore();
+    Msg.clearQueue();
 
     // initialize the display
     P.begin();                                           // initialize the display and data object
@@ -288,25 +344,21 @@ void setup() {
     INFO("Initializing WiFi...\n\r");
     wifiScan();
 
+    Msg.clear();
+
     // attempt to connect and initialise WiFi network
-    if (wifiConnect(ssid, password, WIFITIME)) {         // connect to wifi
-        Msg.clearStore();
+    if (wifiConnect(ssid, password, WIFITIME)) {       // connecting to wifi
         sprintf(string, "WiFi connected successfully to SSID %s.", ssid);
-        Msg.addStore(string, 0);
-        //tout = THREE_SECOND + millis();                  // milliseconds of time to display message
+        Msg.addQueue(string);
+        //tout = THREE_SECOND + millis();              // milliseconds of time to display message
         tout = ONE_SECOND + millis();                  // milliseconds of time to display message
         while (millis() < tout) {
             if (P.displayAnimate()) {
-                if (Msg.getStore(cycle)[0] != '\0')
-                    P.displayText(Msg.getStore(cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
-                cycle = (cycle + 1) % size; // prepare index into msg[] for next pass
-/*
-                if (msg[cycle][0] != '\0')
-                    P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
-                 cycle = (cycle + 1) % ARRAY_SIZE(msg);  // prepare index into msg[] for next pass
-*/
+                if (Msg.getQueue(top + cycle)[0] != '\0')
+                    P.displayText(Msg.getQueue(top + cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+                cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
             }
-            yield();                                     // prevent the watchdog timer doing a reboot
+            yield();                                   // prevent the watchdog timer doing a reboot
         }
     } else
         errorHandler(1);
@@ -317,21 +369,14 @@ void setup() {
 
 void loop() {
 
-    static uint8_t cycle = 0;                            // message number being displayed
-    static int size = Msg.sizeStore();
+    static int cycle = 0;                      // message number being displayed
+    static int top = Msg.topQueue();
+    static int size = Msg.sizeQueue();
 
     if (P.displayAnimate()) {
-/*
-        if (msg[cycle][0] != '\0') {
-            P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
-            INFOS("Message on Display: ", msg[cycle]);
-        }
-        cycle = (cycle + 1) % ARRAY_SIZE(msg);    // prepare index into msg[] for next pass
-*/
-        if (Msg.getStore(cycle)[0] != '\0')
-            P.displayText(Msg.getStore(cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
-        cycle = (cycle + 1) % size; // prepare index into msg[] for next pass
-        //cycle = (cycle + 1) % Msg.sizeStore(); // prepare index into msg[] for next pass
+        if (Msg.getQueue(top + cycle)[0] != '\0')
+            P.displayText(Msg.getQueue(top + cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+        cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 
 }

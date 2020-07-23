@@ -15,14 +15,20 @@ CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
 
-#pragma once                 // compiler to skip subsequent includes of this file
+
+#pragma once                        // compiler to skip subsequent includes of this file
+
+#define STORE_SIZE  5               // default size of message store
+#define QUEUE_SIZE  5               // default size of message queue
+#define BUF_SIZE    80              // default max number of characters of a message
 
 class MessageStore {
   private:
     int store_size, store_top;      // size of and index into top of simple store
     int queue_size, queue_top;      // size of and index into top of queue
     int queue_rear, queue_front;    // size of and indexes for front & rear of the circular queue
-    int msg_size;                   // total size of the message array (store + queue)
+    int total_size;                 // total size of the message array (store + queue)
+    int buffer_size;                // size of the buffer for a message
     char **array = NULL;            // memory array used to store massages
 
     // private methods for Simple Store
@@ -32,6 +38,8 @@ class MessageStore {
     // private methods for Queue
     int indexQueue(void);
     int countQueue(void);
+    bool enQueue(char *);
+    char *deQueue(void);
 
   public:
     // constructors & destructors for the class
@@ -41,12 +49,15 @@ class MessageStore {
 
     // public methods for Circular Queue
     int sizeQueue();
+    int topQueue();
     void clearQueue();
     void printQueue();
+    char *getQueue(int);
     bool addQueue(char *);
 
     // public methods for Simple Store
     int sizeStore();
+    int topStore();
     void clearStore();
     void printStore();
     char *getStore(int);
@@ -54,7 +65,7 @@ class MessageStore {
     bool addStore(char *, int);
     bool deleteStore(int);
 
-    // public methods for Queue and Store
+    // public methods for MessageStore
     int size();
     void clear();
     void print();
