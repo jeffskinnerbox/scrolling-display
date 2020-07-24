@@ -49,6 +49,7 @@ CREATED BY:
 #include "debug.h"
 #include "credentials.h"
 #include "MessageStore.h"
+#include "WiFiTools.h"
 
 
 #define ONE_SECOND    1000UL        // milliseconds in one second
@@ -57,7 +58,6 @@ CREATED BY:
 #define ONE_MINUTE    60000UL       // milliseconds in one minute
 #define ONE_HOUR      3600000UL     // milliseconds in one hour
 #define ONE_DAY       85400000UL    // milliseconds in one day
-#define WIFITIME      10000         // attempt to connect with wifi for 10 seconds then abandon
 
 // display speeds, intensity, etc.
 #define MAX_DEVICES   24    // number of dot matrix modules
@@ -75,16 +75,6 @@ CREATED BY:
 #define DATA_PIN  D7    // or MOSI
 #define CS_PIN    D8    // or SS
 
-// Scrolling parameters
-//uint8_t frameDelay = FRAMEDELAY;
-//textEffect_t scrollEffect = PA_SCROLL_LEFT;
-
-// Parola object constructor for SPI hardware interface
-//MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
-
-// Parola object constructor for arbitrary hardware interface
-MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
-
 // display text effects
 const textPosition_t scrollAlign = PA_CENTER;        // how to align the text (e.g. PA_LEFT)
 const textEffect_t scrollEffectIn = PA_SCROLL_UP;    // direction of scrolling (e.g. PA_SCROLL_LEFT)
@@ -94,121 +84,18 @@ const uint8_t scrollSpeed = SCROLL_SPEED;            // frame delay value
 const uint16_t scrollPause = PAUSE_TIME;             // ms of pause after finished displaying message
 
 
-// credentials for wifi network
-const char *ssid = WIFISSID;
-const char *password = WIFIPASS;
 
-
-// Global message buffers shared by Wifi and Scrolling functions
-//#define QUEUE_SIZE  5         // number of messages stored in a queue
-//#define BUF_SIZE    512       // max number of characters in a message
-
-MessageStore Msg = MessageStore();
 //MessageStore Msg = MessageStore(5, 5, 80);
+MessageStore Msg = MessageStore();
 
+// Parola object constructor for SPI hardware interface
+//MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
+// Parola object constructor for arbitrary hardware interface
+MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
-//------------------------------ WiFi Subroutines ------------------------------
-
-// connect to wifi
-bool wifiConnect(const char *ssid, const char *password, unsigned long timeout) {
-    unsigned long tout;
-
-    // attempt first connect to a WiFi network
-    INFOS("Attempting connection to WiFi SSID ", ssid);
-    WiFi.begin(ssid, password);
-
-    // make subsequent connection attempts to wifi
-    tout = timeout + millis();                // milliseconds of time given to making connection attempt
-    while(WiFi.status() != WL_CONNECTED) {
-        PRINT(".");
-        if (millis() > tout) {
-            PRINT("\n\r");
-            ERRORD("Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
-            return false;
-        }
-        delay(500);
-    }
-    PRINT("\n\r");
-
-    INFOS("Successfully connected to WiFi!  IP address is ", WiFi.localIP());
-    INFOD("WiFi status exit code is ", WiFi.status());
-
-    return true;
-}
-
-
-// terminate the wifi connect
-void wifiTerminate() {
-    INFOS("\nDisconnecting from WiFi with SSID ", WiFi.SSID());
-
-    WiFi.disconnect();
-
-    PRINT("\n-------------------------------------------------------\n\r");
-}
-
-
-// scan for nearby networks
-void wifiScan() {
-    INFO("Starting Network Scan\n\r");
-    byte numSsid = WiFi.scanNetworks();
-
-    // print the list of networks seen
-    INFOD("Total number of SSID found: ", numSsid);
-
-    // print the name of each network found
-    for (int thisNet = 0; thisNet<numSsid; thisNet++) {
-        INFOS("   ", WiFi.SSID(thisNet));
-    }
-
-    INFO("Network Scan Completed\n\r");
-    PRINT("\n-------------------------------------------------------\n\r");
-}
-
-
-
-//------------------------------ Helper Routines -------------------------------
-
-/*
-void loadmsg(void) {
-
-    char string[BUF_SIZE];
-
-    // clear all old messages
-    INFO("Populating message queue with messages...\n\r");
-    Msg.clearStore();
-    Msg.printStore();
-
-    // 1st message is the wifi IP address
-    sprintf(string, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-    Msg.addStore(string, 0);
-    Msg.printStore();
-
-    // 2nd message is gibberish
-    Msg.addStore("The rain falls mainly on the plane in Spain", 1);
-    Msg.printStore();
-
-    // 3rd message is gibberish
-    Msg.addStore("What is the weather outside right now?  What about inside?", 2);
-    Msg.printStore();
-
-    // 4th message is gibberish
-    Msg.addStore("short message", 3);
-    Msg.printStore();
-
-    // 5th message is gibberish
-    Msg.addStore("loooooooooooong message", 4);
-    Msg.printStore();
-
-    // 6th message is gibberish
-    Msg.addStore("this message should fail to load", 5);
-    Msg.printStore();
-
-    INFO("Exiting setup()...\n\r");
-    PRINT("\n-------------------------------------------------------\n\r");
-
-}
-*/
+// WiFiTools constructor
+WiFiTools WT = WiFiTools();
 
 
 //--------------------- Error Message Handler for Display ----------------------
@@ -252,6 +139,9 @@ void errorHandler(int error) {
 }
 
 
+
+//------------------------------ Helper Routines -------------------------------
+
 void loadmsg(void) {
 
     char string[BUF_SIZE];
@@ -277,27 +167,32 @@ void loadmsg(void) {
     // 3rd message is gibberish
     Msg.addQueue("#3 What is the weather outside right now?  What about inside?");
     Msg.printQueue();
-    delay(2000);
+    //delay(2000);
+    yield();                                         // prevent the watchdog timer doing a reboot
 
     // 4th message is gibberish
     Msg.addQueue("#4 short message");
     Msg.printQueue();
-    delay(2000);
+    //delay(2000);
+    yield();                                         // prevent the watchdog timer doing a reboot
 
     // 5th message is gibberish
     Msg.addQueue("#5 loooooooooooong message");
     Msg.printQueue();
-    delay(2000);
+    //delay(2000);
+    yield();                                         // prevent the watchdog timer doing a reboot
 
     // 6th message is gibberish
     Msg.addQueue("#6 Push off the oldest message");
     Msg.printQueue();
-    delay(2000);
+    //delay(2000);
+    yield();                                         // prevent the watchdog timer doing a reboot
 
     // 7th message is gibberish
     Msg.addQueue("#7 This message should push off the next oldest message");
     Msg.printQueue();
-    delay(2000);
+    //delay(2000);
+    yield();                                         // prevent the watchdog timer doing a reboot
 
     INFO("Exiting setup()...\n\r");
     PRINT("\n-------------------------------------------------------\n\r");
@@ -320,9 +215,6 @@ void setup() {
     INFO("Entered setup()...\n\r");
     INFO("Initializing scrolling display...\n\r");
 
-    // initialize all your display messages to null
-    Msg.clearQueue();
-
     // initialize the display
     P.begin();                                           // initialize the display and data object
     P.setIntensity(intensity);                           // set intensity of the display
@@ -342,13 +234,14 @@ void setup() {
 
     // scan for wifi access points
     INFO("Initializing WiFi...\n\r");
-    wifiScan();
+    WT.wifiScan();
 
+    // initialize all your display messages to null
     Msg.clear();
 
     // attempt to connect and initialise WiFi network
-    if (wifiConnect(ssid, password, WIFITIME)) {       // connecting to wifi
-        sprintf(string, "WiFi connected successfully to SSID %s.", ssid);
+    if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
+        sprintf(string, "WiFi connected successfully to SSID %s.", WIFISSID);
         Msg.addQueue(string);
         //tout = THREE_SECOND + millis();              // milliseconds of time to display message
         tout = ONE_SECOND + millis();                  // milliseconds of time to display message
@@ -370,12 +263,12 @@ void setup() {
 void loop() {
 
     static int cycle = 0;                      // message number being displayed
-    static int top = Msg.topQueue();
-    static int size = Msg.sizeQueue();
+    static int top = Msg.top();
+    static int size = Msg.size();
 
     if (P.displayAnimate()) {
-        if (Msg.getQueue(top + cycle)[0] != '\0')
-            P.displayText(Msg.getQueue(top + cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
+        if (Msg.get(top + cycle)[0] != '\0')
+            P.displayText(Msg.get(top + cycle), scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);
         cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 

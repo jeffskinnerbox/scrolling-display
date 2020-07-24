@@ -488,6 +488,7 @@ char *MessageStore::getQueue(int index) {
     }
 
     return array[index];
+
 }
 
 
@@ -506,6 +507,12 @@ int MessageStore::sizeQueue() {
 
 // -------------------------- Methods for MessageStore -------------------------
 
+int MessageStore::top() {
+
+    return store_top;
+}
+
+
 int MessageStore::size(void) {
     return store_size + queue_size;
 }
@@ -516,6 +523,18 @@ void MessageStore::clear(void) {
         array[i][0] = '\0';
 
     queue_front = queue_rear = -1;
+}
+
+
+char *MessageStore::get(int index) {
+
+    if (index < store_top || index >= store_top + store_size + queue_size) {
+        ERRORD("Failed to get message from Queue. Bad index. index = ", index);
+        return NULL;
+    }
+
+    return array[index];
+
 }
 
 

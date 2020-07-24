@@ -48,16 +48,16 @@ class MessageStore {
     ~MessageStore(void);
 
     // public methods for Circular Queue
-    int sizeQueue();
     int topQueue();
+    int sizeQueue();
     void clearQueue();
     void printQueue();
     char *getQueue(int);
     bool addQueue(char *);
 
     // public methods for Simple Store
-    int sizeStore();
     int topStore();
+    int sizeStore();
     void clearStore();
     void printStore();
     char *getStore(int);
@@ -66,8 +66,10 @@ class MessageStore {
     bool deleteStore(int);
 
     // public methods for MessageStore
+    int top();
     int size();
     void clear();
+    char *get(int);
     void print();
 };
 
