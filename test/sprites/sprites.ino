@@ -1,347 +1,140 @@
-//
-// Demonstrates how to set up and use the user defined sprites for
-// text animations.
-// Derived from  https://github.com/MajicDesigns/MD_Parola/blob/master/examples/Parola_Sprites_Library/Parola_Sprites_Library.ino
 
-// Speed for the display is controlled by a pot on SPEED_IN analog input.
-// Digital switches used for control of text justification and invert mode.
-// UI switches are normally HIGH.
-//
-// UISwitch library can be found at https://github.com/MajicDesigns/MD_UISwitch
-// MD_MAX72XX library can be found at https://github.com/MajicDesigns/MD_MAX72XX
-//
+/*------------------------------------------------------------------------------
+Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
+Version:      0.2.0
 
+DESCRIPTION:
+    Demonstrates how to set up and use the user defined sprites for text animations.
+
+    Speed for the display is controlled by a pot on SPEED_IN analog input.
+    Digital switches used for control of text justification and invert mode.
+    UI switches are normally HIGH.
+
+PHYSICAL DESIGN:
+    Hardware
+        MAX7219 Dot Matrix Module 4-in-1 Display - https://www.banggood.com/3Pcs-MAX7219-Dot-Matrix-Module-4-in-1-Display-Screen-For-Arduino-p-1230975.html
+        HiLetgo New Version ESP8266 NodeMCU LUA CP2102 ESP-12E - https://www.amazon.com/gp/product/B010O1G1ES
+
+    Wiring
+        Connections for ESP8266 hardware SPI are:
+        MAX72XX Pin    ESP8266 Pin    Notes / Comments
+        Vcc              3v3           LED matrices seem to work at 3.3V
+        GND              GND           GND
+        DIN              D7            HSPID or HMOSI
+        CS or LD         D8            HSPICS or HCS
+        CLK              D5            CLK or HCLK
+
+REFERENCE MATERIALS:
+    * UISwitch library can be found at https://github.com/MajicDesigns/MD_UISwitch
+    * MD_MAX72XX library can be found at https://github.com/MajicDesigns/MD_MAX72XX
+
+SOURCE:
+    Derived from  https://github.com/MajicDesigns/MD_Parola/blob/master/examples/Parola_Sprites_Library/Parola_Sprites_Library.ino
+
+CREATED BY:
+    jeffskinnerbox@yahoo.com
+------------------------------------------------------------------------------*/
+
+
+
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
+
+// Arduino libraries (~/src/arduino/libraries)
+
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
-#include <MD_UISwitch.h>
+//#include <MD_UISwitch.h>
 
-// Define the number of devices we have in the chain and the hardware interface
-// NOTE: These pin numbers will probably not work with your hardware and may
-// need to be adapted
-//#define HARDWARE_TYPE MD_MAX72XX::PAROLA_HW
-//#define MAX_DEVICES 11
-//
-//#define CLK_PIN   13
-//#define DATA_PIN  11
-//#define CS_PIN    10
+// simple-display project's include files (~/src/scrolling-display/test/sprites)
+#include "debug.h"
+#include "sprites.h"
 
-// hardware coordinate mapping
-// four common types of matrix modules on the market: PAROLA, GENERIC, ICSTATION, FC16
-#define HARDWARE_TYPE MD_MAX72XX::ICSTATION_HW
 
-// number of dot matrix modules in the chain
-#define MAX_DEVICES 24
-
+// Define the hardware interface and PINs used for wiring
 // NOTE: These pin numbers are for ESO8266 hardware SPI
+// NOTE: Four common types of matrix modules on the market: PAROLA, GENERIC, ICSTATION, FC16
+#define HARDWARE_TYPE MD_MAX72XX::ICSTATION_HW
 #define DATA_PIN  D7    // or MOSI
 #define CLK_PIN   D5    // or SCK
 #define CS_PIN    D8    // or SS
 
-
-// HARDWARE SPI
-MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
-// SOFTWARE SPI
-//MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
-
-// Turn on debug statements to the serial output
-#define  DEBUG_ENABLE  0
-
-#if  DEBUG_ENABLE
-#define DEBUG(s, x) { Serial.print(F(s)); Serial.print(x); }
-#define DEBUGS(x) Serial.print(F(x))
-#define DEBUGX(x) Serial.println(x, HEX)
-#else
-#define DEBUG(s, x)
-#define DEBUGS(x)
-#define DEBUGX(x)
-#endif
-
-// User interface pin and switch definitions
+// display text effects
+const uint8_t MAX_DEVICES = 24;   // number of dot matrix modules
+const uint8_t SCROLL_SPEED = 50;  // lower the number the faster the animation; 0 to run as fast as possible
+const uint8_t FRAMEDELAY = 200;   // frame delay value min=10 (fast)  max=200 (slow)
+const uint8_t INTENSITY = 0;      // set intensity of the display (0-15)
+const uint8_t SPACING = 0;        // distance between the end of one message and the start of the next (0 = off display)
 const uint8_t SPEED_IN = 0;       // control the speed with an external pot
 const uint8_t JUSTIFY_SET = 6;    // change the justification
-const uint8_t INVERSE_SET = 9;    // set/reset the display to inverse
-
-uint8_t uiPins[] = { JUSTIFY_SET, INVERSE_SET };
-
-const uint16_t PAUSE_TIME = 1000; // in milliseconds
+const uint8_t INVERSE_SET = 0;    // set/reset the display to inverse
+const uint16_t PAUSE_TIME = 2000; // in milliseconds
 const uint8_t SPEED_DEADBAND = 5; // in analog units
 
 // Global variables
-uint8_t	curString = 0;
-const char *msg[] =
-{
-  "Parola Sprites",
-  "Animation"
+const char *msg[] = {
+    "Parola Sprites",
+    "Animation"
 };
 
-MD_UISwitch_Digital uiSwitches(uiPins, ARRAY_SIZE(uiPins));
-
-// Sprite Definitions
-const uint8_t F_PMAN1 = 6;
-const uint8_t W_PMAN1 = 8;
-const uint8_t PROGMEM pacman1[F_PMAN1 * W_PMAN1] =  // gobbling pacman animation
-{
-  0x00, 0x81, 0xc3, 0xe7, 0xff, 0x7e, 0x7e, 0x3c,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c,
-  0x3c, 0x7e, 0xff, 0xff, 0xff, 0xff, 0x7e, 0x3c,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c,
-};
-
-const uint8_t F_PMAN2 = 6;
-const uint8_t W_PMAN2 = 18;
-const uint8_t PROGMEM pacman2[F_PMAN2 * W_PMAN2] =  // ghost pursued by a pacman
-{
-  0x00, 0x81, 0xc3, 0xe7, 0xff, 0x7e, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x3c, 0x7e, 0xff, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-};
-
-const uint8_t F_WAVE = 14;
-const uint8_t W_WAVE = 14;
-const uint8_t PROGMEM wave[F_WAVE * W_WAVE] =  // triangular wave / worm
-{
-  0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10,
-  0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20,
-  0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40,
-  0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
-  0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
-  0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
-  0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10,
-  0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08,
-  0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02, 0x04,
-  0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x02,
-  0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01,
-  0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02,
-  0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04,
-  0x04, 0x02, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x40, 0x20, 0x10, 0x08,
-};
-
-const uint8_t F_ROLL1 = 4;
-const uint8_t W_ROLL1 = 8;
-const uint8_t PROGMEM roll1[F_ROLL1 * W_ROLL1] =  // rolling square
-{
-  0xff, 0x8f, 0x8f, 0x8f, 0x81, 0x81, 0x81, 0xff,
-  0xff, 0xf1, 0xf1, 0xf1, 0x81, 0x81, 0x81, 0xff,
-  0xff, 0x81, 0x81, 0x81, 0xf1, 0xf1, 0xf1, 0xff,
-  0xff, 0x81, 0x81, 0x81, 0x8f, 0x8f, 0x8f, 0xff,
-};
-
-const uint8_t F_ROLL2 = 4;
-const uint8_t W_ROLL2 = 8;
-const uint8_t PROGMEM roll2[F_ROLL2 * W_ROLL2] =  // rolling octagon
-{
-  0x3c, 0x4e, 0x8f, 0x8f, 0x81, 0x81, 0x42, 0x3c,
-  0x3c, 0x72, 0xf1, 0xf1, 0x81, 0x81, 0x42, 0x3c,
-  0x3c, 0x42, 0x81, 0x81, 0xf1, 0xf1, 0x72, 0x3c,
-  0x3c, 0x42, 0x81, 0x81, 0x8f, 0x8f, 0x4e, 0x3c,
-};
-
-const uint8_t F_LINES = 3;
-const uint8_t W_LINES = 8;
-const uint8_t PROGMEM lines[F_LINES * W_LINES] =  // spaced lines
-{
-  0xff, 0xff, 0xff, 0x00, 0x00, 0xff, 0x00, 0x00,
-  0xff, 0xff, 0x00, 0xff, 0x00, 0x00, 0xff, 0x00,
-  0xff, 0xff, 0x00, 0x00, 0xff, 0x00, 0x00, 0xff,
-};
-
-const uint8_t F_ARROW1 = 3;
-const uint8_t W_ARROW1 = 10;
-const uint8_t PROGMEM arrow1[F_ARROW1 * W_ARROW1] =  // arrow fading to center
-{
-  0x18, 0x3c, 0x7e, 0xff, 0x7e, 0x00, 0x00, 0x3c, 0x00, 0x00,
-  0x18, 0x3c, 0x7e, 0xff, 0x00, 0x7e, 0x00, 0x00, 0x18, 0x00,
-  0x18, 0x3c, 0x7e, 0xff, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x18,
-};
-
-const uint8_t F_ARROW2 = 3;
-const uint8_t W_ARROW2 = 9;
-const uint8_t PROGMEM arrow2[F_ARROW2 * W_ARROW2] =  // arrow fading to outside
-{
-  0x18, 0x3c, 0x7e, 0xe7, 0x00, 0x00, 0xc3, 0x00, 0x00,
-  0x18, 0x3c, 0x7e, 0xe7, 0xe7, 0x00, 0x00, 0x81, 0x00,
-  0x18, 0x3c, 0x7e, 0xe7, 0x00, 0xc3, 0x00, 0x00, 0x81,
-};
-
-const uint8_t F_SAILBOAT = 1;
-const uint8_t W_SAILBOAT = 11;
-const uint8_t PROGMEM sailboat[F_SAILBOAT * W_SAILBOAT] =  // sail boat
-{
-  0x10, 0x30, 0x58, 0x94, 0x92, 0x9f, 0x92, 0x94, 0x98, 0x50, 0x30,
-};
-
-const uint8_t F_STEAMBOAT = 2;
-const uint8_t W_STEAMBOAT = 11;
-const uint8_t PROGMEM steamboat[F_STEAMBOAT * W_STEAMBOAT] =  // steam boat
-{
-  0x10, 0x30, 0x50, 0x9c, 0x9e, 0x90, 0x91, 0x9c, 0x9d, 0x90, 0x71,
-  0x10, 0x30, 0x50, 0x9c, 0x9c, 0x91, 0x90, 0x9d, 0x9e, 0x91, 0x70,
-};
-
-const uint8_t F_HEART = 5;
-const uint8_t W_HEART = 9;
-const uint8_t PROGMEM heart[F_HEART * W_HEART] =  // beating heart
-{
-  0x0e, 0x11, 0x21, 0x42, 0x84, 0x42, 0x21, 0x11, 0x0e,
-  0x0e, 0x1f, 0x33, 0x66, 0xcc, 0x66, 0x33, 0x1f, 0x0e,
-  0x0e, 0x1f, 0x3f, 0x7e, 0xfc, 0x7e, 0x3f, 0x1f, 0x0e,
-  0x0e, 0x1f, 0x33, 0x66, 0xcc, 0x66, 0x33, 0x1f, 0x0e,
-  0x0e, 0x11, 0x21, 0x42, 0x84, 0x42, 0x21, 0x11, 0x0e,
-};
-
-const uint8_t F_INVADER = 2;
-const uint8_t W_INVADER = 10;
-const uint8_t PROGMEM invader[F_INVADER * W_INVADER] =  // space invader
-{
-  0x0e, 0x98, 0x7d, 0x36, 0x3c, 0x3c, 0x36, 0x7d, 0x98, 0x0e,
-  0x70, 0x18, 0x7d, 0xb6, 0x3c, 0x3c, 0xb6, 0x7d, 0x18, 0x70,
-};
-
-const uint8_t F_ROCKET = 2;
-const uint8_t W_ROCKET = 11;
-const uint8_t PROGMEM rocket[F_ROCKET * W_ROCKET] =  // rocket
-{
-  0x18, 0x24, 0x42, 0x81, 0x99, 0x18, 0x99, 0x18, 0xa5, 0x5a, 0x81,
-  0x18, 0x24, 0x42, 0x81, 0x18, 0x99, 0x18, 0x99, 0x24, 0x42, 0x99,
-};
-
-const uint8_t F_FBALL = 2;
-const uint8_t W_FBALL = 11;
-const uint8_t PROGMEM fireball[F_FBALL * W_FBALL] =  // fireball
-{
-  0x7e, 0xab, 0x54, 0x28, 0x52, 0x24, 0x40, 0x18, 0x04, 0x10, 0x08,
-  0x7e, 0xd5, 0x2a, 0x14, 0x24, 0x0a, 0x30, 0x04, 0x28, 0x08, 0x10,
-};
-
-const uint8_t F_CHEVRON = 1;
-const uint8_t W_CHEVRON = 9;
-const uint8_t PROGMEM chevron[F_CHEVRON * W_CHEVRON] =  // chevron
-{
-  0x18, 0x3c, 0x66, 0xc3, 0x99, 0x3c, 0x66, 0xc3, 0x81,
-};
-
-const uint8_t F_WALKER = 5;
-const uint8_t W_WALKER = 7;
-const uint8_t PROGMEM walker[F_WALKER * W_WALKER] =  // walking man
-{
-    0x00, 0x48, 0x77, 0x1f, 0x1c, 0x94, 0x68,
-    0x00, 0x90, 0xee, 0x3e, 0x38, 0x28, 0xd0,
-    0x00, 0x00, 0xae, 0xfe, 0x38, 0x28, 0x40,
-    0x00, 0x00, 0x2e, 0xbe, 0xf8, 0x00, 0x00,
-    0x00, 0x10, 0x6e, 0x3e, 0xb8, 0xe8, 0x00,
-};
-
-struct {
-    const uint8_t *data;
-    uint8_t width;
-    uint8_t frames;
-}
-sprite[] = {
-    { walker, W_WALKER, F_WALKER },
-    { invader, W_INVADER, F_INVADER },
-    { chevron, W_CHEVRON, F_CHEVRON },
-    { heart, W_HEART, F_HEART },
-    { arrow1, W_ARROW1, F_ARROW1 },
-    { steamboat, W_STEAMBOAT, F_STEAMBOAT },
-    { fireball, W_FBALL, F_FBALL },
-    { rocket, W_ROCKET, F_ROCKET },
-    { roll2, W_ROLL2, F_ROLL2 },
-    { pacman2, W_PMAN2, F_PMAN2 },
-    { lines, W_LINES, F_LINES },
-    { roll1, W_ROLL1, F_ROLL1 },
-    { sailboat, W_SAILBOAT, F_SAILBOAT },
-    { arrow2, W_ARROW2, F_ARROW2 },
-    { wave, W_WAVE, F_WAVE },
-    { pacman1, W_PMAN1, F_PMAN1 }
-};
-
+// Parola object constructor for SPI hardware interface
+MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);                          // HARDWARE SPI
 
 
 //------------------------------------------------------------------------------
 
-
-void doUI(void)
-{
-  // set the speed if it has changed - Analog read
-  {
-    int16_t	speed = map(analogRead(SPEED_IN), 0, 1023, 0, 100);
-
-    if ((speed >= ((int16_t)P.getSpeed() + SPEED_DEADBAND)) ||
-        (speed <= ((int16_t)P.getSpeed() - SPEED_DEADBAND)))
-    {
-      P.setSpeed(speed);
-      DEBUG("\nChanged speed to ", P.getSpeed());
-    }
-  }
-
-  // now process the switch digital inputs
-  if (uiSwitches.read() == MD_UISwitch::KEY_PRESS) // a switch was pressed!
-  {
-    switch (uiSwitches.getKey())
-    {
-      case JUSTIFY_SET: // TEXT ALIGNMENT - nothing on initialise
-      {
-        static uint8_t  curMode = 1;
-        textPosition_t  textAlign[] =
-        {
-          PA_CENTER,
-          PA_LEFT,
-          PA_RIGHT
-        };
-
-        DEBUG("\nChanging alignment to ", curMode);
-        P.setTextAlignment(textAlign[curMode]);
-        P.displayReset();
-        curMode = (curMode + 1) % ARRAY_SIZE(textAlign);
-      }
-      break;
-
-      case INVERSE_SET:  // INVERSE
-        P.setInvert(!P.getInvert());
-      break;
-    }
-  }
-}
-
 void setup(void) {
-#if DEBUG_ENABLE
-  Serial.begin(57600);
-  DEBUGS("[Parola Test]");
-#endif
 
-  // user interface switches
-  uiSwitches.begin();
+    unsigned long tout;                           // time-out time
 
-  // Parola object
-  P.begin();
-  P.displayText(msg[curString], PA_CENTER, P.getSpeed(), PAUSE_TIME, PA_SPRITE, PA_SPRITE);
-  P.setSpriteData(pacman1, W_PMAN1, F_PMAN1, pacman2, W_PMAN2, F_PMAN2);
-  curString++;
+    Serial.begin(9600);
+    PRINT("\n\r-------------------------------------------------------");
+    INFO("Entered setup()...");
+    INFO("Initializing scrolling display...");
+
+    // initialize the display (aka Parola object)
+    P.begin();                                        // initialize the display and data object
+    P.setIntensity(INTENSITY);                        // set intensity of the display
+    P.setTextAlignment(PA_LEFT);                      // set the text alignment (e.g. PA_LEFT)
+    P.setTextEffect(PA_SCROLL_LEFT, PA_SCROLL_LEFT);  // special effects when scrolling in & out (e.g. PA_SCROLL_LEFT)
+    P.setScrollSpacing(SPACING);                      // columns between messages
+    P.setSpeed(SCROLL_SPEED);                         // frame delay value
+    P.setPause(PAUSE_TIME);                           // ms of pause after finished displaying message
+    P.displayClear();                                 // clear the display
+
+    // post to the display
+    tout = 4000 + millis();                        // milliseconds of time to display message
+    while (millis() < tout) {
+        if (P.displayAnimate())
+            P.displayText("Stand-By!!", PA_CENTER, SCROLL_SPEED, PAUSE_TIME, PA_SCROLL_UP, PA_DISSOLVE);
+        yield();                                   // prevent the watchdog timer doing a reboot
+    }
+
+    P.displayText("Reset to Sprite Display", PA_CENTER, P.getSpeed(), PAUSE_TIME, PA_SPRITE, PA_SPRITE);
+    P.setSpriteData(pacman1, W_PMAN1, F_PMAN1, pacman2, W_PMAN2, F_PMAN2);
 }
+
 
 void loop(void) {
-  static uint8_t  curFX = 0;
 
-  doUI();
+    static uint8_t curFX = 0;
+    static uint8_t curString = 0;
 
-  if (P.displayAnimate())
-  {
-    if (curString == ARRAY_SIZE(msg))
-    {
-      P.setSpriteData(sprite[curFX].data, sprite[curFX].width, sprite[curFX].frames,  // entry sprite
-                      sprite[curFX].data, sprite[curFX].width, sprite[curFX].frames); // exit sprite
-      curFX = (curFX + 1) % ARRAY_SIZE(sprite);
-      curString = 0;
+    if (P.displayAnimate()) {
+        if (curString == ARRAY_SIZE(msg)) {
+            INFO("Doing P.setSpriteData()");
+            P.setSpriteData(sprite[curFX].data, sprite[curFX].width, sprite[curFX].frames,  // entry sprite
+                      sprite[curFX].data, sprite[curFX].width, sprite[curFX].frames);       // exit sprite
+
+            curFX = (curFX + 1) % ARRAY_SIZE(sprite);
+            curString = 0;
+        }
+
+        INFO("Doing P.setTextBuffer()");
+        P.setTextBuffer(msg[curString]);
+        P.displayReset();
+        curString++;
     }
 
-    P.setTextBuffer(msg[curString]);
-    P.displayReset();
-    curString++;
-  }
 }

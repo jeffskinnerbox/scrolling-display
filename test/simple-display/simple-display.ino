@@ -22,7 +22,7 @@ PHYSICAL DESIGN:
         CLK              D5            CLK or HCLK
 
 MONITOR:
-    screen /dev/ttyUSB0 9600,cs8
+    screen /dev/ttyUSB0 9600,cs8cls
     to terminate Cntr-a :quit
 
 REFERENCE MATERIALS:
@@ -67,9 +67,8 @@ CREATED BY:
 #define INTENSITY      0    // set intensity of the display (0-15)
 #define SPACING        0    // distance between the end of one message and the start of the next (0 = off display)
 
-// Define the number of devices we have in the chain and the hardware interface
+// Define the hardware interface and PINs used for wiring
 // NOTE: These pin numbers are for ESO8266 hardware SPI
-//#define HARDWARE_TYPE MD_MAX72XX::PAROLA_HW
 #define HARDWARE_TYPE MD_MAX72XX::ICSTATION_HW    // values are: PAROLA, GENERIC, ICSTATION, FC16
 #define CLK_PIN   D5    // or SCK
 #define DATA_PIN  D7    // or MOSI
@@ -194,7 +193,7 @@ void loadmsg(void) {
     //delay(2000);
     yield();                                         // prevent the watchdog timer doing a reboot
 
-    INFO("Exiting setup()...\n\r");
+    INFO("Exiting loadmsg()...\n\r");
     PRINT("\n-------------------------------------------------------\n\r");
 
 }
@@ -215,7 +214,7 @@ void setup() {
     INFO("Entered setup()...\n\r");
     INFO("Initializing scrolling display...\n\r");
 
-    // initialize the display
+    // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
     P.setIntensity(intensity);                           // set intensity of the display
     P.setTextAlignment(scrollAlign);                     // set the text alignment
@@ -240,7 +239,7 @@ void setup() {
     Msg.clear();
 
     // attempt to connect and initialise WiFi network
-    if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
+    if (wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
         sprintf(string, "WiFi connected successfully to SSID %s.", WIFISSID);
         Msg.addQueue(string);
         //tout = THREE_SECOND + millis();              // milliseconds of time to display message

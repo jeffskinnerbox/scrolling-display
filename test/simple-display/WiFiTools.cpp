@@ -13,20 +13,15 @@ CREATED BY:
 
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
-//#include <SPI.h>
 #include <ESP8266WiFi.h>
 
 // Arduino libraries (~/src/arduino/libraries)
 #include <Arduino.h>
 
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
-//#include <MD_Parola.h>
-//#include <MD_MAX72xx.h>
 
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
-//#include "credentials.h"
-//#include "MessageStore.h"
 #include "WiFiTools.h"
 
 #define BUF 25
