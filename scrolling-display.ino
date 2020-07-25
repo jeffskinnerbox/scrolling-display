@@ -1,3 +1,4 @@
+
 /*------------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      0.0.2
@@ -28,7 +29,7 @@ PHYSICAL DESIGN:
         CLK              D5            CLK or HCLK
 
 MONITOR:
-    screen /dev/ttyUSB0 9600,cs8
+    screen /dev/ttyUSB0 9600,cs8cls
     to terminate Cntr-a :quit
 
 TESTING:
@@ -59,10 +60,9 @@ CREATED BY:
 
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
-#include "WiFiTools.h"
+#include "WiFiHandler.h"
 #include "credentials.h"
 #include "MessageStore.h"
-
 
 #define ONE_SECOND    1000UL        // milliseconds in one second
 #define TWO_SECOND    2000UL        // milliseconds in two second
@@ -70,14 +70,6 @@ CREATED BY:
 #define ONE_MINUTE    60000UL       // milliseconds in one minute
 #define ONE_HOUR      3600000UL     // milliseconds in one hour
 #define ONE_DAY       85400000UL    // milliseconds in one day
-
-/*// display speeds, intensity, etc.*/
-/*#define MAX_DEVICES   24    // number of dot matrix modules*/
-/*#define PAUSE_TIME    TWO_SECOND*/
-/*#define SCROLL_SPEED  50    // lower the number the faster the animation; 0 to run as fast as possible*/
-/*#define FRAMEDELAY   200    // frame delay value min=10 (fast)  max=200 (slow)*/
-/*#define INTENSITY      0    // set intensity of the display (0-15)*/
-/*#define SPACING        0    // distance between the end of one message and the start of the next (0 = off display)*/
 
 // Define the hardware interface and PINs used for wiring
 // NOTE: These pin numbers are for ESO8266 hardware SPI
@@ -99,33 +91,15 @@ const uint8_t JUSTIFY_SET = 6;      // change the justification
 const uint8_t INVERSE_SET = 0;      // set/reset the display to inverse
 const uint16_t SCROLLPAUSE = 2000;  // ms of pause after finished displaying message
 
-// Scrolling parameters
-//uint8_t frameDelay = FRAMEDELAY;
-//textEffect_t scrollEffect = PA_SCROLL_LEFT;
-
-// Parola object constructor for SPI hardware interface
-//MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
-
 // Parola object constructor for software SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
 // WiFiTools object constructor
 WiFiTools WT = WiFiTools();
 
-// Global message buffers shared by Wifi and Scrolling functions
-#define QUEUE_SIZE  5         // number of messages stored in a queue
-#define BUF_SIZE    512       // max number of characters in a message
-bool newMessageAvailable = false;
-int MessageInQueue = 0;
-char curMessage[QUEUE_SIZE][BUF_SIZE];
-char newMessage[BUF_SIZE];
-
 // MessageStore object constructor for storing the contents of the display
 //MessageStore Msg = MessageStore(5, 5, 80);
 MessageStore Msg = MessageStore();
-
-
-
 
 
 
@@ -212,7 +186,7 @@ void errorHandler(int error) {
 
     switch(error) {
         case 1:
-            FATAL("Can't go on without WiFi connection.  Press reset twice to fix.\n\r");
+            FATAL("Can't go on without WiFi connection.  Press reset twice to fix.");
             Msg.clear();
             Msg.addQueue("Can't go on without WiFi connection.");
             Msg.addQueue("Press reset twice to fix.");
@@ -228,60 +202,16 @@ void errorHandler(int error) {
             }
 
             // nothing can be done so restart
-            FATAL("Nothing can be done.  Doing an automatic restart.\n\r");
+            FATAL("Nothing can be done.  Doing an automatic restart.");
             ESP.reset();
             break;
         default:
             // nothing can be done so restart
             ERRORD("Unknown error code in errorHandler: ", error);
-            FATAL("Nothing can be done.  Doing an automatic restart.\n\r");
+            FATAL("Nothing can be done.  Doing an automatic restart.");
             ESP.reset();
     }
 }
-
-/*// handle errors by displaying a code and then restart*/
-/*void errorHandler(int error) {*/
-    /*textPosition_t scrollAlign = PA_LEFT;*/
-    /*uint8_t scrollSpeed = 25;                      // default frame delay value*/
-    /*uint16_t scrollPause = TWO_SECOND;             // in milliseconds*/
-    /*textEffect_t scrollEffectIn = PA_SCROLL_LEFT;*/
-    /*textEffect_t scrollEffectOut = PA_NO_EFFECT;*/
-    /*int i = 0;*/
-    /*unsigned long tout;*/
-
-    /*sprintf(curMessage[0], "Can't go on without WiFi connection.  Press reset twice to fix.");*/
-    /*P.displayText(curMessage[0], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);*/
-
-    /*tout = ONE_MINUTE + millis();                // milliseconds of time given to making connection attempt*/
-    /*while (millis() < tout) {*/
-        /*if (P.displayAnimate()) {*/
-            /*Serial.println("Inside errorHandler");*/
-            /*P.displayReset();        // reset the animation back to the beginning*/
-        /*}*/
-        /*yield();    // prevent the watchdog timer doing a reboot*/
-    /*}*/
-
-    /*sprintf(curMessage[0], "Can't go on without WiFi connection.");*/
-    /*sprintf(curMessage[1], "Press reset twice to fix.");*/
-    /*MessageInQueue = 2;*/
-
-    /*tout = ONE_MINUTE + millis();                // milliseconds of time given to making connection attempt*/
-    /*while (millis() < tout) {*/
-        /*if (P.displayAnimate()) {*/
-            /*INFO("Inside errorHandler");*/
-            /*P.displayText(curMessage[i], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);*/
-            /*i++;*/
-            /*if (i == MessageInQueue) i = 0;*/
-            /*P.displayReset();        // reset the animation back to the beginning*/
-        /*}*/
-        /*yield();    // prevent the watchdog timer doing a reboot*/
-    /*}*/
-
-    /*Serial.flush();*/
-
-    /*ESP.reset();                     // nothing can be done so restart*/
-/*}*/
-
 
 
 //------------------------------------------------------------------------------
@@ -312,241 +242,6 @@ void stopUDP() {
 */
 
 
-//------------------------------------------------------------------------------
-
-
-/*
-void getData(char *szMesg, uint8_t len)
-// Message may contain data for:
-// New text (/&MSG=)
-// Scroll direction (/&SD=)
-// Invert (/&I=)
-// Speed (/&SP=)
-{
-  char *pStart, *pEnd;      // pointer to start and end of text
-
-  // check text message
-  pStart = strstr(szMesg, "/&MSG=");
-  if (pStart != NULL)
-  {
-    char *psz = newMessage;
-
-    pStart += 6;  // skip to start of data
-    pEnd = strstr(pStart, "/&");
-
-    if (pEnd != NULL)
-    {
-      while (pStart != pEnd)
-      {
-        if ((*pStart == '%') && isdigit(*(pStart + 1)))
-        {
-          // replace %xx hex code with the ASCII character
-          char c = 0;
-          pStart++;
-          c += (htoi(*pStart++) << 4);
-          c += htoi(*pStart++);
-          *psz++ = c;
-        }
-        else
-          *psz++ = *pStart++;
-      }
-
-      *psz = '\0'; // terminate the string
-      newMessageAvailable = (strlen(newMessage) != 0);
-      INFOS("New Msg: ", newMessage);
-    }
-  }
-
-  // check scroll direction
-  pStart = strstr(szMesg, "/&SD=");
-  if (pStart != NULL)
-  {
-    pStart += 5;  // skip to start of data
-
-    INFOS("Scroll direction: ", *pStart);
-    scrollEffect = (*pStart == 'R' ? PA_SCROLL_RIGHT : PA_SCROLL_LEFT);
-    P.setTextEffect(scrollEffect, scrollEffect);
-    P.displayReset();
-  }
-
-  // check invert
-  pStart = strstr(szMesg, "/&I=");
-  if (pStart != NULL)
-  {
-    pStart += 4;  // skip to start of data
-
-    INFOS("Invert mode: ", *pStart);
-    P.setInvert(*pStart == '1');
-  }
-
-  // check speed
-  pStart = strstr(szMesg, "/&SP=");
-  if (pStart != NULL)
-  {
-    pStart += 5;  // skip to start of data
-
-    int16_t speed = atoi(pStart);
-    INFOD("Speed: ", P.getSpeed());
-    P.setSpeed(speed);
-    frameDelay = speed;
-  }
-}
-*/
-
-
-/*
-void handleWiFi(void)
-{
-  static enum { S_IDLE, S_WAIT_CONN, S_READ, S_EXTRACT, S_RESPONSE, S_DISCONN } state = S_IDLE;
-  static char szBuf[1024];
-  static uint16_t idxBuf = 0;
-  static WiFiClient client;
-  static uint32_t timeStart;
-
-  switch (state)
-  {
-  case S_IDLE:   // initialise
-    INFO("S_IDLE");
-    idxBuf = 0;
-    state = S_WAIT_CONN;
-    break;
-
-  case S_WAIT_CONN:   // waiting for connection
-  {
-    client = server.available();
-    if (!client) break;
-    if (!client.connected()) break;
-
-#if DEBUG
-    char szTxt[20];
-    sprintf(szTxt, "%03d.%03d.%03d.%03d", client.remoteIP()[0], client.remoteIP()[1], client.remoteIP()[2], client.remoteIP()[3]);
-    INFOS("New client @ ", szTxt);
-#endif
-
-    timeStart = millis();
-    state = S_READ;
-  }
-  break;
-
-  case S_READ: // get the first line of data
-    INFO("S_READ ");
-
-    while (client.available())
-    {
-      char c = client.read();
-
-      if ((c == '\r') || (c == '\n'))
-      {
-        szBuf[idxBuf] = '\0';
-        client.flush();
-        INFOS("Recv: ", szBuf);
-        state = S_EXTRACT;
-      }
-      else
-        szBuf[idxBuf++] = (char)c;
-    }
-    if (millis() - timeStart > 1000)
-    {
-      INFO("Wait timeout");
-      state = S_DISCONN;
-    }
-    break;
-
-  case S_EXTRACT: // extract data
-    INFO("S_EXTRACT");
-    // Extract the string from the message if there is one
-    getData(szBuf, BUF_SIZE);
-    state = S_RESPONSE;
-    break;
-
-  case S_RESPONSE: // send the response to the client
-    INFO("S_RESPONSE");
-    // Return the response to the client (web page)
-    client.print(WebResponse);
-    client.print(WebPage);
-    state = S_DISCONN;
-    break;
-
-  case S_DISCONN: // disconnect client
-    INFO("S_DISCONN");
-    client.flush();
-    client.stop();
-    state = S_IDLE;
-    break;
-
-  default:  state = S_IDLE;
-  }
-}
-*/
-
-
-
-/*//------------------------------- Main Routines --------------------------------*/
-
-/*void setup() {*/
-    /*textPosition_t scrollAlign = PA_LEFT;*/
-    /*uint8_t scrollSpeed = 25;                      // default frame delay value*/
-    /*uint16_t scrollPause = TWO_SECOND;             // in milliseconds*/
-    /*textEffect_t scrollEffectIn = PA_SCROLL_LEFT;*/
-    /*textEffect_t scrollEffectOut = PA_NO_EFFECT;*/
-
-    /*Serial.begin(9600);*/
-    /*INFO("\n\rInitializing scrolling display ...");*/
-
-    /*// initialize all your display messages to null*/
-    /*newMessage[0] = '\0';*/
-    /*MessageInQueue = 0;*/
-    /*for (int j = 0; j < QUEUE_SIZE; j++)*/
-            /*curMessage[0][j] = '\0';*/
-
-    /*P.begin();                     // initialize the object data*/
-    /*P.displayClear();              // clear all the zones in the current display*/
-
-    /*P.displaySuspend(false);       // start the current display animation, true = suspend, false = resume*/
-    /*P.displayScroll(curMessage, PA_LEFT, scrollEffect, frameDelay);*/
-
-    /*// scan for wifi access point and print what you find - useful for trouble shouting wifi*/
-    /*INFO("Initializing WiFi for scanning...\n\r");*/
-    /*WT.wifiScan();*/
-
-    /*// Connect to and initialise WiFi network*/
-    /*INFOS("Connecting to WIFi SSID ", WIFISSID);*/
-
-    /*//WiFi.begin(ssid, password);*/
-    /*if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {  // connect to wifi*/
-    /*} else {*/
-        /*Serial.println("Can't go on without WiFi connection.  Press reset twice to fix.");*/
-        /*errorHandler(1);*/
-    /*}*/
-
-    /*// set up first message as the IP address*/
-    /*MessageInQueue++;*/
-    /*sprintf(curMessage[MessageInQueue - 1], "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);*/
-    /*INFOS("curMessage = ", curMessage[MessageInQueue - 1]);*/
-    /*P.displayText(curMessage[MessageInQueue - 1], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);*/
-/*}*/
-
-
-/*void loop() {*/
-    /*textPosition_t scrollAlign = PA_LEFT;*/
-    /*uint8_t scrollSpeed = 25;                      // default frame delay value*/
-    /*uint16_t scrollPause = TWO_SECOND;             // in milliseconds*/
-    /*textEffect_t scrollEffectIn = PA_SCROLL_LEFT;*/
-    /*textEffect_t scrollEffectOut = PA_NO_EFFECT;*/
-    /*int i = 0;*/
-
-    /*INFO("Outside the loop");*/
-    /*if (P.displayAnimate()) {*/
-        /*INFO("Inside the loop");*/
-        /*P.displayText(curMessage[i], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);*/
-        /*i++;*/
-        /*if (i == MessageInQueue) i = 0;*/
-        /*P.displayReset();        // reset the animation back to the beginning*/
-    /*}*/
-
-/*}*/
-
-
 
 //------------------------------ Helper Routines -------------------------------
 
@@ -555,7 +250,7 @@ void loadmsg(void) {
     char string[BUF_SIZE];
 
     // clear all old messages
-    INFO("Populating message queue with messages...\n\r");
+    INFO("Populating message queue with messages...");
     Msg.clearQueue();
     Msg.printQueue();
 
@@ -602,8 +297,8 @@ void loadmsg(void) {
     //delay(2000);
     yield();                                         // prevent the watchdog timer doing a reboot
 
-    INFO("Exiting loadmsg()...\n\r");
-    PRINT("\n-------------------------------------------------------\n\r");
+    INFO("Exiting loadmsg()...");
+    PRINT("--------------------------------------------------------------------------------");
 
 }
 
@@ -619,9 +314,9 @@ void setup() {
     int size = Msg.sizeQueue();
 
     Serial.begin(9600);
-    PRINT("\n-------------------------------------------------------\n\r");
-    INFO("Entered setup()...\n\r");
-    INFO("Initializing scrolling display...\n\r");
+    PRINT("--------------------------------------------------------------------------------");
+    INFO("Entered setup()...");
+    INFO("Initializing scrolling display...");
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
@@ -641,7 +336,6 @@ void setup() {
     }
 
     // scan for wifi access points
-    INFO("Initializing WiFi...\n\r");
     WT.wifiScan();
 
     // initialize all your display messages to null

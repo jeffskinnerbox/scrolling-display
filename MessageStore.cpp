@@ -178,25 +178,23 @@ int MessageStore::countQueue() {
 // function inserts an element into the circular queue at the rear position
 bool  MessageStore::enQueue(char *str) {
 
-    if ((queue_front == queue_top && queue_rear == queue_top + queue_size - 1) || (queue_rear == (queue_top + queue_front - 1)%(queue_size - 1))) {
-        INFO("Failed to add message to Queue. Queue is full.\n\r");
+    if ((queue_front == queue_top && queue_rear == queue_top + queue_size - 1)
+            || (queue_rear == (queue_top + queue_front - 1)%(queue_size - 1))) {
+        INFO("Failed to add message to Queue. Queue is full.");
         return false;
     }
 
-    else if (queue_front == -1)                // insert first element
-    {
+    else if (queue_front == -1) {                // insert first element
         queue_front = queue_rear = queue_top;
         sprintf(array[queue_rear], str);
     }
 
-    else if (queue_rear == queue_top + queue_size - 1 && queue_front != queue_top)
-    {
+    else if (queue_rear == queue_top + queue_size - 1 && queue_front != queue_top) {
         queue_rear = queue_top;
         sprintf(array[queue_rear], str);
     }
 
-    else
-    {
+    else {
         queue_rear++;
         sprintf(array[queue_rear], str);
     }
@@ -211,7 +209,7 @@ char *MessageStore::deQueue(void) {
     char *data;
 
     if (queue_front == -1) {
-        INFO("Queue is empty.\n\r");
+        INFO("Queue is empty.");
         return NULL;
     }
 
@@ -227,6 +225,7 @@ char *MessageStore::deQueue(void) {
         queue_front++;
 
     return data;
+
 }
 
 
@@ -239,7 +238,7 @@ void MessageStore::clearStore(void) {
     for (int i = store_top; i < store_top + store_size; i++)
         array[i][0] = '\0';
 
-    INFO("Simple store has been cleared.\r\n");
+    INFO("Simple store has been cleared.");
 
 }
 
@@ -263,6 +262,7 @@ void MessageStore::printStore(void) {
     for (int i = store_top; i < store_top + store_size; i++)
         if (array[i][0] != '\0')
             INFOS("\t", array[i]);
+
 }
 
 
@@ -283,10 +283,10 @@ bool MessageStore::addStore(char *str) {
         ERRORD("Failed to add message to Store. Bad index.  index = ", index);
         return false;
     } else if (index < 0) {
-        INFO("Failed to add message to Store. Store is full.\n\r");
+        INFO("Failed to add message to Store. Store is full.");
         return false;
     } else {
-        INFO("Successfully adding message to Store.\n\r");
+        INFO("Successfully adding message to Store.");
         sprintf(array[index], str);
     }
 
@@ -311,7 +311,7 @@ bool MessageStore::addStore(char *str, int index) {
         ERRORD("Failed to add message to Store. Bad index.  index = ", index);
         return false;
     } else {
-        INFO("Successfully adding message to Store.\n\r");
+        INFO("Successfully adding message to Store.");
         sprintf(array[index], str);
     }
 
@@ -328,7 +328,7 @@ bool MessageStore::deleteStore(int index) {
         ERRORD("Failed to delete message from Store. Bad index. index = ", index);
         return false;
     } else {
-        INFO("Successfully deleted message from Store.\n\r");
+        INFO("Successfully deleted message from Store.");
         array[index][0] = '\0';
         return true;
     }
@@ -369,7 +369,7 @@ void MessageStore::clearQueue(void) {
 
     queue_front = queue_rear = -1;
 
-    INFO("Circular queue has been cleared.\r\n");
+    INFO("Circular queue has been cleared.");
 
 }
 
@@ -413,7 +413,7 @@ bool MessageStore::addQueue(char *str) {
 
 /*
     if ((queue_front == queue_top && queue_rear == queue_size - 1) || (queue_rear == (queue_front - 1)%(queue_size - 1))) {
-        INFO("Circular Queue is full. Removing element from end of message queue.\n\r");
+        INFO("Circular Queue is full. Removing element from end of message queue.");
     } else if (queue_front == -1) {     // (room in queue) queue is empty, so insert into first element
         queue_front = queue_rear = queue_top;
         sprintf(array[queue_front], str);
@@ -428,7 +428,7 @@ bool MessageStore::addQueue(char *str) {
 
 /*
     if (queue_front == queue_top && queue_rear == queue_size - 1 || queue_rear - queue_front == 1) {
-        INFO("Circular Queue is full. Removing element from end of message queue.\n\r");
+        INFO("Circular Queue is full. Removing element from end of message queue.");
     }
 
     if (queue_front == -1) {        // (room in queue) queue is empty, so insert into first element
@@ -462,7 +462,7 @@ bool MessageStore::addQueue(char *str) {
         return true;
     }
 
-    ERROR("You should never reach the point in MessageStore::addQueue.\n\r");
+    ERROR("You should never reach the point in MessageStore::addQueue.");
     printQueue();
     delay(50000);
     return false;
@@ -550,12 +550,14 @@ void MessageStore::print(void) {
 
     // print controlling parameters
     INFOD("Number of elements in MessageStore are: ", cnt);
-    INFOD("\tstore_top = ", store_top);
-    INFOD("\tstore_size = ", store_size);
-    INFOD("\tqueue_top = ", queue_top);
-    INFOD("\tqueue_size = ", queue_size);
-    INFOD("\tqueue_front = ", queue_front);
-    INFOD("\tqueue_rear = ", queue_rear);
+    INFOD("store_size = ", store_size);
+    INFOD("queue_size = ", queue_size);
+    INFOD("total_size = ", total_size);
+    INFOD("buffer_size = ", buffer_size);
+    INFOD("store_top = ", store_top);
+    INFOD("queue_top = ", queue_top);
+    INFOD("queue_front = ", queue_front);
+    INFOD("queue_rear = ", queue_rear);
 
     // print the queue contents
     for (int i = store_top; i < store_size + queue_size; i++)
