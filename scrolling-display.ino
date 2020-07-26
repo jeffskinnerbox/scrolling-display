@@ -101,6 +101,11 @@ WiFiTools WT = WiFiTools();
 //MessageStore Msg = MessageStore(5, 5, 80);
 MessageStore Msg = MessageStore();
 
+// version stamp
+#define VERSION "0.0.2"
+#define VER VERSION " - "  __DATE__ " at " __TIME__
+const char version[] = VER;
+
 
 
 //--------------------------- WiFi and Web Stuff ???? --------------------------
@@ -175,7 +180,7 @@ uint8_t htoi(char c) {
 
 //--------------------- Error Message Handler for Display ----------------------
 
-// handle errors by displaying a code and then restart
+// handle errors by displaying a code and then taking action (e.g. restart)
 void errorHandler(int error) {
 
     int i = 0;
@@ -203,12 +208,14 @@ void errorHandler(int error) {
 
             // nothing can be done so restart
             FATAL("Nothing can be done.  Doing an automatic restart.");
+            Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
             break;
         default:
             // nothing can be done so restart
             ERRORD("Unknown error code in errorHandler: ", error);
             FATAL("Nothing can be done.  Doing an automatic restart.");
+            Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
     }
 }
@@ -315,8 +322,9 @@ void setup() {
 
     Serial.begin(9600);
     PRINT("--------------------------------------------------------------------------------");
-    INFO("Entered setup()...");
-    INFO("Initializing scrolling display...");
+    INFO("Entering setup() for scrolling display");
+    INFOS("scrolling display version = ", version);
+    INFOS("scrolling display MAC address = ", WiFi.macAddress());
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
