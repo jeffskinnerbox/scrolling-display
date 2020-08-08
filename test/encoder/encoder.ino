@@ -72,7 +72,8 @@ CREATED BY:
 // D6 = signal (rotary encoder DT)
 // D7 = signal (rotary encoder CLK)
 // INIT = number for displaycounter when button is pressed
-RotaryEncoder E = RotaryEncoder(D5, D6, D7, INIT);
+//RotaryEncoder E = RotaryEncoder(D5, D6, D7, INIT);
+RotaryEncoder *E;
 
 // version stamp
 #define VERSION "0.0.2"
@@ -93,6 +94,8 @@ void setup() {
     INFO("Starting KY-040 Rotary Encoder!");
     INFOS("encoder version = ", version);
 
+    E = new RotaryEncoder(D5, D6, D7, INIT);
+
 }
 
 
@@ -101,8 +104,8 @@ void loop() {
     static bool state = BUTTON, prv_state = BUTTON;
 
     // check the status of the rotary encoder
-    cnt = E.check_rotary();        // check rotary encoder for change of state
-    state = E.check_switch();      // check button for change of state
+    cnt = E->check_rotary();        // check rotary encoder for change of state
+    state = E->check_switch();      // check button for change of state
 
     if (cnt != prv_cnt || state != prv_state) {
         INFOD("cnt = ", cnt);
