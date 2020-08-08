@@ -47,6 +47,8 @@ CREATED BY:
     Brainy-Bits
 ------------------------------------------------------------------------------ */
 
+#define DEBUG true    // activate debugging routings that print trace messages on serial port
+
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 //#include <SPI.h>
 //#include <ESP8266WiFi.h>
@@ -57,111 +59,23 @@ CREATED BY:
 //#include <MD_Parola.h>
 //#include <MD_MAX72xx.h>
 
-// simple-display project's include files (~/src/scrolling-display/test/simple-display)
+// encoder project's include files (~/src/scrolling-display/test/encoder)
 #include "debug.h"
+#include "RotaryEncoder.h"
 
 
 // rotary encoder connections to nodemcu
-const int PinSW =  D5;    // rotary encoder switch (rotary encoder SW)
-const int PinDT =  D6;    // DATA signal (rotary encoder DT)
-const int PinCLK = D7;    // CLOCK signal (rotary encoder CLK)
+//const int PINSW = D5;    // rotary encoder switch (rotary encoder SW)
+//const int PINDT = D6;    // DATA signal (rotary encoder DT)
+//const int PINCLK = D7;    // CLOCK signal (rotary encoder CLK)
+//const int INIT = 0;      // initialization number for displaycounter
 
-// variable to debounce rotary encoder
-long RotaryTimeOfLastDebounce = 0;
-long SwitchTimeOfLastDebounce = 0;
-int DelayOfDebounce = 1UL;         // 1 milliseconds (0.001 seconds)
-//int DelayOfDebounce = 10UL;        // 10 milliseconds (0.01 seconds)
-//int DelayOfDebounce = 100UL;       // 100 milliseconds (0.1 seconds)
-
-// store previous pins states
-int PreviousCLK;
-int PreviousDATA;
-
-int displaycounter;      // store current counter value
-const int Init = 0;      // initialization number displaycounter
-
-int switchpress;         // if LOW, switch is being pressed
+RotaryEncoder E = RotaryEncoder(D5, D6, D7, 0);
 
 // version stamp
 #define VERSION "0.0.2"
 #define VER VERSION " - "  __DATE__ " at " __TIME__
 const char version[] = VER;
-
-
-
-//------------------------------ Helper Routines -------------------------------
-
-// Check if the rotary encoder has moved and update the counter as required.
-// Increased counter if moving in clockwise direction and decrease the counter
-// if moving in the counter clockwise direction.
-void check_rotary() {
-
-    if ((PreviousCLK == LOW) && (PreviousDATA == HIGH)) {
-        if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
-            displaycounter++;
-            INFOD("displaycounter = ", displaycounter);
-        }
-
-        if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
-            displaycounter--;
-            INFOD("displaycounter = ", displaycounter);
-        }
-    }
-
-    if ((PreviousCLK == HIGH) && (PreviousDATA == LOW)) {
-        if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {
-            displaycounter++;
-            INFOD("displaycounter = ", displaycounter);
-        }
-
-        if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
-            displaycounter--;
-            INFOD("displaycounter = ", displaycounter);
-        }
-    }
-
-    if ((PreviousCLK == HIGH) && (PreviousDATA == HIGH)) {
-        if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {
-            displaycounter++;
-            INFOD("displaycounter = ", displaycounter);
-        }
-
-        if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
-            displaycounter--;
-            INFOD("displaycounter = ", displaycounter);
-        }
-    }
-
-    if ((PreviousCLK == LOW) && (PreviousDATA == LOW)) {
-        if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
-            displaycounter++;
-            INFOD("displaycounter = ", displaycounter);
-        }
-
-        if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == HIGH)) {
-            displaycounter--;
-            INFOD("displaycounter = ", displaycounter);
-        }
-    }
-
-}
-
-
-// check if rotary encoder switch is being pressed
-void check_switch() {
-
-    if ((digitalRead(PinSW) == LOW) && (switchpress == HIGH)) {
-        displaycounter = Init;             // reset encoder counter to zero
-        switchpress = LOW;                 // switch has been pressed, now reset
-        INFOD("button pressed: displaycounter = ", displaycounter);
-    }
-
-    if ((digitalRead(PinSW) == HIGH) && (switchpress == LOW)) {
-        switchpress = HIGH;                 // switch has been released
-        INFOD("button released: displaycounter = ", displaycounter);
-    }
-
-}
 
 
 
@@ -177,45 +91,46 @@ void setup() {
     INFO("Starting KY-040 Rotary Encoder!");
     INFOS("encoder version = ", version);
 
-    // put current pin state in variables
-    PreviousCLK = digitalRead(PinCLK);
-    PreviousDATA = digitalRead(PinDT);
+/*    // put rotary encoder current pin state in variables*/
+    /*PreviousCLK = digitalRead(PINCLK);*/
+    /*PreviousDATA = digitalRead(PINDT);*/
 
-    // set the switch pin to use pullup resistors
-    pinMode(PinSW, INPUT_PULLUP);
-    //pinMode(PinSW, INPUT);
-    //pinMode(PinDT, INPUT);
-    //pinMode(PinCLK, INPUT);
+/*    // set the rotary encoder switch pin to use pullup resistors*/
+    /*pinMode(PINSW, INPUT_PULLUP);*/
+    /*//pinMode(PINSW, INPUT);*/
+    /*//pinMode(PINDT, INPUT);*/
+    /*//pinMode(PINCLK, INPUT);*/
 
-    // intiailize and print the curent value of encoder counter
-    switchpress = HIGH;
-    displaycounter = Init;
-    INFOD("switchpress = ", switchpress);
-    INFOD("displaycounter = ", displaycounter);
+/*    // intiailize and print the curent value of encoder counter*/
+    /*switchpress = HIGH;*/
+    /*displaycounter = INIT;*/
+    /*INFOD("switchpress = ", switchpress);*/
+    /*INFOD("displaycounter = ", displaycounter);*/
 
 }
 
 
 void loop() {
 
-    // if enough time has passed, check the rotary encoder
-    if ((millis() - RotaryTimeOfLastDebounce) > DelayOfDebounce) {
-        check_rotary();      // check rotary encoder for change of state
+    E.check_rotary();      // check rotary encoder for change of state
+/*    if ((millis() - RotaryTimeOfLastDebounce) > DelayOfDebounce) {*/
+        /*check_rotary();      // check rotary encoder for change of state*/
 
-        // update pin state variables
-        PreviousCLK = digitalRead(PinCLK);
-        PreviousDATA = digitalRead(PinDT);
+        /*// update pin state variables*/
+        /*PreviousCLK = digitalRead(PINCLK);*/
+        /*PreviousDATA = digitalRead(PINDT);*/
 
-        // set the time of last debounce
-        RotaryTimeOfLastDebounce = millis();
-    }
+        /*// set the time of last debounce*/
+        /*RotaryTimeOfLastDebounce = millis();*/
+    /*}*/
 
-    // check if rotary encoder switch is being pressed
-    if ((millis() - SwitchTimeOfLastDebounce) > DelayOfDebounce) {
-        check_switch();
+    E.check_switch();      // check button for change of state
+    /*// check if rotary encoder switch is being pressed*/
+    /*if ((millis() - SwitchTimeOfLastDebounce) > DelayOfDebounce) {*/
+        /*check_switch();*/
 
-        // set the time of last debounce
-        SwitchTimeOfLastDebounce = millis();
-    }
+        /*// set the time of last debounce*/
+        /*SwitchTimeOfLastDebounce = millis();*/
+    /*}*/
 
 }

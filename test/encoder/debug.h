@@ -63,7 +63,6 @@ CREATED BY:
 
 // debugging routings that print trace messages on serial port
 // using F() to load strings in flash memory, not RAM
-#define DEBUG true
 
 #if DEBUG
     #define PRT(s)         { Serial.print(F(s)); }                             // Print a string without newline
