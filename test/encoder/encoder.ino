@@ -47,7 +47,7 @@ CREATED BY:
     Brainy-Bits
 ------------------------------------------------------------------------------ */
 
-#define DEBUG true    // activate debugging routings that print trace messages on serial port
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 //#include <SPI.h>
@@ -64,13 +64,15 @@ CREATED BY:
 #include "RotaryEncoder.h"
 
 
-// rotary encoder connections to nodemcu
-//const int PINSW = D5;    // rotary encoder switch (rotary encoder SW)
-//const int PINDT = D6;    // DATA signal (rotary encoder DT)
-//const int PINCLK = D7;    // CLOCK signal (rotary encoder CLK)
-//const int INIT = 0;      // initialization number for displaycounter
+#define INIT 0        // number for encoder when button is pressed
+#define BUTTON HIGH   // state for when button has been released
 
-RotaryEncoder E = RotaryEncoder(D5, D6, D7, 0);
+// RotaryEncoder object constructor for detecting rotary encoder state
+// D5 = encoder switch (rotary encoder SW)
+// D6 = signal (rotary encoder DT)
+// D7 = signal (rotary encoder CLK)
+// INIT = number for displaycounter when button is pressed
+RotaryEncoder E = RotaryEncoder(D5, D6, D7, INIT);
 
 // version stamp
 #define VERSION "0.0.2"
@@ -91,46 +93,24 @@ void setup() {
     INFO("Starting KY-040 Rotary Encoder!");
     INFOS("encoder version = ", version);
 
-/*    // put rotary encoder current pin state in variables*/
-    /*PreviousCLK = digitalRead(PINCLK);*/
-    /*PreviousDATA = digitalRead(PINDT);*/
-
-/*    // set the rotary encoder switch pin to use pullup resistors*/
-    /*pinMode(PINSW, INPUT_PULLUP);*/
-    /*//pinMode(PINSW, INPUT);*/
-    /*//pinMode(PINDT, INPUT);*/
-    /*//pinMode(PINCLK, INPUT);*/
-
-/*    // intiailize and print the curent value of encoder counter*/
-    /*switchpress = HIGH;*/
-    /*displaycounter = INIT;*/
-    /*INFOD("switchpress = ", switchpress);*/
-    /*INFOD("displaycounter = ", displaycounter);*/
-
 }
 
 
 void loop() {
+    static int cnt = INIT, prv_cnt = INIT;
+    static bool state = BUTTON, prv_state = BUTTON;
 
-    E.check_rotary();      // check rotary encoder for change of state
-/*    if ((millis() - RotaryTimeOfLastDebounce) > DelayOfDebounce) {*/
-        /*check_rotary();      // check rotary encoder for change of state*/
+    // check the status of the rotary encoder
+    cnt = E.check_rotary();        // check rotary encoder for change of state
+    state = E.check_switch();      // check button for change of state
 
-        /*// update pin state variables*/
-        /*PreviousCLK = digitalRead(PINCLK);*/
-        /*PreviousDATA = digitalRead(PINDT);*/
+    if (cnt != prv_cnt || state != prv_state) {
+        INFOD("cnt = ", cnt);
+        INFOB("state = ", state);
 
-        /*// set the time of last debounce*/
-        /*RotaryTimeOfLastDebounce = millis();*/
-    /*}*/
-
-    E.check_switch();      // check button for change of state
-    /*// check if rotary encoder switch is being pressed*/
-    /*if ((millis() - SwitchTimeOfLastDebounce) > DelayOfDebounce) {*/
-        /*check_switch();*/
-
-        /*// set the time of last debounce*/
-        /*SwitchTimeOfLastDebounce = millis();*/
-    /*}*/
+        // update previous count and state
+        prv_cnt = cnt;
+        prv_state = state;
+    }
 
 }

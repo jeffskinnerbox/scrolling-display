@@ -15,37 +15,38 @@ CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
 
-#pragma once                        // compiler to skip subsequent includes of this file
+#pragma once                          // compiler to skip subsequent includes of this file
 
 class RotaryEncoder {
   private:
-    int PinSW;    // rotary encoder switch (rotary encoder SW)
-    int PinDT;    // DATA signal (rotary encoder DT)
-    int PinCLK;    // CLOCK signal (rotary encoder CLK)
-    int Init;      // initialization number for displaycounter
+    // microcontroller pins used by the rotary encoder
+    int PinSW;                        // rotary encoder switch (rotary encoder SW)
+    int PinDT;                        // DATA signal (rotary encoder DT)
+    int PinCLK;                       // CLOCK signal (rotary encoder CLK)
+    int Init;                         // initialization number for displaycounter when button pressed
 
-    // variable used to debounce rotary encoder
-    long RotaryTimeOfLastDebounce;
-    long SwitchTimeOfLastDebounce;
-    int DelayOfDebounce;
+    // variable used to debounce rotary encoder and button press
+    long RotaryTimeOfLastDebounce;    // variable used to debounce rotary encoder
+    long SwitchTimeOfLastDebounce;    // variable used to debounce button
+    int DelayOfDebounce;              // to debounce, amount of time to ignore changes
 
     // storage for previous pins states
-    int PreviousCLK;
-    int PreviousDATA;
+    int PreviousDATA;                 // previous DATA signal state
+    int PreviousCLK;                  // previous CLOCK signal state
 
-    bool clockwise;   // rotary turned clockwise
-    int displaycounter;      // store for current counter value
-
-    int switchpress;         // if LOW, switch is being pressed
+    // current state of the rotary encoder
+    bool clockwise;                   // true if rotary turned clockwise
+    bool switchpress;                 // if true, switch is being pressed
+    int displaycounter;               // store for current counter value
+    //int switchpress;                  // if LOW, switch is being pressed
 
   public:
     // constructors & destructors for the class
-    RotaryEncoder(int /* rotary encoder switch */, int /* DATA signal */, int /* CLOCK signal */, int /* initialization number */);
-    //RotaryEncoder(int, int, int, int);
+    RotaryEncoder(int, int, int, int);
     ~RotaryEncoder(void);
 
     // public methods for MessageStore
-    void check_rotary(void);
-    void check_switch(void);
+    int check_rotary(void);
+    bool check_switch(void);
 };
 

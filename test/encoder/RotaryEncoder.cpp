@@ -1,3 +1,4 @@
+
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      0.2.0
@@ -46,7 +47,7 @@ CREATED BY:
     Brainy-Bits
 ------------------------------------------------------------------------------ */
 
-#define DEBUG true    // activate debugging routings that print trace messages on serial port
+#define DEBUG false    // activate debugging routings (print trace messages on serial port)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 
@@ -66,12 +67,23 @@ CREATED BY:
 // Constructor to create RotaryEncoder
 RotaryEncoder::RotaryEncoder(int pinsw, int pindt, int pinclk, int init) {
 
-    PinSW = pinsw;      // rotary encoder switch (rotary encoder SW)
-    PinDT = pindt;      // DATA signal (rotary encoder DT)
-    PinCLK = pinclk;    // CLOCK signal (rotary encoder CLK)
-    Init = init;        // initialization number for displaycounter
-    //
-    // put rotary encoder current pin state in variables
+    // initialize pin assignment to rotary encoder
+    PinSW = pinsw;                 // rotary encoder switch (rotary encoder SW)
+    PinDT = pindt;                 // DATA signal (rotary encoder DT)
+    PinCLK = pinclk;               // CLOCK signal (rotary encoder CLK)
+    Init = init;                   // initialization number for displaycounter
+
+    // intiailize the state of the rotary encoder
+    switchpress = HIGH;            // if LOW, switch is being pressed
+    displaycounter = Init;         // initialize the encoder turn count
+    clockwise = true;              // rotary turned clockwise
+
+    // initialize variable used to debounce rotary encoder
+    RotaryTimeOfLastDebounce = 0;
+    SwitchTimeOfLastDebounce = 0;
+    DelayOfDebounce = 10UL;        // 10 milliseconds (0.01 seconds)
+
+    // initialize rotary encoder current pin state
     PreviousCLK = digitalRead(PinCLK);
     PreviousDATA = digitalRead(PinDT);
 
@@ -80,21 +92,6 @@ RotaryEncoder::RotaryEncoder(int pinsw, int pindt, int pinclk, int init) {
     //pinMode(PinSW, INPUT);
     //pinMode(PinDT, INPUT);
     //pinMode(PinCLK, INPUT);
-
-    // intiailize and print the curent value of encoder counter
-    switchpress = HIGH;
-    displaycounter = Init;
-    INFOD("switchpress = ", switchpress);
-    INFOD("displaycounter = ", displaycounter);
-
-    // variable used to debounce rotary encoder
-    RotaryTimeOfLastDebounce = 0;
-    SwitchTimeOfLastDebounce = 0;
-    //DelayOfDebounce = 1UL;         // 1 milliseconds (0.001 seconds)
-    DelayOfDebounce = 10UL;        // 10 milliseconds (0.01 seconds)
-    //DelayOfDebounce = 100UL;       // 100 milliseconds (0.1 seconds)
-
-    clockwise = true;   // rotary turned clockwise
 
 }
 
@@ -114,7 +111,7 @@ RotaryEncoder::~RotaryEncoder() {
 // Check if the rotary encoder has moved and update the counter as required.
 // Increased counter if moving in clockwise direction and decrease the counter
 // if moving in the counter clockwise direction.
-void RotaryEncoder::check_rotary() {
+int RotaryEncoder::check_rotary() {
 
     // if enough time has passed, check the rotary encoder
     if ((millis() - RotaryTimeOfLastDebounce) > DelayOfDebounce) {
@@ -172,73 +169,26 @@ void RotaryEncoder::check_rotary() {
 
         // set the time of last debounce
         RotaryTimeOfLastDebounce = millis();
-}
+    }
 
-
-/*    if ((PreviousCLK == LOW) && (PreviousDATA == HIGH)) {*/
-        /*if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {*/
-            /*displaycounter++;*/
-            /*INFOD("A1-displaycounter = ", displaycounter);*/
-        /*}*/
-
-        /*if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {*/
-            /*displaycounter--;*/
-            /*INFOD("A2-displaycounter = ", displaycounter);*/
-        /*}*/
-    /*}*/
-
-    /*if ((PreviousCLK == HIGH) && (PreviousDATA == LOW)) {*/
-        /*if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {*/
-            /*displaycounter++;*/
-            /*INFOD("A3-displaycounter = ", displaycounter);*/
-        /*}*/
-
-        /*if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {*/
-            /*displaycounter--;*/
-            /*INFOD("A4-displaycounter = ", displaycounter);*/
-        /*}*/
-    /*}*/
-
-    /*if ((PreviousCLK == HIGH) && (PreviousDATA == HIGH)) {*/
-        /*if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {*/
-            /*displaycounter++;*/
-            /*INFOD("A5-displaycounter = ", displaycounter);*/
-        /*}*/
-
-        /*if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {*/
-            /*displaycounter--;*/
-            /*INFOD("A6-displaycounter = ", displaycounter);*/
-        /*}*/
-    /*}*/
-
-    /*if ((PreviousCLK == LOW) && (PreviousDATA == LOW)) {*/
-        /*if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {*/
-            /*//displaycounter++;*/
-            /*INFOD("A7-displaycounter = ", displaycounter);*/
-        /*}*/
-
-        /*if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == HIGH)) {*/
-            /*displaycounter--;*/
-            /*INFOD("A8-displaycounter = ", displaycounter);*/
-        /*}*/
-    /*}*/
+    return displaycounter;
 
 }
 
 
 // check if rotary encoder button is being pressed
-void RotaryEncoder::check_switch() {
+bool RotaryEncoder::check_switch() {
 
     // if enough time has passed, check the the button press
     if ((millis() - SwitchTimeOfLastDebounce) > DelayOfDebounce) {
-        if ((digitalRead(PinSW) == LOW) && (switchpress == HIGH)) {
+        if ((digitalRead(PinSW) == LOW) && (switchpress == false)) {
             displaycounter = Init;             // reset encoder counter to zero
-            switchpress = LOW;                 // switch has been pressed
+            switchpress = true;                // button has been pressed
             INFOD("button pressed: displaycounter = ", displaycounter);
         }
 
-        if ((digitalRead(PinSW) == HIGH) && (switchpress == LOW)) {
-            switchpress = HIGH;                 // switch has been released
+        if ((digitalRead(PinSW) == HIGH) && (switchpress == true)) {
+            switchpress = false;                 // button has been released
             INFOD("button released: displaycounter = ", displaycounter);
 
             // re-set the time of last debounce
@@ -246,17 +196,24 @@ void RotaryEncoder::check_switch() {
         }
     }
 
+/*    // if enough time has passed, check the the button press*/
+    //if ((millis() - SwitchTimeOfLastDebounce) > DelayOfDebounce) {
+        //if ((digitalRead(PinSW) == LOW) && (switchpress == HIGH)) {
+            //displaycounter = Init;             // reset encoder counter to zero
+            //switchpress = LOW;                 // button has been pressed
+            //INFOD("button pressed: displaycounter = ", displaycounter);
+        //}
 
-/*    if ((digitalRead(PinSW) == LOW) && (switchpress == HIGH)) {*/
-        /*displaycounter = Init;             // reset encoder counter to zero*/
-        /*switchpress = LOW;                 // switch has been pressed*/
-        /*INFOD("button pressed: displaycounter = ", displaycounter);*/
+        //if ((digitalRead(PinSW) == HIGH) && (switchpress == LOW)) {
+            //switchpress = HIGH;                 // button has been released
+            //INFOD("button released: displaycounter = ", displaycounter);
+
+            //// re-set the time of last debounce
+            //SwitchTimeOfLastDebounce = millis();
+        //}
     /*}*/
 
-    /*if ((digitalRead(PinSW) == HIGH) && (switchpress == LOW)) {*/
-        /*switchpress = HIGH;                 // switch has been released*/
-        /*INFOD("button released: displaycounter = ", displaycounter);*/
-    /*}*/
+    return switchpress;
 
 }
 
