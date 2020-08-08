@@ -62,7 +62,7 @@ CREATED BY:
 
 // display text effects
 const uint8_t MAX_DEVICES = 24;   // number of dot matrix modules
-const uint8_t SCROLL_SPEED = 50;  // lower the number the faster the animation; 0 to run as fast as possible
+const uint8_t SCROLL_SPEED = 30;  // lower the number the faster the animation; 0 to run as fast as possible
 const uint8_t FRAMEDELAY = 200;   // frame delay value min=10 (fast)  max=200 (slow)
 const uint8_t INTENSITY = 0;      // set intensity of the display (0-15)
 const uint8_t SPACING = 0;        // distance between the end of one message and the start of the next (0 = off display)
