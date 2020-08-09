@@ -27,7 +27,7 @@
 #-------------------------------------------------------------------------------
 
 # name of program being created
-PROG = encoder
+PROG = hello-world-1
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266

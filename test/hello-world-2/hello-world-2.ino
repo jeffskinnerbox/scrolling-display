@@ -20,9 +20,16 @@ CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
 
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
+#include <SPI.h>
+
+// Arduino libraries (~/src/arduino/libraries)
+
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
-#include <SPI.h>
+
+// hello-world-2 project's include files (current directory)
 
 #define TRUE              1
 #define FALSE             0
@@ -61,6 +68,11 @@ const char *msg[] = {
 #define FRAMEDELAY    50    // frame delay value min=10 (fast)  max=200 (slow)
 #define INTENSITY      0    // set intensity of the display (0-15)
 #define SPACING        0    // distance between the end of one message and the start of the next (0 = off display
+
+// version stamp
+#define VERSION "1.0.0"
+#define VER VERSION " - "  __DATE__ " at " __TIME__
+const char version[] = VER;
 
 
 
