@@ -23,9 +23,17 @@ CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
 
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
+#include <SPI.h>
+
+// Arduino libraries (~/src/arduino/libraries)
+
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
-#include <SPI.h>
+
+// hello-world-3 project's include files (current directory)
+
 
 // define units of time
 #define ONE_SECOND     1000UL        // milliseconds in one second
@@ -90,6 +98,11 @@ const textEffect_t scrollEffectOut = PA_DISSOLVE;    // special effects when scr
 const uint8_t intensity = INTENSITY;                 // intensity of matrix LEDs
 const uint8_t scrollSpeed = SCROLL_SPEED;            // frame delay value
 const uint16_t scrollPause = TWO_SECOND;             // ms of pause after finished displaying message
+
+// version stamp
+#define VERSION "1.0.0"
+#define VER VERSION " - "  __DATE__ " at " __TIME__
+const char version[] = VER;
 
 
 
