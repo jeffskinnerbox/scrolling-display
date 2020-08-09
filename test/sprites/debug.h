@@ -1,7 +1,8 @@
 
 /* -----------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      1.0.0
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
@@ -63,9 +64,9 @@ CREATED BY:
 
 // debugging routings that print trace messages on serial port
 // using F() to load strings in flash memory, not RAM
-#define DEBUG true
 
 #if DEBUG
+    #define PRT(s)         { Serial.print(F(s)); }                             // Print a string without newline
     #define PRINT(s)       { Serial.println(F(s)); }                           // Print a string
     #define PRINTD(s, v)   { Serial.print(F(s)); Serial.println(v, DEC); }     // Print a string followed by decimal
     #define PRINTX(s, v)   { Serial.print(F(s)); Serial.println(v, HEX); }     // Print a string followed by hex
@@ -100,6 +101,7 @@ CREATED BY:
     #define ERRORS(s, v)   { Serial.print(F("\e[1;31mERROR:   \e[m")); Serial.print(F(s)); Serial.println(v); }
     #define WARNINGS(s, v) { Serial.print(F("\e[1;33mWARNING: \e[m")); Serial.print(F(s)); Serial.println(v); }
 #else
+    #define PRT(s)
     #define PRINT(s)
     #define PRINTD(s, v)
     #define PRINTX(s, v)

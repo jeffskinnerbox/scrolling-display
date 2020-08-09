@@ -1,7 +1,8 @@
 
 /*------------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      1.0.0
 
 DESCRIPTION:
     Demonstrates how to set up and use the user defined sprites for text animations.
@@ -33,8 +34,10 @@ SOURCE:
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
+
 ------------------------------------------------------------------------------*/
 
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
@@ -80,6 +83,12 @@ const char *msg[] = {
 
 // Parola object constructor for SPI hardware interface
 MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);                          // HARDWARE SPI
+
+// version stamp
+#define VERSION "0.3.0"
+#define VER VERSION " - "  __DATE__ " at " __TIME__
+const char version[] = VER;
+
 
 
 //------------------------------------------------------------------------------
