@@ -1,7 +1,8 @@
 
 #-------------------------------------------------------------------------------
+#
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      0.2.0
+# Version:      0.3.0
 #
 # USAGE
 #	To build the executable
@@ -22,6 +23,7 @@
 #
 # DOCUMENTATION
 #   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#
 #-------------------------------------------------------------------------------
 
 # name of program being created

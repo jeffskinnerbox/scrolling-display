@@ -1,11 +1,12 @@
 
 /* -----------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      0.3.0
 
 DESCRIPTION:
     Test program for getting a KY-040 Rotary Encoder working with a ESP8266 NodeMCU
-    with a simple switch debouncing scheme.
+    with a simple software switch debouncing scheme.
 
 PHYSICAL DESIGN:
     Hardware
@@ -29,12 +30,6 @@ MONITOR:
 
         CNTR-a :quit
 
-TESTING:
-    xxxxxxxxxx
-
-USAGE:
-    xxxxxxxxxx
-
 REFERENCE MATERIALS:
     https://www.youtube.com/watch?v=cYCTMdUi8P0
     https://www.brainy-bits.com/arduino-rotary-encoder-ky-040/
@@ -44,7 +39,8 @@ SOURCES:
     https://www.brainy-bits.com/arduino-rotary-encoder-ky-040/
 
 CREATED BY:
-    Brainy-Bits
+    Brainy-Bits and modified by jeffskinnerbox@yahoo.com
+
 ------------------------------------------------------------------------------ */
 
 #define DEBUG false    // activate debugging routings (print trace messages on serial port)
@@ -74,7 +70,7 @@ RotaryEncoder::RotaryEncoder(int pinsw, int pindt, int pinclk, int init) {
     Init = init;                   // initialization number for displaycounter
 
     // intiailize the state of the rotary encoder
-    switchpress = HIGH;            // if LOW, switch is being pressed
+    switchpress = false;           // if true, switch is being pressed
     displaycounter = Init;         // initialize the encoder turn count
     clockwise = true;              // rotary turned clockwise
 
@@ -88,10 +84,19 @@ RotaryEncoder::RotaryEncoder(int pinsw, int pindt, int pinclk, int init) {
     PreviousDATA = digitalRead(PinDT);
 
     // set the rotary encoder switch pin to use pullup resistors
-    pinMode(PinSW, INPUT_PULLUP);
-    //pinMode(PinSW, INPUT);
-    //pinMode(PinDT, INPUT);
-    //pinMode(PinCLK, INPUT);
+    pinMode(PinSW, INPUT);
+    pinMode(PinSW, INPUT_PULLUP);    // pulled HIGH to the logic voltage (5V or 3.3V for most cases)
+    pinMode(PinCLK, INPUT);
+    pinMode(PinCLK, INPUT_PULLUP);
+    pinMode(PinDT, INPUT);
+    pinMode(PinDT, INPUT_PULLUP);
+
+    INFOD("DelayOfDebounce = ", DelayOfDebounce);
+    INFOD("Init = ", Init);
+    INFOB("clockwise = ", clockwise);
+    INFOB("switchpress = ", switchpress);
+    INFOD("displaycounter = ", displaycounter);
+    PRINT("--------------------------------------------------------------------------------\n\r");
 
 }
 
@@ -115,49 +120,101 @@ int RotaryEncoder::check_rotary() {
 
     // if enough time has passed, check the rotary encoder
     if ((millis() - RotaryTimeOfLastDebounce) > DelayOfDebounce) {
+/*        if ((PreviousCLK == LOW) && (PreviousDATA == HIGH)) {*/
+            //if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
+                //clockwise = true;              // rotary turned clockwise
+                //displaycounter++;
+                //INFOD("A1-displaycounter = ", displaycounter);
+            //}
+
+            //if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
+                //clockwise = false;              // rotary turned counter-clockwise
+                //displaycounter--;
+                //INFOD("A2-displaycounter = ", displaycounter);
+            //}
+        //}
+
+        //if ((PreviousCLK == HIGH) && (PreviousDATA == LOW)) {
+            //if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {
+                //clockwise = true;              // rotary turned clockwise
+                //displaycounter++;
+                //INFOD("A3-displaycounter = ", displaycounter);
+            //}
+
+            //if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
+                //clockwise = false;              // rotary turned counter-clockwise
+                //displaycounter--;
+                //INFOD("A4-displaycounter = ", displaycounter);
+            //}
+        //}
+
+        //if ((PreviousCLK == HIGH) && (PreviousDATA == HIGH)) {
+            //if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {
+                //clockwise = true;              // rotary turned clockwise
+                //displaycounter++;
+                //INFOD("A5-displaycounter = ", displaycounter);
+            //}
+
+            //if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
+                //clockwise = false;              // rotary turned counter-clockwise
+                //displaycounter--;
+                //INFOD("A6-displaycounter = ", displaycounter);
+            //}
+        //}
+
+        //if ((PreviousCLK == LOW) && (PreviousDATA == LOW)) {
+            //if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
+                // I have found commenting out lines can give better results
+                //clockwise = true;              // rotary turned clockwise
+                //displaycounter++;
+                //INFOD("A7-displaycounter = ", displaycounter);
+            //}
+
+            //if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == HIGH)) {
+                //clockwise = false;              // rotary turned counter-clockwise
+                //displaycounter--;
+                //INFOD("A8-displaycounter = ", displaycounter);
+            //}
+        /*}*/
+
         if ((PreviousCLK == LOW) && (PreviousDATA == HIGH)) {
             if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
+                clockwise = true;              // rotary turned clockwise
                 displaycounter++;
                 INFOD("A1-displaycounter = ", displaycounter);
-            }
-
-            if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
+            } else if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
+                clockwise = false;              // rotary turned counter-clockwise
                 displaycounter--;
                 INFOD("A2-displaycounter = ", displaycounter);
             }
-        }
-
-        if ((PreviousCLK == HIGH) && (PreviousDATA == LOW)) {
+        } else if ((PreviousCLK == HIGH) && (PreviousDATA == LOW)) {
             if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {
+                clockwise = true;              // rotary turned clockwise
                 displaycounter++;
                 INFOD("A3-displaycounter = ", displaycounter);
-            }
-
-            if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
+            } else if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
+                clockwise = false;              // rotary turned counter-clockwise
                 displaycounter--;
                 INFOD("A4-displaycounter = ", displaycounter);
             }
-        }
-
-        if ((PreviousCLK == HIGH) && (PreviousDATA == HIGH)) {
+        } else if ((PreviousCLK == HIGH) && (PreviousDATA == HIGH)) {
             if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == HIGH)) {
+                clockwise = true;              // rotary turned clockwise
                 displaycounter++;
                 INFOD("A5-displaycounter = ", displaycounter);
-            }
-
-            if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
+            } else if ((digitalRead(PinCLK) == LOW) && (digitalRead(PinDT) == LOW)) {
+                clockwise = false;              // rotary turned counter-clockwise
                 displaycounter--;
                 INFOD("A6-displaycounter = ", displaycounter);
             }
-        }
-
-        if ((PreviousCLK == LOW) && (PreviousDATA == LOW)) {
+        } else if ((PreviousCLK == LOW) && (PreviousDATA == LOW)) {
             if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == LOW)) {
+                // I have found commenting out lines can give better results
+                //clockwise = true;              // rotary turned clockwise
                 //displaycounter++;
                 INFOD("A7-displaycounter = ", displaycounter);
-            }
-
-            if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == HIGH)) {
+            } else if ((digitalRead(PinCLK) == HIGH) && (digitalRead(PinDT) == HIGH)) {
+                clockwise = false;              // rotary turned counter-clockwise
                 displaycounter--;
                 INFOD("A8-displaycounter = ", displaycounter);
             }
@@ -182,7 +239,6 @@ bool RotaryEncoder::check_switch() {
     // if enough time has passed, check the the button press
     if ((millis() - SwitchTimeOfLastDebounce) > DelayOfDebounce) {
         if ((digitalRead(PinSW) == LOW) && (switchpress == false)) {
-            displaycounter = Init;             // reset encoder counter to zero
             switchpress = true;                // button has been pressed
             INFOD("button pressed: displaycounter = ", displaycounter);
         }
@@ -196,25 +252,30 @@ bool RotaryEncoder::check_switch() {
         }
     }
 
-/*    // if enough time has passed, check the the button press*/
-    //if ((millis() - SwitchTimeOfLastDebounce) > DelayOfDebounce) {
-        //if ((digitalRead(PinSW) == LOW) && (switchpress == HIGH)) {
-            //displaycounter = Init;             // reset encoder counter to zero
-            //switchpress = LOW;                 // button has been pressed
-            //INFOD("button pressed: displaycounter = ", displaycounter);
-        //}
-
-        //if ((digitalRead(PinSW) == HIGH) && (switchpress == LOW)) {
-            //switchpress = HIGH;                 // button has been released
-            //INFOD("button released: displaycounter = ", displaycounter);
-
-            //// re-set the time of last debounce
-            //SwitchTimeOfLastDebounce = millis();
-        //}
-    /*}*/
-
     return switchpress;
 
 }
 
+
+// return the direction the rotary encoder was last turned
+bool RotaryEncoder::get_direction(void) {
+    return clockwise;
+}
+
+
+// reset rotary encoder counter to initial value
+int RotaryEncoder::set_init(void) {
+    displaycounter = Init;
+
+    return displaycounter;
+}
+
+
+// set rotary encoder initial value user specified value
+int RotaryEncoder::set_init(int init) {
+    Init = init;
+    displaycounter = Init;
+
+    return displaycounter;
+}
 

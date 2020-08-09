@@ -1,11 +1,12 @@
 
 /* -----------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      0.3.0
 
 DESCRIPTION:
     Test program for getting a KY-040 Rotary Encoder working with a ESP8266 NodeMCU
-    with a simple switch debouncing scheme.
+    with a simple software switch debouncing scheme.
 
 PHYSICAL DESIGN:
     Hardware
@@ -29,12 +30,6 @@ MONITOR:
 
         CNTR-a :quit
 
-TESTING:
-    xxxxxxxxxx
-
-USAGE:
-    xxxxxxxxxx
-
 REFERENCE MATERIALS:
     https://www.youtube.com/watch?v=cYCTMdUi8P0
     https://www.brainy-bits.com/arduino-rotary-encoder-ky-040/
@@ -44,39 +39,36 @@ SOURCES:
     https://www.brainy-bits.com/arduino-rotary-encoder-ky-040/
 
 CREATED BY:
-    Brainy-Bits
+    Brainy-Bits and modified by jeffskinnerbox@yahoo.com
+
 ------------------------------------------------------------------------------ */
 
 #define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
-//#include <SPI.h>
-//#include <ESP8266WiFi.h>
 
 // Arduino libraries (~/src/arduino/libraries)
 
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
-//#include <MD_Parola.h>
-//#include <MD_MAX72xx.h>
 
 // encoder project's include files (~/src/scrolling-display/test/encoder)
 #include "debug.h"
 #include "RotaryEncoder.h"
 
 
-#define INIT 0        // number for encoder when button is pressed
-#define BUTTON HIGH   // state for when button has been released
+#define INIT 0         // number for encoder when button is pressed
+#define BUTTON false   // state for when button has been released
 
 // RotaryEncoder object constructor for detecting rotary encoder state
-// D5 = encoder switch (rotary encoder SW)
-// D6 = signal (rotary encoder DT)
-// D7 = signal (rotary encoder CLK)
-// INIT = number for displaycounter when button is pressed
+//    D5 = encoder switch (rotary encoder SW)
+//    D6 = signal (rotary encoder DT)
+//    D7 = signal (rotary encoder CLK)
+//    INIT = number for displaycounter when button is pressed
 //RotaryEncoder E = RotaryEncoder(D5, D6, D7, INIT);
 RotaryEncoder *E;
 
 // version stamp
-#define VERSION "0.0.2"
+#define VERSION "0.3.0"
 #define VER VERSION " - "  __DATE__ " at " __TIME__
 const char version[] = VER;
 
@@ -94,26 +86,49 @@ void setup() {
     INFO("Starting KY-040 Rotary Encoder!");
     INFOS("encoder version = ", version);
 
+    // RotaryEncoder object constructor for detecting rotary encoder state
+    //    D5 = encoder switch (rotary encoder SW)
+    //    D6 = signal (rotary encoder DT)
+    //    D7 = signal (rotary encoder CLK)
+    //    INIT = number for displaycounter when button is pressed
     E = new RotaryEncoder(D5, D6, D7, INIT);
 
 }
 
 
 void loop() {
-    static int cnt = INIT, prv_cnt = INIT;
+    static int count = INIT, prv_cnt = INIT;
     static bool state = BUTTON, prv_state = BUTTON;
+    static bool direction = true, prv_direct = true;
 
     // check the status of the rotary encoder
-    cnt = E->check_rotary();        // check rotary encoder for change of state
-    state = E->check_switch();      // check button for change of state
+    count = E->check_rotary();        // check rotary encoder for change of state
+    state = E->check_switch();        // check button for change of state
+    direction = E->get_direction();   // get the direction of last turn
 
-    if (cnt != prv_cnt || state != prv_state) {
-        INFOD("cnt = ", cnt);
+    // if rotary encoder count changes, print debug message
+    if (count != prv_cnt) {
+        prv_cnt = count;              // update previous count
+        INFOD("count = ", count);
+    }
+
+    // if rotary encoder button is pressed, re-initialize and print debug message
+    if (state == true && state != prv_state) {
         INFOB("state = ", state);
+        prv_state = state;            // update previous button state
 
-        // update previous count and state
-        prv_cnt = cnt;
-        prv_state = state;
+        count = E->set_init();        // reset button status to initial value
+        prv_cnt = count;              // update previous count
+        INFOD("count = ", count);
+    } else if (state == false && state != prv_state) {
+        INFOB("state = ", state);
+        prv_state = state;            // update previous button state
+    }
+
+    // if rotary encoder direction changes, print debug message
+    if (direction != prv_direct) {
+        INFOB("direction = ", direction);
+        prv_direct = direction;       // update previous direction state
     }
 
 }
