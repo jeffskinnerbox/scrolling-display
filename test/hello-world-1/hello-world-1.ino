@@ -20,9 +20,16 @@ CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
 
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
+#include <SPI.h>
+
+// Arduino libraries (~/src/arduino/libraries)
+
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
-#include <SPI.h>
+
+// encoder project's include files (~/src/scrolling-display/test/hello-world-1)
 
 
 // hardware coordinate mapping
@@ -41,6 +48,10 @@ CREATED BY:
 //MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);  // software SPI
 MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);                     // hardware SPI
 
+// version stamp
+#define VERSION "1.0.0"
+#define VER VERSION " - "  __DATE__ " at " __TIME__
+const char version[] = VER;
 
 
 //------------------------------------------------------------------------------
