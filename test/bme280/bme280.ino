@@ -30,6 +30,8 @@ CREATED BY:
 
 ------------------------------------------------------------------------------ */
 
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
+
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
 #include <Wire.h>
@@ -42,12 +44,19 @@ CREATED BY:
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
-// encoder project's include files (current directory)
+// bme280 project's include files (current directory)
+#include "debug.h"
+#include "WiFiTools.h"
 #include "credentials.h"
 
+#define ONE_SECOND    1000UL        // milliseconds in one second
+#define TWO_SECOND    2000UL        // milliseconds in two second
+#define THREE_SECOND  3000UL        // milliseconds in three second
+#define ONE_MINUTE    60000UL       // milliseconds in one minute
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define BME_I2C 0x76
+#define BUF_SIZE 80
 
 Adafruit_BME280 bme;
 
@@ -57,7 +66,11 @@ float temperature, humidity, pressure, altitude;
 const char *ssid = WIFISSID;
 const char *pass = WIFIPASS;
 
+// create a webserver object that listens for HTTP request on port 80
 ESP8266WebServer server(80);
+
+// WiFiTools object constructor
+WiFiTools WT = WiFiTools();
 
 // version stamp
 #define VERSION "0.3.0"
@@ -105,8 +118,9 @@ float dew_point_F(float t, float h) {
 //-------------------------------- WiFi Routines -------------------------------
 //----------------------------- Webserver Routines -----------------------------
 
-String SendHTML(float temperature,float humidity,float pressure,float altitude){
+String SendHTML(float temperature,float humidity,float pressure,float altitude) {
     String ptr = "<!DOCTYPE html> <html>\n";
+
     ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
     ptr +="<title>ESP8266 Weather Station</title>\n";
     ptr +="<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
@@ -126,97 +140,157 @@ String SendHTML(float temperature,float humidity,float pressure,float altitude){
     ptr +="<p><strong>Pressure: </strong>";
     ptr +=pressure;
     ptr +=" hPa</p>";
-    //ptr +="<p><strong>Altitude: </strong>";
-    //ptr +=altitude;
-    //ptr +=" meters</p>";
+    ptr +="<p><strong>Altitude: </strong>";
+    ptr +=altitude;
+    ptr +=" meters</p>";
     ptr +="</div>\n";
     ptr +="</body>\n";
     ptr +="</html>\n";
 
     return ptr;
+
 }
 
 
 void handle_OnConnect() {
+    char string[BUF_SIZE];
     temperature = bme.readTemperature();
     humidity = bme.readHumidity();
     pressure = bme.readPressure() / 100.0F;
     altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
 
     // print temperature
-    Serial.print("temperature = "); Serial.print(temperature); Serial.print(" °C  /  "); Serial.print(C_to_F(temperature)); Serial.println(" °F");
+    sprintf(string, "temperature = %.2f °C  /  %.2f °F",
+            temperature, C_to_F(temperature));
+    INFOS("", string);
 
     // print humidity
-    Serial.print("humidity = "); Serial.print(humidity); Serial.println(" %");
+    sprintf(string, "humidity = %.2f %%", humidity);
+    INFOS("", string);
 
     // print estimated dew point
-    //Serial.print("approx. dew point = "); Serial.print(dew_point_C(temperature, humidity)); Serial.print(" °C  /  "); Serial.print(dew_point_F(C_to_F(temperature), humidity)); Serial.println(" °F");
+    sprintf(string, "approx. dew point =  %.2f °C  /  %.2f °F",
+            dew_point_C(temperature, humidity), dew_point_F(C_to_F(temperature), humidity));
+    INFOS("", string);
 
     // print air pressure
-    Serial.print("pressure = "); Serial.print(pressure); Serial.print(" hPa (aka millibars)  /  "); Serial.print(hPa_to_inches(pressure)); Serial.println(" inches of mercury");
+    sprintf(string, "pressure = %.2f % hPa (aka millibars)  /  %.2f inches of mercury",
+            pressure, hPa_to_inches(pressure));
+    INFOS("", string);
 
     // print estimated altitude above sea level
-    //Serial.print("approx. altitude above sea level = "); Serial.print(altitude); Serial.print(" meters  /  ");  Serial.print(meter_to_feet(altitude)); Serial.println(" feet");
+    sprintf(string, "approx. altitude above sea level = %.2f meters  /  %.2f feet",
+            altitude, meter_to_feet(altitude));
+    INFOS("", string);
 
-    Serial.println("");
-
-    // update web servicer with latest readings
+    // send HTTP status 200 (Ok) and send some text to the browser/client
     server.send(200, "text/html", SendHTML(temperature, humidity, pressure, altitude));
+
 }
 
 
 void handle_NotFound(){
     server.send(404, "text/plain", "Not found");
 
-    Serial.println("404 Error on Webserver.");
+    ERROR("404 Error on Webserver.");
 }
 
+
+
+
+//--------------------- Error Message Handler for Display ----------------------
+
+// handle errors by displaying a code and then taking action (e.g. restart)
+void errorHandler(int error) {
+
+    int i = 0;
+    unsigned long tout;                           // time-out time
+
+    switch(error) {
+        case 1:
+            FATAL("Can't go on without WiFi connection.  Press reset twice to fix.");
+            tout = ONE_MINUTE + millis();         // milliseconds of time to display message
+            while (millis() < tout) {
+                yield();                          // prevent the watchdog timer doing a reboot
+            }
+
+            // nothing can be done so restart
+            FATAL("Nothing can be done.  Doing an automatic restart.");
+            Serial.flush();                  // make sure serial messages are posted
+            ESP.reset();
+            break;
+        default:
+            // nothing can be done so restart
+            ERRORD("Unknown error code in errorHandler: ", error);
+            FATAL("Nothing can be done.  Doing an automatic restart.");
+            Serial.flush();                  // make sure serial messages are posted
+            ESP.reset();
+    }
+}
 
 
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
+    char string[BUF_SIZE];
+    unsigned long tout;                           // time-out time
+
     // setup serial port to print debug output
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
+    Serial.println('\n');
 
-    Serial.println("\n\rStarting Bosch BME280 Pressure - Humidity - Temp Sensor Test!");
-    Serial.print("bme280 version = "); Serial.println(version);
+    PRINT("--------------------------------------------------------------------------------");
+    INFO("Starting Bosch BME280 Pressure - Humidity - Temp Sensor Test!");
+    INFOS("bme280 version = ", version);
+    INFOS("bme280 MAC address = ", WiFi.macAddress());
 
     // start reading the bme280 sensor
     if (!bme.begin(BME_I2C)) {
-        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        ERROR("Could not find a valid BME280 sensor, check wiring!");
     }
 
-    // report the wifi access point you connect with
-    Serial.print("Connecting to ");
-    Serial.print(ssid);
+/*    // report the wifi access point you connect with*/
+    /*Serial.print("Connecting to ");*/
+    /*Serial.print(ssid);*/
 
-    //connect to your local wi-fi network
-    WiFi.begin(ssid, pass);
+    /*//connect to your local wi-fi network*/
+    /*WiFi.begin(ssid, pass);*/
 
-    //connect nodemcu wifi your wifi access point
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.print(".");
-    }
-    Serial.println("\n");
+    /*//connect nodemcu wifi your wifi access point*/
+    /*while (WiFi.status() != WL_CONNECTED) {*/
+        /*delay(1000);*/
+        /*Serial.print(".");*/
+    /*}*/
+    /*Serial.println("\n");*/
+
+    // attempt to connect and initialise WiFi network
+    if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
+        while (millis() < tout) {
+            tout = ONE_SECOND + millis();              // milliseconds of time to display message
+            yield();                                   // prevent the watchdog timer doing a reboot
+        }
+    } else
+        errorHandler(1);
+
 
     server.on("/", handle_OnConnect);
     server.onNotFound(handle_NotFound);
 
     // start the web server
     server.begin();
-    Serial.println("HTTP server started\n");
+    INFO("HTTP server started");
 
-    // report the ip address of your web server
-    Serial.print("Connected to WiFi with IP Address: ");
-    Serial.println(WiFi.localIP());
-    Serial.println("\n");
+/*    // report the ip address of your web server*/
+    /*Serial.print("Connected to WiFi with IP Address: ");*/
+    /*Serial.println(WiFi.localIP());*/
+    /*Serial.println("\n");*/
 }
 
 
 void loop() {
+
     server.handleClient();
+
 }
 
