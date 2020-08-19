@@ -21,7 +21,13 @@ MONITOR:
 
         CNTR-a :quit
 
+USAGE:
+    Place the IP address of the device (printed in debug message)
+    in a browser to see the web server output of the device.
+
 REFERENCE MATERIALS:
+    Dew-point Calculation - http://irtfweb.ifa.hawaii.edu/~tcs3/tcs3/Misc/Dewpoint_Calculation_Humidity_Sensor_E.pdf
+    Dew-point Calculation - https://en.wikipedia.org/wiki/Dew_point
 
 SOURCES:
 
@@ -49,22 +55,12 @@ CREATED BY:
 #include "WiFiTools.h"
 #include "credentials.h"
 
-#define ONE_SECOND    1000UL        // milliseconds in one second
-#define TWO_SECOND    2000UL        // milliseconds in two second
-#define THREE_SECOND  3000UL        // milliseconds in three second
-#define ONE_MINUTE    60000UL       // milliseconds in one minute
 
-#define SEALEVELPRESSURE_HPA (1013.25)
-#define BME_I2C 0x76
-#define BUF_SIZE 80
+#define SEALEVELPRESSURE_HPA (1013.25)   // average sea-level pressure = 1013.25 mbar/101.325 kPa/29.921 inHg/760.00 mmHg
+#define BME_I2C 0x76                     // I2C address of bme280
+#define BUF_SIZE 80                      // string buffer size used for sprintf
 
 Adafruit_BME280 bme;
-
-float temperature, humidity, pressure, altitude;
-
-// Put your SSID & Password
-const char *ssid = WIFISSID;
-const char *pass = WIFIPASS;
 
 // create a webserver object that listens for HTTP request on port 80
 ESP8266WebServer server(80);
@@ -100,99 +96,112 @@ float meter_to_feet(float a) {
 }
 
 
+/*
 // calculate approximate dew point in Celsius
 // the dew point is the temperature to which air must be cooled to become saturated with water vapor.
 float dew_point_C(float t, float h) {
-    return t - (100 - h) / 5;            // approximation
+    float dp;
+
+    // accurate to within about ±1 °C as long as the relative humidity is above 50%
+    if (h > 50)
+        dp = t - (100 - h) / 5;
+
+    return dp;
 }
 
 
 // calculate approximate dew point in Fahrenheit
 // the dew point is the temperature to which air must be cooled to become saturated with water vapor.
 float dew_point_F(float t, float h) {
-    return t - 9 / 25 * (100 - h);       // approximation
+    float dp;
+
+    // accurate to within about ±1 °C as long as the relative humidity is above 50%
+    if (h > 50)
+        dp = t - 9 / 25 * (100 - h);
+
+    return dp;
 }
+*/
 
 
 
-//-------------------------------- WiFi Routines -------------------------------
 //----------------------------- Webserver Routines -----------------------------
 
-String SendHTML(float temperature,float humidity,float pressure,float altitude) {
+String PostData(float temperature,float humidity,float pressure,float altitude) {
     String ptr = "<!DOCTYPE html> <html>\n";
 
-    ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-    ptr +="<title>ESP8266 Weather Station</title>\n";
-    ptr +="<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
-    ptr +="body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
-    ptr +="p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
-    ptr +="</style>\n";
-    ptr +="</head>\n";
-    ptr +="<body>\n";
-    ptr +="<div id=\"webpage\">\n";
-    ptr +="<h1>ESP8266 Weather Station</h1>\n";
-    ptr +="<p><strong>Temperature: </strong>";
-    ptr +=temperature;
-    ptr +=" &deg;C</p>";
-    ptr +="<p><strong>Humidity: </strong>";
-    ptr +=humidity;
-    ptr +=" %</p>";
-    ptr +="<p><strong>Pressure: </strong>";
-    ptr +=pressure;
-    ptr +=" hPa</p>";
-    ptr +="<p><strong>Altitude: </strong>";
-    ptr +=altitude;
-    ptr +=" meters</p>";
-    ptr +="</div>\n";
-    ptr +="</body>\n";
-    ptr +="</html>\n";
+    ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
+    ptr += "<title>ESP8266 Weather Station</title>\n";
+    ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
+    ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
+    ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+    ptr += "</style>\n";
+    ptr += "</head>\n";
+    ptr += "<body>\n";
+    ptr += "<div id=\"webpage\">\n";
+    ptr += "<h1>ESP8266 Weather Station</h1>\n";
+    ptr += "<p><strong>Temperature: </strong>";
+    ptr += temperature;
+    ptr += " &deg;C</p>";
+    ptr += "<p><strong>Humidity: </strong>";
+    ptr += humidity;
+    ptr += " %</p>";
+    ptr += "<p><strong>Pressure: </strong>";
+    ptr += pressure;
+    ptr += " hPa</p>";
+    ptr += "<p><strong>Altitude: </strong>";
+    ptr += altitude;
+    ptr += " meters</p>";
+    ptr += "</div>\n";
+    ptr += "</body>\n";
+    ptr += "</html>\n";
 
     return ptr;
 
 }
 
 
-void handle_OnConnect() {
+// Send HTTP status 200 (Ok) and send some text to the browser/client
+void handle_Root() {
+
     char string[BUF_SIZE];
-    temperature = bme.readTemperature();
-    humidity = bme.readHumidity();
-    pressure = bme.readPressure() / 100.0F;
-    altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
+    float temperature = bme.readTemperature();
+    float humidity = bme.readHumidity();
+    float pressure = bme.readPressure() / 100.0F;
+    float altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
 
     // print temperature
-    sprintf(string, "temperature = %.2f °C  /  %.2f °F",
+    sprintf(string, "temperature = %.2f °C / %.2f °F",
             temperature, C_to_F(temperature));
     INFOS("", string);
 
-    // print humidity
-    sprintf(string, "humidity = %.2f %%", humidity);
-    INFOS("", string);
-
-    // print estimated dew point
-    sprintf(string, "approx. dew point =  %.2f °C  /  %.2f °F",
-            dew_point_C(temperature, humidity), dew_point_F(C_to_F(temperature), humidity));
+    // print relative humidity
+    sprintf(string, "relative humidity = %.2f %%", humidity);
     INFOS("", string);
 
     // print air pressure
-    sprintf(string, "pressure = %.2f % hPa (aka millibars)  /  %.2f inches of mercury",
+    sprintf(string, "pressure = %.2f % hPa (aka millibars) / %.2f inches of mercury",
             pressure, hPa_to_inches(pressure));
     INFOS("", string);
 
     // print estimated altitude above sea level
-    sprintf(string, "approx. altitude above sea level = %.2f meters  /  %.2f feet",
+    sprintf(string, "approx. altitude above sea level = %.2f meters / %.2f feet",
             altitude, meter_to_feet(altitude));
     INFOS("", string);
 
     // send HTTP status 200 (Ok) and send some text to the browser/client
-    server.send(200, "text/html", SendHTML(temperature, humidity, pressure, altitude));
+    server.send(200, "text/html", PostData(temperature, humidity, pressure, altitude));
+    INFO("Posted data on webserver.");
 
 }
 
 
+ // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
 void handle_NotFound(){
-    server.send(404, "text/plain", "Not found");
 
+    server.send(404, "text/plain", "404: Not found");
     ERROR("404 Error on Webserver.");
+
 }
 
 
@@ -200,21 +209,12 @@ void handle_NotFound(){
 
 //--------------------- Error Message Handler for Display ----------------------
 
-// handle errors by displaying a code and then taking action (e.g. restart)
+// handle errors by printing code and then take action (e.g. restart)
 void errorHandler(int error) {
-
-    int i = 0;
-    unsigned long tout;                           // time-out time
 
     switch(error) {
         case 1:
-            FATAL("Can't go on without WiFi connection.  Press reset twice to fix.");
-            tout = ONE_MINUTE + millis();         // milliseconds of time to display message
-            while (millis() < tout) {
-                yield();                          // prevent the watchdog timer doing a reboot
-            }
-
-            // nothing can be done so restart
+            ERRORD("Error code in errorHandler: ", error);
             FATAL("Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
@@ -226,14 +226,14 @@ void errorHandler(int error) {
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
     }
+
 }
+
 
 
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
-    char string[BUF_SIZE];
-    unsigned long tout;                           // time-out time
 
     // setup serial port to print debug output
     Serial.begin(9600);
@@ -250,47 +250,23 @@ void setup() {
         ERROR("Could not find a valid BME280 sensor, check wiring!");
     }
 
-/*    // report the wifi access point you connect with*/
-    /*Serial.print("Connecting to ");*/
-    /*Serial.print(ssid);*/
-
-    /*//connect to your local wi-fi network*/
-    /*WiFi.begin(ssid, pass);*/
-
-    /*//connect nodemcu wifi your wifi access point*/
-    /*while (WiFi.status() != WL_CONNECTED) {*/
-        /*delay(1000);*/
-        /*Serial.print(".");*/
-    /*}*/
-    /*Serial.println("\n");*/
-
     // attempt to connect and initialise WiFi network
-    if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
-        while (millis() < tout) {
-            tout = ONE_SECOND + millis();              // milliseconds of time to display message
-            yield();                                   // prevent the watchdog timer doing a reboot
-        }
-    } else
+    if (!WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME))
         errorHandler(1);
 
-
-    server.on("/", handle_OnConnect);
-    server.onNotFound(handle_NotFound);
+    server.on("/", HTTP_GET, handle_Root);  // call function when a client requests URI "/"
+    server.onNotFound(handle_NotFound);     // call when requests an unknown URI (i.e. something other than the above)
 
     // start the web server
     server.begin();
     INFO("HTTP server started");
 
-/*    // report the ip address of your web server*/
-    /*Serial.print("Connected to WiFi with IP Address: ");*/
-    /*Serial.println(WiFi.localIP());*/
-    /*Serial.println("\n");*/
 }
 
 
 void loop() {
 
-    server.handleClient();
+    server.handleClient();                 // listen for HTTP requests from clients
 
 }
 
