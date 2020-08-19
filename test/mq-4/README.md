@@ -41,9 +41,25 @@ and temperature with ±1.0°C accuracy.
 Because pressure changes with altitude, and the pressure measurements are so good,
 you can also use it as an altimeter with  ±1 meter or better accuracy!
 
+## MQ-4 Methane Gas Sensor
+The MQ-4 Methane Gas Sensor is a gas sensor that detects the presence of methane gas.
+Its highly sensitivity to methane and natural gas but also slight sensitivity to alcohol and smoke.
+The sensor is simple to wire up, using one analog voltage input pin from your microcontroller.
+The MQ-4 detects the concentration of methane gas in the air and ouputs its reading as an analog voltage.
+The concentration sensing range of 200 ppm to 10,000 ppm (suitable for gas stove leak detection),
+operates at temperatures from -10 to 50°C, and consumes less than 150 mA at 5 V.
+
+The sensor has ajustable sensitivity using the onboard potentiometer.
+
+* [Flammable Gas Sensor - Model：MQ-4](https://cdn.sparkfun.com/datasheets/Sensors/Biometric/MQ-4%20Ver1.3%20-%20Manual.pdf)
+
+* Wemos and MQ-4 gas sensor - http://www.esp8266learning.com/wemos-mq-4-gas-sensor.php
+* MQ4 GAS SENSOR – METHANE NATURAL GAS MONITOR WITH MQ3 / MQ4 SENSORS - http://www.geekstips.com/mq4-sensor-natural-gas-methane-arduino/
+
 ## Hardware
 * [HiLetgo New Version ESP8266 NodeMCU LUA CP2102 ESP-12E](https://www.amazon.com/gp/product/B010O1G1ES)
 * [Diymore BME280 Temperature Humidity Barometric Pressure Sensor Module](https://www.amazon.com/gp/product/B01LETIESU/)
+* [MQ-4 Methane and Natural Gas (CNG) Analog Sensor Breakout Board](https://www.amazon.com/ACROBOTIC-Methane-Natural-Breakout-Raspberry/dp/B07CRHWBSJ)
 
 ## Wiring
 Connections for ESP8266 hardware are as follows:
@@ -54,6 +70,14 @@ Connections for ESP8266 hardware are as follows:
 | GND                   | GND         | Ground                |
 | SCL                   | D1          | I2C clock on NodeMCU  |
 | SDA                   | D2          | I2C data on NodeMCU   |
+
+
+|          MQ-4         | NodeMCU Pin |   Notes / Comments    |
+|:---------------------:|:-----------:|:---------------------:|
+| VCC                   | 5V          | Power                 |
+| GND                   | GND         | Ground                |
+| D0                    | not connected | digital output       |
+| A0                    | analog pin  | analog pin            |
 
 # SOFTWARE DESIGN
 ## Sources
