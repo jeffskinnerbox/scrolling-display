@@ -79,6 +79,15 @@ Connections for ESP8266 hardware are as follows:
 | D0                    | not connected | digital output       |
 | A0                    | analog pin  | analog pin            |
 
+## NodeMCU ADC Specifications
+The NodeMCU has one ADC pin, `A0`, that is accessible, giving it the ability to read analog signals.
+The ADC pin has a 10-bit resolution, which means you’ll get values between 0 and 1023
+and the ADC voltage range is 0 to 3.3V.
+
+>**NOTE:** If your using the ESP8266 bare chip, the ADC pin input voltage range is 0 to 1V.
+>However, the NodeMCU (aka ESP8266 development board) come with an internal voltage divider,
+>so the input range is 0 to 3.3V.
+
 # SOFTWARE DESIGN
 ## Sources
 Program code and/or ideas taken from:

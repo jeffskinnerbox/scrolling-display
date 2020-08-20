@@ -2,7 +2,7 @@
 /* -----------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.3.0
+Version:      0.1.0
 
 DESCRIPTION:
 
@@ -72,6 +72,9 @@ WiFiTools WT = WiFiTools();
 #define VERSION "0.3.0"
 #define VER VERSION " - "  __DATE__ " at " __TIME__
 const char version[] = VER;
+
+
+const int analogInPin = A0;     // nodemcu analog Pin ADC0 = A0
 
 
 //------------------------------ Helper Routines -------------------------------
@@ -238,9 +241,8 @@ void setup() {
     // setup serial port to print debug output
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
-    Serial.println('\n');
 
-    PRINT("--------------------------------------------------------------------------------");
+    PRINT("\n--------------------------------------------------------------------------------");
     INFO("Starting Bosch BME280 Pressure - Humidity - Temp Sensor Test!");
     INFOS("bme280 version = ", version);
     INFOS("bme280 MAC address = ", WiFi.macAddress());
@@ -250,7 +252,7 @@ void setup() {
         ERROR("Could not find a valid BME280 sensor, check wiring!");
     }
 
-    // attempt to connect and initialise WiFi network
+    // attempt to connect and initialize WiFi network
     if (!WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME))
         errorHandler(1);
 
@@ -265,8 +267,20 @@ void setup() {
 
 
 void loop() {
+    const float MAXVOLT = 3.3;  // maximum voltage possible on pot tap
+    const int MAXADC = 1024;    // maximum ADC value for maximum voltage on pot tap
+    int sensorValue;            // ADC value read from the analog pin
+    float voltage;              // voltage reading of pot tap
 
-    server.handleClient();                 // listen for HTTP requests from clients
+    // listen for HTTP requests from clients
+    server.handleClient();
+
+    // ADC read of analog pin (integer proportional to max)
+    sensorValue = analogRead(analogInPin);
+
+    // voltage value of analog pin
+    voltage = MAXVOLT * (float)sensorValue / (float)MAXADC;
+    INFOD("voltage = ", voltage);
 
 }
 

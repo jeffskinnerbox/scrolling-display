@@ -1,4 +1,4 @@
-
+ 
 #-------------------------------------------------------------------------------
 #
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
@@ -27,7 +27,7 @@
 #-------------------------------------------------------------------------------
 
 # name of program being created
-PROG = bme280
+PROG = mq-4
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266
