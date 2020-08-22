@@ -1,7 +1,7 @@
 
 /*------------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.3.0
+Version:      0.4.0
 
 DESCRIPTION:
 
@@ -16,6 +16,7 @@ CREATED BY:
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 
 // Arduino libraries (~/src/arduino/libraries)
 #include <Arduino.h>
@@ -94,6 +95,20 @@ void WiFiTools::wifiTerminate() {
     WiFi.disconnect();
 
     PRINT("--------------------------------------------------------------------------------");
+
+}
+
+
+// // start the mDNS responder service
+bool WiFiTools::wifiMDNS(char *name) {
+
+    if (MDNS.begin(name)) {              // Start the mDNS responder for 'name'.local
+        INFOS("mDNS responder started for ", name);
+        return true;
+    } else {
+        ERRORS("Error setting up mDNS responder for ", name);
+        return false;
+    }
 
 }
 

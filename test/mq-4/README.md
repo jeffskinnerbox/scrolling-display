@@ -10,7 +10,7 @@ Version:      0.4.0
 ---
 
 # DESCRIPTION
-Test program for ESP8266 NodeMCU + BME280,
+Test program for ESP8266 NodeMCU + BME280 + MQ-4,
 a integrated environmental sensing unit from Bosch that combines
 sensors for pressure, humidity, and temperature.
 
@@ -121,9 +121,12 @@ The NodeMCU should serve up a web page showing temperature, humidity, pressure a
 No commands or parameter are entered.
 
 # DOCUMENTATION
-* [Making a Simple Weather Web Seerver Using ESP8266 and BME280](http://embedded-lab.com/blog/making-simple-weather-web-server-using-esp8266-bme280/)
+* [Making a Simple Weather Web Server Using ESP8266 and BME280](http://embedded-lab.com/blog/making-simple-weather-web-server-using-esp8266-bme280/)
 * For information on barometric pressure measurement, see [RPi - IoT Weather Station](https://www.hackster.io/mjrobot/rpi-iot-weather-station-8c409c)
 and [BMP180 Barometric Pressure Sensor Hookup](https://learn.sparkfun.com/tutorials/bmp180-barometric-pressure-sensor-hookup-)
+* [ESP8266 ADC – Read Analog Values with Arduino IDE, MicroPython and Lua](https://randomnerdtutorials.com/esp8266-adc-reading-analog-values-with-nodemcu/)
+* [MQ4 Gas Sensor – Methane Natural Gas Monitor With MQ3 / MQ4 Sensors](http://www.geekstips.com/mq4-sensor-natural-gas-methane-arduino/)
+* [Flammable Gas Sensor（Model MQ-4: Manual](https://cdn.sparkfun.com/datasheets/Sensors/Biometric/MQ-4%20Ver1.3%20-%20Manual.pdf)
 
 
 

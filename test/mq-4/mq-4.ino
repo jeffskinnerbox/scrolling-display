@@ -25,6 +25,9 @@ USAGE:
     Place the IP address of the device (printed in debug message)
     in a browser to see the web server output of the device.
 
+    http://MQ-4.local/
+    http://192.168.1.47
+
 REFERENCE MATERIALS:
     Dew-point Calculation - http://irtfweb.ifa.hawaii.edu/~tcs3/tcs3/Misc/Dewpoint_Calculation_Humidity_Sensor_E.pdf
     Dew-point Calculation - https://en.wikipedia.org/wiki/Dew_point
@@ -50,7 +53,7 @@ CREATED BY:
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
-// bme280 project's include files (current directory)
+// mq-4 project's include files (current directory)
 #include "debug.h"
 #include "WiFiTools.h"
 #include "credentials.h"
@@ -74,7 +77,7 @@ WiFiTools WT = WiFiTools();
 const char version[] = VER;
 
 
-const int analogInPin = A0;     // nodemcu analog Pin ADC0 = A0
+const int ANALOGPIN = A0;     // nodemcu analog Pin ADC0 (aka A0)
 
 
 //------------------------------ Helper Routines -------------------------------
@@ -130,7 +133,7 @@ float dew_point_F(float t, float h) {
 
 //----------------------------- Webserver Routines -----------------------------
 
-String PostData(float temperature,float humidity,float pressure,float altitude) {
+String PostData(float temperature,float humidity,float pressure,float altitude, float voltage) {
     String ptr = "<!DOCTYPE html> <html>\n";
 
     ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
@@ -155,6 +158,9 @@ String PostData(float temperature,float humidity,float pressure,float altitude) 
     ptr += "<p><strong>Altitude: </strong>";
     ptr += altitude;
     ptr += " meters</p>";
+    ptr += "<p><strong>Pot: </strong>";
+    ptr += voltage;
+    ptr += " volts</p>";
     ptr += "</div>\n";
     ptr += "</body>\n";
     ptr += "</html>\n";
@@ -165,13 +171,14 @@ String PostData(float temperature,float humidity,float pressure,float altitude) 
 
 
 // Send HTTP status 200 (Ok) and send some text to the browser/client
-void handle_Root() {
+void handler_Root() {
 
     char string[BUF_SIZE];
     float temperature = bme.readTemperature();
     float humidity = bme.readHumidity();
     float pressure = bme.readPressure() / 100.0F;
     float altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
+    float voltage = potRead(ANALOGPIN);
 
     // print temperature
     sprintf(string, "temperature = %.2f °C / %.2f °F",
@@ -192,15 +199,19 @@ void handle_Root() {
             altitude, meter_to_feet(altitude));
     INFOS("", string);
 
+    // print estimated altitude above sea level
+    sprintf(string, "voltage on pot tap = %.2f volts", voltage);
+    INFOS("", string);
+
     // send HTTP status 200 (Ok) and send some text to the browser/client
-    server.send(200, "text/html", PostData(temperature, humidity, pressure, altitude));
+    server.send(200, "text/html", PostData(temperature, humidity, pressure, altitude, voltage));
     INFO("Posted data on webserver.");
 
 }
 
 
  // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
-void handle_NotFound(){
+void handler_NotFound() {
 
     server.send(404, "text/plain", "404: Not found");
     ERROR("404 Error on Webserver.");
@@ -209,8 +220,7 @@ void handle_NotFound(){
 
 
 
-
-//--------------------- Error Message Handler for Display ----------------------
+//---------------------------- Error Message Handler ---------------------------
 
 // handle errors by printing code and then take action (e.g. restart)
 void errorHandler(int error) {
@@ -234,6 +244,27 @@ void errorHandler(int error) {
 
 
 
+//------------------------------- Helper Routines ------------------------------
+
+// read the voltage level on analog pin
+float potRead(int pin) {
+    const float MAXVOLT = 3.3;  // maximum voltage possible on pot tap
+    const int MAXADC = 1024;    // maximum ADC value for maximum voltage on pot tap
+    int sensorValue;            // ADC value read from the analog pin
+    float voltage;              // voltage reading of pot tap
+
+    // ADC read of analog pin (integer proportional to max)
+    sensorValue = analogRead(pin);
+
+    // voltage value of analog pin
+    voltage = MAXVOLT * (float)sensorValue / (float)MAXADC;
+
+    return voltage;
+
+}
+
+
+
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
@@ -243,9 +274,9 @@ void setup() {
     while (!Serial) {}                        // wait for serial port to connect
 
     PRINT("\n--------------------------------------------------------------------------------");
-    INFO("Starting Bosch BME280 Pressure - Humidity - Temp Sensor Test!");
-    INFOS("bme280 version = ", version);
-    INFOS("bme280 MAC address = ", WiFi.macAddress());
+    INFO("Starting MQ-4 Methane Gas Sensor");
+    INFOS("mq-4 version = ", version);
+    INFOS("mq-4 MAC address = ", WiFi.macAddress());
 
     // start reading the bme280 sensor
     if (!bme.begin(BME_I2C)) {
@@ -256,31 +287,25 @@ void setup() {
     if (!WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME))
         errorHandler(1);
 
-    server.on("/", HTTP_GET, handle_Root);  // call function when a client requests URI "/"
-    server.onNotFound(handle_NotFound);     // call when requests an unknown URI (i.e. something other than the above)
+    // start the mDNS responder service (start before web server)
+    WT.wifiMDNS("MQ-4");
 
     // start the web server
     server.begin();
     INFO("HTTP server started");
 
+    server.on("/", HTTP_GET, handler_Root);  // call function when a client requests URI "/"
+    server.onNotFound(handler_NotFound);     // call when requests an unknown URI (i.e. something other than the above)
+
 }
 
 
 void loop() {
-    const float MAXVOLT = 3.3;  // maximum voltage possible on pot tap
-    const int MAXADC = 1024;    // maximum ADC value for maximum voltage on pot tap
-    int sensorValue;            // ADC value read from the analog pin
-    float voltage;              // voltage reading of pot tap
 
     // listen for HTTP requests from clients
     server.handleClient();
 
-    // ADC read of analog pin (integer proportional to max)
-    sensorValue = analogRead(analogInPin);
-
-    // voltage value of analog pin
-    voltage = MAXVOLT * (float)sensorValue / (float)MAXADC;
-    INFOD("voltage = ", voltage);
+    INFOD("voltage = ", potRead(ANALOGPIN));
 
 }
 

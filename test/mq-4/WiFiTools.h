@@ -1,7 +1,7 @@
 
 /*------------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.3.0
+Version:      0.4.0
 
 DESCRIPTION:
 
@@ -26,7 +26,8 @@ class WiFiTools {
     ~WiFiTools(void);
 
     // public methods
-    bool wifiConnect(char *, char *, unsigned long);
-    void wifiTerminate(void);
-    void wifiScan(void);
+    bool wifiConnect(char *, char *, unsigned long);  // connect to wifi
+    void wifiTerminate(void);                         // terminate the wifi connect
+    bool wifiMDNS(char *);                            // start the mDNS responder service
+    void wifiScan(void);                              // scan for nearby networks
 };
