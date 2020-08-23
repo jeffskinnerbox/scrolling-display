@@ -16,7 +16,6 @@ CREATED BY:
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
 
 // Arduino libraries (~/src/arduino/libraries)
 #include <Arduino.h>
@@ -62,8 +61,15 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     password = pass;
     timeout = tout;
 
+    // set wifi mode: WIFI_AP, WIFI_STA, WIFI_AP_STA, WIFI_OFF
+    if (WiFi.mode(WIFI_STA)) {
+        INFO("WiFi set to Station (STA) Mode");
+    } else {
+        ERROR("Could not set WiFi to Station (STA) Mode!");
+    }
+
     // attempt first connect to a WiFi network
-    INFOS("Attempting connection to WiFi SSID ", ssid);
+    INFOS("Attempting connection to WiFi with SSID ", ssid);
     WiFi.begin(ssid, password);
 
     // make subsequent connection attempts to wifi
@@ -71,6 +77,7 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     while(WiFi.status() != WL_CONNECTED) {
         PRT(".");
         if (millis() > tout) {
+            PRT(".\n\r");
             ERRORD("Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
@@ -79,8 +86,6 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
 
     PRT(".\n\r");
     INFOS("Successfully connected to WiFi!  IP address is ", WiFi.localIP());
-    INFOD("WiFi status exit code is ", WiFi.status());
-    PRINT("--------------------------------------------------------------------------------");
 
     return true;
 
@@ -94,12 +99,11 @@ void WiFiTools::wifiTerminate() {
 
     WiFi.disconnect();
 
-    PRINT("--------------------------------------------------------------------------------");
-
 }
 
 
-// // start the mDNS responder service
+/*
+// start the mDNS responder service
 bool WiFiTools::wifiMDNS(char *name) {
 
     if (MDNS.begin(name)) {              // Start the mDNS responder for 'name'.local
@@ -109,6 +113,16 @@ bool WiFiTools::wifiMDNS(char *name) {
         ERRORS("Error setting up mDNS responder for ", name);
         return false;
     }
+
+}
+*/
+
+
+// wifi diagnostic information
+void WiFiTools::wifiDiag() {
+
+    INFO("Printing WiFi diagnostic information:");
+    WiFi.printDiag(Serial);
 
 }
 
@@ -128,7 +142,6 @@ void WiFiTools::wifiScan() {
     }
 
     INFO("Network Scan Completed");
-    PRINT("--------------------------------------------------------------------------------");
 
 }
 

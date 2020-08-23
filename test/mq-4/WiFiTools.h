@@ -28,6 +28,6 @@ class WiFiTools {
     // public methods
     bool wifiConnect(char *, char *, unsigned long);  // connect to wifi
     void wifiTerminate(void);                         // terminate the wifi connect
-    bool wifiMDNS(char *);                            // start the mDNS responder service
     void wifiScan(void);                              // scan for nearby networks
+    void wifiDiag(void);                              // print wifi diagnostic information
 };

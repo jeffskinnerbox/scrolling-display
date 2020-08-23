@@ -28,6 +28,8 @@ USAGE:
     http://MQ-4.local/
     http://192.168.1.47
 
+    ping mq-4.local
+
 REFERENCE MATERIALS:
     Dew-point Calculation - http://irtfweb.ifa.hawaii.edu/~tcs3/tcs3/Misc/Dewpoint_Calculation_Humidity_Sensor_E.pdf
     Dew-point Calculation - https://en.wikipedia.org/wiki/Dew_point
@@ -45,6 +47,7 @@ CREATED BY:
 #include <SPI.h>
 #include <Wire.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 
 // Arduino libraries (~/src/arduino/libraries)
@@ -62,6 +65,9 @@ CREATED BY:
 #define SEALEVELPRESSURE_HPA (1013.25)   // average sea-level pressure = 1013.25 mbar/101.325 kPa/29.921 inHg/760.00 mmHg
 #define BME_I2C 0x76                     // I2C address of bme280
 #define BUF_SIZE 80                      // string buffer size used for sprintf
+
+#define NAME "MQ-4"                      // mDNS advertised name of this device
+#define FORTH_SEC 250UL                  // milliseconds in one-forth second
 
 Adafruit_BME280 bme;
 
@@ -92,7 +98,7 @@ float hPa_to_inches(float p) {
 
 // convert celsius to fahrenheit
 float C_to_F(float t) {
-    return t * 9 / 5 + 32;
+    return t * 9.0 / 5.0 + 32.0;
 }
 
 
@@ -137,7 +143,7 @@ String PostData(float temperature,float humidity,float pressure,float altitude, 
     String ptr = "<!DOCTYPE html> <html>\n";
 
     ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-    ptr += "<title>ESP8266 Weather Station</title>\n";
+    ptr += "<title>ESP8266 BME Station</title>\n";
     ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
     ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
     ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
@@ -145,7 +151,7 @@ String PostData(float temperature,float humidity,float pressure,float altitude, 
     ptr += "</head>\n";
     ptr += "<body>\n";
     ptr += "<div id=\"webpage\">\n";
-    ptr += "<h1>ESP8266 Weather Station</h1>\n";
+    ptr += "<h1>ESP8266 BME280 and MQ-4 Sensor Station</h1>\n";
     ptr += "<p><strong>Temperature: </strong>";
     ptr += temperature;
     ptr += " &deg;C</p>";
@@ -246,7 +252,9 @@ void errorHandler(int error) {
 
 //------------------------------- Helper Routines ------------------------------
 
-// read the voltage level on analog pin
+// read the voltage level on analog pin connected to central tap of a potentiometer
+// wired across vcc and gnd
+// assumes 10-bit ADC and ADC voltage range is 0 to 3.3
 float potRead(int pin) {
     const float MAXVOLT = 3.3;  // maximum voltage possible on pot tap
     const int MAXADC = 1024;    // maximum ADC value for maximum voltage on pot tap
@@ -268,44 +276,84 @@ float potRead(int pin) {
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
+    char string[BUF_SIZE];
 
     // setup serial port to print debug output
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
-    PRINT("\n--------------------------------------------------------------------------------");
+    PRINT("\n\r--------------------------------------------------------------------------------");
     INFO("Starting MQ-4 Methane Gas Sensor");
     INFOS("mq-4 version = ", version);
-    INFOS("mq-4 MAC address = ", WiFi.macAddress());
+    INFOS("ESP8266 MAC address = ", WiFi.macAddress());
+    INFOD("ESP8266 chip ID = ", ESP.getChipId());
 
     // start reading the bme280 sensor
     if (!bme.begin(BME_I2C)) {
         ERROR("Could not find a valid BME280 sensor, check wiring!");
+        WARNING("Proceeding without BME280 working!");
     }
 
     // attempt to connect and initialize WiFi network
     if (!WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME))
         errorHandler(1);
 
-    // start the mDNS responder service (start before web server)
-    WT.wifiMDNS("MQ-4");
+    // start the mDNS responder service for 'NAME'.local (start before web server)
+    if (!MDNS.begin(NAME)) {
+        ERROR("Error setting up mDNS responder!");
+        WARNING("Proceeding without mDNS working!");
+    } else
+        INFOS("mDNS responder started for ", NAME);
 
     // start the web server
     server.begin();
-    INFO("HTTP server started");
+    //if (server) {
+    if (true) {
+        INFO("HTTP server started and listening");
+        sprintf(string, "Web server started, open %s.local (aka %s) in a web browser", NAME, WiFi.localIP().toString().c_str());
+        INFOS("", string);
+    } else {
+        ERROR("HTTP server NOT started or NOT listening!");
+    }
+
+    // add service for mDNS to broadcast over the network
+    MDNS.addService("http", "tcp", 80);
 
     server.on("/", HTTP_GET, handler_Root);  // call function when a client requests URI "/"
     server.onNotFound(handler_NotFound);     // call when requests an unknown URI (i.e. something other than the above)
 
+    // print wifi diagnostic information
+    //WT.wifiDiag();
+
+    PRINT("--------------------------------------------------------------------------------");
+
 }
 
 
+// NOTE: the esp8266 uses the ADC to evaluate the strength of the WiFi signal.
+// Heav use of analogRead disturbs it and you will have problems with web server.
+// Reduce the frequency of use of analogRead to get better service.
 void loop() {
+    static float old_voltage = 0.0;
+    static float voltage = 1.0;
+    static unsigned long lastMeasureMillis = 0UL;
+
+    MDNS.update();
 
     // listen for HTTP requests from clients
     server.handleClient();
 
-    INFOD("voltage = ", potRead(ANALOGPIN));
+    // read the analog pin
+    if (millis() - lastMeasureMillis > FORTH_SEC) {
+        lastMeasureMillis = millis();
+        voltage = potRead(ANALOGPIN);
+
+        // report significant changes in voltage level
+        if (old_voltage - voltage > 0.01 || voltage - old_voltage > 0.01) {
+            INFOD("voltage = ", voltage);
+            old_voltage = voltage;
+        }
+    }
 
 }
 

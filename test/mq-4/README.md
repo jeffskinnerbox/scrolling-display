@@ -102,6 +102,27 @@ The ESP8266 ADC pin input voltage range is 0 to 1V if you’re using the bare ch
 However, a development board like the NodeMCU come with an internal voltage divider,
 so the input range is 0 to 3.3V.
 
+## ADC Conflicts with WiFi
+The esp8266 uses the ADC to evaluate the strength of the WiFi signal.
+Heave use of analogRead disturbs it and you will have problems with web server.
+Reduce the frequency of use of analogRead to get better service.
+
+## ESP8266 mDNS
+In networking world it is difficult to remember IP address of each website and computer.
+To solve this problem, the Domain Name System (DNS) is used to make human understandable names.
+In the world of microcontrollers like the ESP8266, when using ESP as web server, for example,
+its equally difficult to remember IP address of ESP8266, particularly when using DHCP.
+Many ESP8266 application doesn’t have display interface
+and they are not easy to access to know its IP address.
+To overcome this problem Multicast DNS (mDNS) is used.
+
+mDNS provides the ability to perform DNS-like operations on the local network
+in the absence of any conventional Unicast DNS server.
+In addition, Multicast DNS designates a portion of the DNS namespace to be free for local use,
+without the need to pay any annual fee,
+and without the need to set up delegations or
+otherwise configure a conventional DNS server to answer for those names.
+
 ## Libraries
 Arduino IDE or ESP libraries used:
 
