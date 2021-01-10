@@ -20,12 +20,12 @@
 #	    := set variable as the output an executed shell script
 #	    += is used for appending more text to variables
 #
-# SOURCES
-#   The Makefile was created with the help of this website:
-#   https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
+#  SOURCES
+#   	The Makefile was created with the help of this website:
+#   	https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
 #
-# DOCUMENTATION
-#   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#  DOCUMENTATION
+#   	https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
 #-------------------------------------------------------------------------------
 
 # name of program being created
@@ -70,7 +70,8 @@ UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
 #-------------------------------------------------------------------------------
 
-.PHONY: build upload clean erase size
+#.PHONY: build upload clean erase size
+.PHONY: build clean
 
 all: build upload
 
