@@ -9,6 +9,10 @@ Version:      0.4.0
 
 ---
 
+## BME680 Environmental Sensor
+* [ESP32: BME680 Environmental Sensor using Arduino IDE (Gas, Pressure, Humidity, Temperature)](https://randomnerdtutorials.com/esp32-bme680-sensor-arduino/)
+* [Hazardous Gas Monitor](https://learn.sparkfun.com/tutorials/hazardous-gas-monitor)
+
 # DESCRIPTION
 Test program for ESP8266 NodeMCU + BME280 + MQ-4,
 a integrated environmental sensing unit from Bosch that combines
@@ -44,14 +48,30 @@ you can also use it as an altimeter with  ±1 meter or better accuracy!
 ## MQ-4 Methane Gas Sensor
 The MQ-4 Methane Gas Sensor is a gas sensor that detects the presence of methane gas.
 Its highly sensitivity to methane and natural gas but also slight sensitivity to alcohol and smoke.
+Specificially, the MQ-4 gas sensor can measure
+liquefied petroleum gas (LPG), methane (CH4), hydrogen (H2), carbon monoxide (CO), alcohol, and smoke concentrations.
 The sensor is simple to wire up, using one analog voltage input pin from your microcontroller.
 The MQ-4 detects the concentration of methane gas in the air and ouputs its reading as an analog voltage.
 The concentration sensing range of 200 ppm to 10,000 ppm (suitable for gas stove leak detection),
 operates at temperatures from -10 to 50°C, and consumes less than 150 mA at 5 V.
 
-The sensor has ajustable sensitivity using the onboard potentiometer.
+MQ4 model must be powered with stable 5v and needs at least 150mA (best to have 250mA),
+according to the datasheet, to be able to work properly.
+
+**NOTE:** Be aware that:
+
+1. You need to "preheat” the sensor, which means before
+use you should operate the sensor for 12h to 24h to burn it in.
+2. Also before getting stable measurements, the sensor needs at least 1 minute to heat up.
+3. Only after these steps you will be able to get consistent data.
+4. Also this kind of devices, which have internal heater,
+are pretty sensible to ambient influences like humidity or moisture.
+
+The sensor has adjustable sensitivity using the onboard potentiometer.
 
 * [Flammable Gas Sensor - Model：MQ-4](https://cdn.sparkfun.com/datasheets/Sensors/Biometric/MQ-4%20Ver1.3%20-%20Manual.pdf)
+* [MQ4 Gas Sensor – Methane Natural Gas Monitor With MQ3 / MQ4 Sensors](http://www.geekstips.com/mq4-sensor-natural-gas-methane-arduino/)
+* [Understanding a Gas Sensor](https://jayconsystems.com/blog/understanding-a-gas-sensor)
 
 * Wemos and MQ-4 gas sensor - http://www.esp8266learning.com/wemos-mq-4-gas-sensor.php
 * MQ4 GAS SENSOR – METHANE NATURAL GAS MONITOR WITH MQ3 / MQ4 SENSORS - http://www.geekstips.com/mq4-sensor-natural-gas-methane-arduino/
@@ -84,9 +104,27 @@ The NodeMCU has one ADC pin, `A0`, that is accessible, giving it the ability to 
 The ADC pin has a 10-bit resolution, which means you’ll get values between 0 and 1023
 and the ADC voltage range is 0 to 3.3V.
 
+Types of ADC:
+* Parallel Comparator ADC - used for fast processing, like you'll need for SDR radios,
+but typically are more expensive
+* Successive-Approximation ADC - slower operation and less expensive.  Note these types of ADC
+will often have a multiplexed frount end to supply multiple ADC pins on a chip but its really
+a single, shared ADC.
+
 >**NOTE:** If your using the ESP8266 bare chip, the ADC pin input voltage range is 0 to 1V.
 >However, the NodeMCU (aka ESP8266 development board) come with an internal voltage divider,
 >so the input range is 0 to 3.3V.
+
+>**NOTE:** The ESP8266 uses its single ADC (`A0` pin) to evaluate the strength of the WiFi signal.
+>Heavy use of `analogRead` disturbs the WiFi logic and you will have problems
+>with making WiFi connections, use of web servers, etc.
+>Reduce the frequency of use of `analogRead` within the event loop to get better results.
+
+* [#340 How good are the ADCs inside Arduinos, ESP8266, and ESP32? And extenal ADCs (ADS1115)](https://www.youtube.com/watch?v=UAJMLTzrM9Q&t=40s)
+* [#10 Tutorial: Make the Arduino Analog Readings more precise](https://www.youtube.com/watch?v=xI_qU2auVx8)
+* [#18 ADS1115 Analog-to-Digital Converter Tutorial](https://www.youtube.com/watch?v=tnfBslyfLRQ)
+* [#104 ADS1115 Analog-to-Digital Converter for Arduino, Pi](https://www.youtube.com/watch?v=8qGr6Q5Ymps)
+
 
 # SOFTWARE DESIGN
 ## Sources

@@ -42,6 +42,7 @@ CREATED BY:
 ------------------------------------------------------------------------------ */
 
 #define DEBUG true    // activate debugging routings (print trace messages on serial port)
+#define POT true      // instead of using a MQ-4 sensor, measure the voltage of a potentiometer (used for testing)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
@@ -143,7 +144,7 @@ String PostData(float temperature,float humidity,float pressure,float altitude, 
     String ptr = "<!DOCTYPE html> <html>\n";
 
     ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-    ptr += "<title>ESP8266 BME Station</title>\n";
+    ptr += "<title>ESP8266 BME280 + MQ-4 Station</title>\n";
     ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
     ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
     ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
@@ -164,9 +165,12 @@ String PostData(float temperature,float humidity,float pressure,float altitude, 
     ptr += "<p><strong>Altitude: </strong>";
     ptr += altitude;
     ptr += " meters</p>";
+#if POT    // --------- for potentiometer ---------
     ptr += "<p><strong>Pot: </strong>";
     ptr += voltage;
     ptr += " volts</p>";
+#else      // ---------- for MQ-4 sensor ----------
+#endif
     ptr += "</div>\n";
     ptr += "</body>\n";
     ptr += "</html>\n";
@@ -205,12 +209,85 @@ void handler_Root() {
             altitude, meter_to_feet(altitude));
     INFOS("", string);
 
-    // print estimated altitude above sea level
+#if POT    // --------- for potentiometer ---------
+    // print voltage reading of potentiometer central tap
     sprintf(string, "voltage on pot tap = %.2f volts", voltage);
     INFOS("", string);
+#else      // ---------- for MQ-4 sensor ----------
+#endif
 
     // send HTTP status 200 (Ok) and send some text to the browser/client
     server.send(200, "text/html", PostData(temperature, humidity, pressure, altitude, voltage));
+    INFO("Posted data on webserver.");
+
+}
+
+
+String PostBME280Data(float temperature,float humidity,float pressure,float altitude) {
+    String ptr = "<!DOCTYPE html> <html>\n";
+
+    ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
+    ptr += "<title>ESP8266 BME280 + MQ-4 Station</title>\n";
+    ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
+    ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
+    ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+    ptr += "</style>\n";
+    ptr += "</head>\n";
+    ptr += "<body>\n";
+    ptr += "<div id=\"webpage\">\n";
+    ptr += "<h1>ESP8266 BME280 Sensor</h1>\n";
+    ptr += "<p><strong>Temperature: </strong>";
+    ptr += temperature;
+    ptr += " &deg;C</p>";
+    ptr += "<p><strong>Humidity: </strong>";
+    ptr += humidity;
+    ptr += " %</p>";
+    ptr += "<p><strong>Pressure: </strong>";
+    ptr += pressure;
+    ptr += " hPa</p>";
+    ptr += "<p><strong>Altitude: </strong>";
+    ptr += altitude;
+    ptr += " meters</p>";
+    ptr += "</div>\n";
+    ptr += "</body>\n";
+    ptr += "</html>\n";
+
+    return ptr;
+
+}
+
+
+// Send HTTP status 200 (Ok) and send some text to the browser/client
+void handler_BME280() {
+
+    char string[BUF_SIZE];
+    float temperature = bme.readTemperature();
+    float humidity = bme.readHumidity();
+    float pressure = bme.readPressure() / 100.0F;
+    float altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
+    float voltage = potRead(ANALOGPIN);
+
+    // print temperature
+    sprintf(string, "temperature = %.2f °C / %.2f °F",
+            temperature, C_to_F(temperature));
+    INFOS("", string);
+
+    // print relative humidity
+    sprintf(string, "relative humidity = %.2f %%", humidity);
+    INFOS("", string);
+
+    // print air pressure
+    sprintf(string, "pressure = %.2f % hPa (aka millibars) / %.2f inches of mercury",
+            pressure, hPa_to_inches(pressure));
+    INFOS("", string);
+
+    // print estimated altitude above sea level
+    sprintf(string, "approx. altitude above sea level = %.2f meters / %.2f feet",
+            altitude, meter_to_feet(altitude));
+    INFOS("", string);
+
+    // send HTTP status 200 (Ok) and send some text to the browser/client
+    server.send(200, "text/html", PostBME280Data(temperature, humidity, pressure, altitude));
     INFO("Posted data on webserver.");
 
 }
@@ -252,12 +329,13 @@ void errorHandler(int error) {
 
 //------------------------------- Helper Routines ------------------------------
 
+#if POT    // --------- for potentiometer ---------
 // read the voltage level on analog pin connected to central tap of a potentiometer
 // wired across vcc and gnd
 // assumes 10-bit ADC and ADC voltage range is 0 to 3.3
 float potRead(int pin) {
     const float MAXVOLT = 3.3;  // maximum voltage possible on pot tap
-    const int MAXADC = 1024;    // maximum ADC value for maximum voltage on pot tap
+    const int MAXADC = 1024;    // maximum ADC value for maximum voltage on pot tap (10-bit ADC)
     int sensorValue;            // ADC value read from the analog pin
     float voltage;              // voltage reading of pot tap
 
@@ -270,6 +348,8 @@ float potRead(int pin) {
     return voltage;
 
 }
+#else      // ---------- for MQ-4 sensor ----------
+#endif
 
 
 
@@ -319,8 +399,9 @@ void setup() {
     // add service for mDNS to broadcast over the network
     MDNS.addService("http", "tcp", 80);
 
-    server.on("/", HTTP_GET, handler_Root);  // call function when a client requests URI "/"
-    server.onNotFound(handler_NotFound);     // call when requests an unknown URI (i.e. something other than the above)
+    server.on("/", HTTP_GET, handler_Root);          // call function when a client requests end-point URI "/"
+    server.on("/bme280", HTTP_GET, handler_BME280);  // call function when a client requests end-point URI "/bme280"
+    server.onNotFound(handler_NotFound);             // call when requests an unknown end-point
 
     // print wifi diagnostic information
     //WT.wifiDiag();
@@ -343,6 +424,7 @@ void loop() {
     // listen for HTTP requests from clients
     server.handleClient();
 
+#if POT    // --------- for potentiometer ---------
     // read the analog pin
     if (millis() - lastMeasureMillis > FORTH_SEC) {
         lastMeasureMillis = millis();
@@ -354,6 +436,8 @@ void loop() {
             old_voltage = voltage;
         }
     }
+#else      // ---------- for MQ-4 sensor ----------
+#endif
 
 }
 
