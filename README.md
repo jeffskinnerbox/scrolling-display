@@ -81,8 +81,8 @@ and they will be place in `$HOME/src/arduino/sketechbooks/libraries`
 
 >**NOTE:** You could have install this libary within the Arduino IDE, for example,
 >via **Tools** > **Manage Libraries...** > enter "arduino-timer" and install.
->That will work with the Adruino IDE but would **not** have worked with `ardunio-cli`.
->You must use `arduino-cli lib install <library-name>`.
+>That will work with the Adruino IDE but would **not** have worked with command-line tool `ardunio-cli`.
+>Instead, you must use `arduino-cli lib install <library-name>`.
 
 The libraries to be installed are Parola and MAX72xx.
 let's first search for them to get the libaries exaqct names

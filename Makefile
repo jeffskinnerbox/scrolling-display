@@ -72,7 +72,7 @@ UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
 .PHONY: build upload clean erase size
 
-all: build upload
+all: build clean
 
 build: 											# build the binary executable
 	$(CC) $(CC_FLAGS) $(PWD)
