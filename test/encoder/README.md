@@ -10,6 +10,9 @@ Version:      0.3.0
 
 ---
 
+* [Embed With Elliot: Debounce Your Noisy Buttons, Part I](https://hackaday.com/2015/12/09/embed-with-elliot-debounce-your-noisy-buttons-part-i/)
+* [Embed With Elliot: Debounce Your Noisy Buttons, Part II](https://hackaday.com/2015/12/10/embed-with-elliot-debounce-your-noisy-buttons-part-ii/)
+
 # DESCRIPTION
 Test program for getting a KY-040 Rotary Encoder working with a ESP8266 NodeMCU
 with a simple switch debouncing scheme.
