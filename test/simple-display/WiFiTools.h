@@ -1,7 +1,7 @@
 
 /*------------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      0.4.0
 
 DESCRIPTION:
 
@@ -10,7 +10,6 @@ REFERENCE MATERIALS:
 CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
-
 
 #pragma once                        // compiler to skip subsequent includes of this file
 
@@ -27,7 +26,8 @@ class WiFiTools {
     ~WiFiTools(void);
 
     // public methods
-    bool wifiConnect(char *, char *, unsigned long);
-    void wifiTerminate(void);
-    void wifiScan(void);
+    bool wifiConnect(char *, char *, unsigned long);  // connect to wifi
+    void wifiTerminate(void);                         // terminate the wifi connect
+    void wifiScan(void);                              // scan for nearby networks
+    void wifiDiag(void);                              // print wifi diagnostic information
 };

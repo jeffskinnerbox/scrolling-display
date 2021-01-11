@@ -2,14 +2,12 @@
 /* -----------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.3.0
+Version:      1.0.0
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
 
 REFERENCE MATERIALS:
-    Arduino Macro F() - https://www.baldengineer.com/arduino-f-macro.html
-
     The ANSI escape sequences set screen attributes, such as bold text,
     and color of foreground and background.
 
@@ -66,6 +64,7 @@ CREATED BY:
 
 // debugging routings that print trace messages on serial port
 // using F() to load strings in flash memory, not RAM
+
 #if DEBUG
     #define PRT(s)         { Serial.print(F(s)); }                             // Print a string without newline
     #define PRINT(s)       { Serial.println(F(s)); }                           // Print a string

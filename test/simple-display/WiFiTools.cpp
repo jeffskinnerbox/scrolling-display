@@ -1,7 +1,7 @@
 
 /*------------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      0.4.0
 
 DESCRIPTION:
 
@@ -10,6 +10,8 @@ REFERENCE MATERIALS:
 CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
+
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
@@ -26,6 +28,8 @@ CREATED BY:
 
 #define BUF 25
 
+
+
 // ------------------------ Constructors & Destructors -------------------------
 
 // Constructor to create WiFiTools
@@ -33,7 +37,7 @@ WiFiTools::WiFiTools(void) {
 
     ssid = new char[BUF];
     password = new char[BUF];
-    timeout = 10000;              // time out for wifi access request
+    timeout = 10000UL;              // time out for wifi access request
 
 }
 
@@ -57,43 +61,76 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     password = pass;
     timeout = tout;
 
+    // set wifi mode: WIFI_AP, WIFI_STA, WIFI_AP_STA, WIFI_OFF
+    if (WiFi.mode(WIFI_STA)) {
+        INFO("WiFi set to Station (STA) Mode");
+    } else {
+        ERROR("Could not set WiFi to Station (STA) Mode!");
+    }
+
     // attempt first connect to a WiFi network
-    INFOS("Attempting connection to WiFi SSID ", ssid);
+    INFOS("Attempting connection to WiFi with SSID ", ssid);
     WiFi.begin(ssid, password);
 
     // make subsequent connection attempts to wifi
     tout = timeout + millis();                // milliseconds of time given to making connection attempt
     while(WiFi.status() != WL_CONNECTED) {
-        PRINT(".");
+        PRT(".");
         if (millis() > tout) {
-            PRINT("\n\r");
+            PRT(".\n\r");
             ERRORD("Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
         delay(500);
     }
-    PRINT("\n\r");
 
+    PRT(".\n\r");
     INFOS("Successfully connected to WiFi!  IP address is ", WiFi.localIP());
-    INFOD("WiFi status exit code is ", WiFi.status());
 
     return true;
+
 }
 
 
 // terminate the wifi connect
 void WiFiTools::wifiTerminate() {
-    INFOS("\nDisconnecting from WiFi with SSID ", WiFi.SSID());
+
+    INFOS("Disconnecting from WiFi with SSID ", WiFi.SSID());
 
     WiFi.disconnect();
 
-    PRINT("\n-------------------------------------------------------\n\r");
+}
+
+
+/*
+// start the mDNS responder service
+bool WiFiTools::wifiMDNS(char *name) {
+
+    if (MDNS.begin(name)) {              // Start the mDNS responder for 'name'.local
+        INFOS("mDNS responder started for ", name);
+        return true;
+    } else {
+        ERRORS("Error setting up mDNS responder for ", name);
+        return false;
+    }
+
+}
+*/
+
+
+// wifi diagnostic information
+void WiFiTools::wifiDiag() {
+
+    INFO("Printing WiFi diagnostic information:");
+    WiFi.printDiag(Serial);
+
 }
 
 
 // scan for nearby networks
 void WiFiTools::wifiScan() {
-    INFO("Starting Network Scan\n\r");
+
+    INFO("Starting Network Scan");
     byte numSsid = WiFi.scanNetworks();
 
     // print the list of networks seen
@@ -104,7 +141,7 @@ void WiFiTools::wifiScan() {
         INFOS("   ", WiFi.SSID(thisNet));
     }
 
-    INFO("Network Scan Completed\n\r");
-    PRINT("\n-------------------------------------------------------\n\r");
+    INFO("Network Scan Completed");
+
 }
 

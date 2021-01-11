@@ -239,7 +239,7 @@ void setup() {
     Msg.clear();
 
     // attempt to connect and initialise WiFi network
-    if (wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
+    if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
         sprintf(string, "WiFi connected successfully to SSID %s.", WIFISSID);
         Msg.addQueue(string);
         //tout = THREE_SECOND + millis();              // milliseconds of time to display message

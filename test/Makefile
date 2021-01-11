@@ -1,5 +1,6 @@
 
 #-------------------------------------------------------------------------------
+#
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 # Version:      1.0.0
 #
@@ -31,16 +32,18 @@
 #  DOCUMENTATION
 #       https://www.gnu.org/software/make/manual/html_node/Recursion.html
 #       https://www.gnu.org/software/make/manual/make.html#Empty-Recipes
+#
 #-------------------------------------------------------------------------------
 
 
-TOPTARGETS := all clean
+TOPTARGETS := build clean
 
 SUBDIRS := $(wildcard */.)
 
 #-------------------------------------------------------------------------------
 
 $(TOPTARGETS): $(SUBDIRS)
+
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 

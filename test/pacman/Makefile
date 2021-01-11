@@ -1,13 +1,10 @@
 
 #-------------------------------------------------------------------------------
+#
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      1.0.0
+# Version:      0.4.0
 #
 # USAGE
-#	To build the executable and flash the device
-#		make
-#		make all
-#
 #	To build the executable
 #	    make build
 #
@@ -26,10 +23,11 @@
 #
 # DOCUMENTATION
 #   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#
 #-------------------------------------------------------------------------------
 
 # name of program being created
-PROG = pacman
+PROG = encoder
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266
@@ -68,6 +66,9 @@ CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-pa
 UPLOAD = arduino-cli upload
 UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
+# current directory during a GNUmake file run (not equal to bash pwd)
+DIR := ${CURDIR}
+
 #-------------------------------------------------------------------------------
 
 .PHONY: build upload clean erase size
@@ -75,10 +76,10 @@ UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 all: build upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(PWD)
+	$(CC) $(CC_FLAGS) $(DIR)
 
-upload: 										# up load the binary executable
-	$(UPLOAD) $(UPLOAD_FLAGS) $(PWD)
+upload: 										# flash the binary executable
+	$(UPLOAD) $(UPLOAD_FLAGS) $(DIR)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)

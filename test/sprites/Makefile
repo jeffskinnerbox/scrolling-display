@@ -1,13 +1,10 @@
 
 #-------------------------------------------------------------------------------
+#
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      1.0.0
+# Version:      0.4.0
 #
 # USAGE
-#	To build the executable and flash the device
-#		make
-#		make all
-#
 #	To build the executable
 #	    make build
 #
@@ -20,16 +17,17 @@
 #	    := set variable as the output an executed shell script
 #	    += is used for appending more text to variables
 #
-#  SOURCES
-#   	The Makefile was created with the help of this website:
-#   	https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
+# SOURCES
+#   The Makefile was created with the help of this website:
+#   https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
 #
-#  DOCUMENTATION
-#   	https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+# DOCUMENTATION
+#   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#
 #-------------------------------------------------------------------------------
 
 # name of program being created
-PROG = sprites
+PROG = encoder
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266
@@ -68,18 +66,20 @@ CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-pa
 UPLOAD = arduino-cli upload
 UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
+# current directory during a GNUmake file run (not equal to bash pwd)
+DIR := ${CURDIR}
+
 #-------------------------------------------------------------------------------
 
-#.PHONY: build upload clean erase size
-.PHONY: build clean
+.PHONY: build upload clean erase size
 
 all: build upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(PWD)
+	$(CC) $(CC_FLAGS) $(DIR)
 
-upload: 										# up load the binary executable
-	$(UPLOAD) $(UPLOAD_FLAGS) $(PWD)
+upload: 										# flash the binary executable
+	$(UPLOAD) $(UPLOAD_FLAGS) $(DIR)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)

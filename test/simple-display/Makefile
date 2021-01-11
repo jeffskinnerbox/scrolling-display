@@ -1,7 +1,8 @@
 
 #-------------------------------------------------------------------------------
+#
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      0.2.0
+# Version:      0.4.0
 #
 # USAGE
 #	To build the executable
@@ -22,10 +23,11 @@
 #
 # DOCUMENTATION
 #   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#
 #-------------------------------------------------------------------------------
 
 # name of program being created
-PROG = simple-display
+PROG = encoder
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266
@@ -64,26 +66,20 @@ CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-pa
 UPLOAD = arduino-cli upload
 UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
+# current directory during a GNUmake file run (not equal to bash pwd)
+DIR := ${CURDIR}
+
+#-------------------------------------------------------------------------------
 
 .PHONY: build upload clean erase size
 
 all: build upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(PWD)
+	$(CC) $(CC_FLAGS) $(DIR)
 
-upload: 										# up load the binary executable
-	$(UPLOAD) $(UPLOAD_FLAGS) $(PWD)
-
-#all: build upload
-
-#build: $(PROG).$(VAR).bin
-
-#$(PROG).$(VAR).bin: $(PROG).ino                 # build the binary executable
-	#$(CC) $(CC_FLAGS)
-
-#upload: $(PROG).$(VAR).bin                      # up load the binary executable
-	#$(UPLOAD) $(UPLOAD_FLAGS)
+upload: 										# flash the binary executable
+	$(UPLOAD) $(UPLOAD_FLAGS) $(DIR)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)

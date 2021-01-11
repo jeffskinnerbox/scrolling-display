@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------------------
 #
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      0.3.0
+# Version:      0.4.0
 #
 # USAGE
 #	To build the executable
@@ -66,6 +66,9 @@ CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-pa
 UPLOAD = arduino-cli upload
 UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
+# current directory during a GNUmake file run (not equal to bash pwd)
+DIR := ${CURDIR}
+
 #-------------------------------------------------------------------------------
 
 .PHONY: build upload clean erase size
@@ -73,10 +76,10 @@ UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 all: build upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(PWD)
+	$(CC) $(CC_FLAGS) $(DIR)
 
 upload: 										# flash the binary executable
-	$(UPLOAD) $(UPLOAD_FLAGS) $(PWD)
+	$(UPLOAD) $(UPLOAD_FLAGS) $(DIR)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)

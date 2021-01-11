@@ -1,13 +1,10 @@
 
 #-------------------------------------------------------------------------------
+#
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      1.0.0
+# Version:      0.4.0
 #
 # USAGE
-#	To build the executable and flash the device
-#		make
-#		make all
-#
 #	To build the executable
 #	    make build
 #
@@ -20,21 +17,76 @@
 #	    := set variable as the output an executed shell script
 #	    += is used for appending more text to variables
 #
-#  SOURCES
+# SOURCES
+#   The Makefile was created with the help of this website:
+#   https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
 #
-#  DOCUMENTATION
+# DOCUMENTATION
+#   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#
 #-------------------------------------------------------------------------------
 
+# name of program being created
+PROG = encoder
 
-all: ;
+# type of package, architecture, and board in use
+PACKAGE = esp8266
+ARCH =    esp8266
+BOARD =   nodemcuv2
 
-build: ;
+# serial port used by the board
+PORT = /dev/ttyUSB0
 
-upload: ;
+# optional verbose compile/upload flag
+#VERBOSE = -v
 
-erase: ;
+#-------------------------------------------------------------------------------
 
-size: ;
+# fully qualified board name (FQBN)
+FQBN = $(PACKAGE):$(ARCH):$(BOARD)
 
-clean: ;
+# location of the esptool used for flashing
+ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/2.6.1/esptool.py
 
+# string within names given to .bin and .elf files
+VAR = $(shell echo $(FQBN) | tr ':' '.')
+
+# path for temp-storage of binary, object, and core.a files
+BUILD = /tmp/$(PROG)
+BUILD_PATH = $(BUILD)/build
+
+# paths to libraries and include files
+LIBS = "/home/jeff/src/arduino/sketchbooks/libraries"
+
+# compiler and compiler flags
+CC = arduino-cli compile
+CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-path=$(BUILD) --libraries $(LIBS)
+
+# firmware flasher and flags
+UPLOAD = arduino-cli upload
+UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
+
+# current directory during a GNUmake file run (not equal to bash pwd)
+DIR := ${CURDIR}
+
+#-------------------------------------------------------------------------------
+
+.PHONY: build upload clean erase size
+
+all: build upload
+
+build: 											# build the binary executable
+	#$(CC) $(CC_FLAGS) $(DIR)
+
+upload: 										# flash the binary executable
+	#$(UPLOAD) $(UPLOAD_FLAGS) $(DIR)
+
+erase:                                          # erase the entire flash
+	#$(ESPTOOL) erase_flash --port $(PORT)
+
+size:                                           # determine the flash size
+	#$(ESPTOOL) flash_id --port $(PORT)
+
+clean:                                          # delete all binaries and object files
+	rm -r --force $(BUILD)
+	rm --force *.bin *.elf *.hex
