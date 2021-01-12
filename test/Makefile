@@ -16,7 +16,7 @@
 #	    make upload
 #
 #	makefile syntax
-#	    = set the varialbe
+#	    = set the variable
 #	    ?= set the variable only if it's not set/doesn't have a value
 #	    := set variable as the output an executed shell script
 #	    += is used for appending more text to variables
@@ -36,15 +36,15 @@
 #-------------------------------------------------------------------------------
 
 
-TOPTARGETS := build clean
+TOPTARGETS := build clean              # only goals are to do build or clean
 
-SUBDIRS := $(wildcard */.)
+SUBDIRS := $(wildcard */.)             # create list of all subdirectories as targets
 
 #-------------------------------------------------------------------------------
 
-$(TOPTARGETS): $(SUBDIRS)
+$(TOPTARGETS): $(SUBDIRS)              # targets are subdirectories
 
-$(SUBDIRS):
+.PHONY: $(TOPTARGETS) $(SUBDIRS)       # explicitly declare these target to be phony
+
+$(SUBDIRS):                            # pass your goal to subdirectory makefile
 	$(MAKE) -C $@ $(MAKECMDGOALS)
-
-.PHONY: $(TOPTARGETS) $(SUBDIRS)

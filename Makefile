@@ -1,5 +1,6 @@
 
 #-------------------------------------------------------------------------------
+#
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 # Version:      0.2.0
 #
@@ -15,7 +16,7 @@
 #	    make upload
 #
 #	makefile syntax
-#	    = set the varialbe
+#	    = set the variable
 #	    ?= set the variable only if it's not set/doesn't have a value
 #	    := set variable as the output an executed shell script
 #	    += is used for appending more text to variables
@@ -26,6 +27,8 @@
 #
 # DOCUMENTATION
 #   https://create.arduino.cc/projecthub/B45i/getting-started-with-arduino-cli-7652a5
+#   https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
+#
 #-------------------------------------------------------------------------------
 
 # name of program being created
@@ -70,11 +73,11 @@ UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
 #-------------------------------------------------------------------------------
 
-.PHONY: build upload clean erase size
+.PHONY: build upload clean erase size           # explicitly declare these target to be phony
 
-all: build clean
+all: build upload                               # build and then upload
 
-build: 											# build the binary executable
+build:                                          # build the binary executable
 	$(CC) $(CC_FLAGS) $(PWD)
 
 upload: 										# up load the binary executable
@@ -89,3 +92,4 @@ size:                                           # determine the flash size
 clean:                                          # delete all binaries and object files
 	rm -r --force $(BUILD)
 	rm --force *.bin *.elf *.hex
+

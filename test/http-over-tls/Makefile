@@ -12,7 +12,7 @@
 #	    make upload
 #
 #	makefile syntax
-#	    = set the varialbe
+#	    = set the variable
 #	    ?= set the variable only if it's not set/doesn't have a value
 #	    := set variable as the output an executed shell script
 #	    += is used for appending more text to variables
@@ -71,9 +71,9 @@ DIR := ${CURDIR}
 
 #-------------------------------------------------------------------------------
 
-.PHONY: build upload clean erase size
+.PHONY: build upload clean erase size           # explicitly declare these target to be phony
 
-all: build upload
+all: build upload                               # build and then upload
 
 build: 											# build the binary executable
 	#$(CC) $(CC_FLAGS) $(DIR)
