@@ -18,17 +18,18 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 
 // Arduino libraries (~/src/arduino/libraries)
 #include <Arduino.h>
 
-// simple-display project's include files (~/src/scrolling-display/test/simple-display)
+// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
+
+// simple-display project's include files (~/src/scrolling-display/test/scrolling-display)
 #include "debug.h"
 #include "MessageStore.h"
-
-// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 
 

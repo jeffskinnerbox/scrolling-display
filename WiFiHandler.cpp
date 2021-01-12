@@ -13,6 +13,7 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <ESP8266WiFi.h>

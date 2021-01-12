@@ -317,12 +317,14 @@ void loadmsg(void) {
 
 void setup() {
     char string[BUF_SIZE];
-    unsigned long tout;                           // time-out time
-    int cycle = 0;                                // message number being displayed
+    unsigned long tout;                       // time-out time
+    int cycle = 0;                            // message number being displayed
     int top = Msg.topQueue();
     int size = Msg.sizeQueue();
 
     Serial.begin(9600);
+    while (!Serial) {}                        // wait for serial port to connect
+
     PRINT("--------------------------------------------------------------------------------");
     INFO("Entering setup() for scrolling display");
     INFOS("scrolling display version = ", version);
@@ -382,6 +384,7 @@ void loop() {
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')
             P.displayText(Msg.get(top + cycle), SCROLLALIGN, SCROLLSPEED, SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
+            INFOS("Posting to display message = ", Msg.get(top + cycle));
         cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 
