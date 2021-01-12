@@ -21,14 +21,14 @@ PHYSICAL DESIGN:
         Connect CKY-040 Rotary Encoder CLK pin with with NodeMCU D7 pin
 
 MONITOR:
-    To monitor the clocks activities while operating, power the NodeMCU via
-    USB connection to a Linux computer and execut the following:
+    screen /dev/ttyUSB0 9600,cs8cls
+    to terminate Cntr-a :quit
 
-        screen /dev/ttyUSB0 9600,cs8cls
+TESTING:
+    Just upload and observe.
 
-    To terminate monitoring, enter:
-
-        CNTR-a :quit
+USAGE:
+    Just upload and observe.
 
 REFERENCE MATERIALS:
     https://www.youtube.com/watch?v=cYCTMdUi8P0
@@ -81,6 +81,10 @@ void setup() {
     // setup serial port so you can print debug output
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
+
+    PRINT("--------------------------------------------------------------------------------");
+    INFO("Starting encoder!");
+    INFOS("encoder version = ", version);
 
     PRINT("\n\r");
     INFO("Starting KY-040 Rotary Encoder!");

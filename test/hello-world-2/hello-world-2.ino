@@ -1,5 +1,6 @@
 
 /*------------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      1.0.0
 
@@ -10,15 +11,24 @@ DESCRIPTION:
     An little bit more advanced program that does - Hello World!
 
 MONITOR:
-    screen /dev/ttyUSB0 9600,cs8
+    screen /dev/ttyUSB0 9600,cs8cls
     to terminate Cntr-a :quit
+
+TESTING:
+    Just upload and observe.
+
+USAGE:
+    Just upload and observe.
 
 SOURCES:
     Derived from https://github.com/MajicDesigns/MD_Parola/blob/master/examples/Parola_Ambulance/Parola_Ambulance.ino
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
+
 ------------------------------------------------------------------------------*/
+
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
@@ -30,6 +40,7 @@ CREATED BY:
 #include <MD_MAX72xx.h>
 
 // hello-world-2 project's include files (current directory)
+#include "debug.h"
 
 #define TRUE              1
 #define FALSE             0
@@ -81,7 +92,13 @@ const char version[] = VER;
 void setup() {
 
     Serial.begin(9600);
-    Serial.println("Entered setup()");
+    while (!Serial) {}                        // wait for serial port to connect
+
+    PRINT("--------------------------------------------------------------------------------");
+    INFO("Starting hello-world-2!");
+    INFOS("hello-world-2 version = ", version);
+    //INFOS("ESP8266 MAC address = ", WiFi.macAddress());
+    //INFOD("ESP8266 chip ID = ", ESP.getChipId());
 
     P.begin();
 

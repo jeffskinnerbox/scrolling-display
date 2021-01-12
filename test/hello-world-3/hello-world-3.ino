@@ -1,5 +1,6 @@
 
 /*------------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      1.0.0
 
@@ -10,8 +11,14 @@ DESCRIPTION:
     Now using more advanced text scrolling features.
 
 MONITOR:
-    screen /dev/ttyUSB0 9600,cs8
+    screen /dev/ttyUSB0 9600,cs8cls
     to terminate Cntr-a :quit
+
+TESTING:
+    Just upload and observe.
+
+USAGE:
+    Just upload and observe.
 
 REFERENCE MATERIALS:
     For textEffect parameters - https://github.com/MajicDesigns/MD_Parola/blob/master/src/MD_Parola.h
@@ -21,7 +28,10 @@ SOURCES:
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
+
 ------------------------------------------------------------------------------*/
+
+#define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
@@ -33,6 +43,7 @@ CREATED BY:
 #include <MD_MAX72xx.h>
 
 // hello-world-3 project's include files (current directory)
+#include "debug.h"
 
 
 // define units of time
@@ -42,22 +53,6 @@ CREATED BY:
 #define ONE_MINUTE     60000UL       // milliseconds in one minute
 #define ONE_HOUR       3600000UL     // milliseconds in one hour
 #define ONE_DAY        85400000UL    // milliseconds in one day
-
-// debugging routings print trace messages on serial port, enable with value 'true'
-#define DEBUG true
-#if DEBUG
-#define PRINT(s, v)   { Serial.print(F(s)); Serial.println(v); }          // Print a string followed by a value (decimal)
-#define PRINTX(s, v)  { Serial.print(F(s)); Serial.println(v, HEX); }     // Print a string followed by a value (hex)
-#define PRINTB(s, v)  { Serial.print(F(s)); Serial.println(v, BIN); }     // Print a string followed by a value (binary)
-#define PRINTC(s, v)  { Serial.print(F(s)); Serial.println(ln(char)v); }  // Print a string followed by a value (char)
-#define PRINTS(s)     { Serial.println(F(s)); }                           // Print a string
-#else
-#define PRINT(s, v)   // Print a string followed by a value (decimal)
-#define PRINTX(s, v)  // Print a string followed by a value (hex)
-#define PRINTB(s, v)  // Print a string followed by a value (binary)
-#define PRINTC(s, v)  // Print a string followed by a value (char)
-#define PRINTS(s)     // Print a string
-#endif
 
 // NOTE: These pin numbers are for ESO8266 hardware SPI
 #define DATA_PIN       D7    // or MOSI
@@ -112,11 +107,17 @@ void setup() {
     int i;
 
     Serial.begin(9600);
-    PRINTS("Entered setup()");
+    while (!Serial) {}                        // wait for serial port to connect
 
-//    PRINTS("Text to be displayed:");
+    PRINT("--------------------------------------------------------------------------------");
+    INFO("Starting hello-world-3!");
+    INFOS("hello-world-3 version = ", version);
+    //INFOS("ESP8266 MAC address = ", WiFi.macAddress());
+    INFOD("ESP8266 chip ID = ", ESP.getChipId());
+
+//    PRINT("Text to be displayed:");
 //    for (i = 0; i < ARRAY_SIZE(msg); ++i) {
-//        PRINTS(msg[i]);
+//        PRINTS("message = ", msg[i]);
 //    }
 
     P.begin();                                           // initialize the display and data object
@@ -128,7 +129,7 @@ void setup() {
     P.setPause(scrollPause);                             // ms of pause after finished displaying message
     P.displayClear();                                    // clear the display
 
-    PRINTS("Exit setup()");
+    PRINT("Exit setup()");
 }
 
 
@@ -136,7 +137,7 @@ void loop() {
     static uint8_t cycle = 0;                            // message number being displayed
 
     if (P.displayAnimate()) {
-        PRINT("Displaying message #", cycle);
+        PRINTS("Displaying message #", cycle);
 
         // send the string to the display
         P.displayText(msg[cycle], scrollAlign, scrollSpeed, scrollPause, scrollEffectIn, scrollEffectOut);

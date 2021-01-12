@@ -1,5 +1,6 @@
 
 /*------------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      0.2.0
 
@@ -25,6 +26,12 @@ MONITOR:
     screen /dev/ttyUSB0 9600,cs8cls
     to terminate Cntr-a :quit
 
+TESTING:
+    Just upload and observe.
+
+USAGE:
+    Just upload and observe.
+
 REFERENCE MATERIALS:
     * MD_MAX72XX library can be found at https://github.com/MajicDesigns/MD_MAX72XX
 
@@ -33,6 +40,7 @@ SOURCES:
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
+
 ------------------------------------------------------------------------------*/
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
@@ -95,6 +103,11 @@ MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
 // WiFiTools constructor
 WiFiTools WT = WiFiTools();
+
+// version stamp
+#define VERSION "0.2.0"
+#define VER VERSION " - "  __DATE__ " at " __TIME__
+const char version[] = VER;
 
 
 //--------------------- Error Message Handler for Display ----------------------
@@ -210,9 +223,12 @@ void setup() {
     int size = Msg.sizeQueue();
 
     Serial.begin(9600);
-    PRINT("\n-------------------------------------------------------\n\r");
+    PRINT("\n\r--------------------------------------------------------------------------------");
     INFO("Entered setup()...\n\r");
-    INFO("Initializing scrolling display...\n\r");
+    INFO("Initializing simple scrolling display...\n\r");
+    INFOS("simple scrolling display version = ", version);
+    INFOS("ESP8266 MAC address = ", WiFi.macAddress());
+    INFOD("ESP8266 chip ID = ", ESP.getChipId());
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object

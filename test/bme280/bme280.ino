@@ -12,18 +12,14 @@ PHYSICAL DESIGN:
     Wiring
 
 MONITOR:
-    To monitor the clocks activities while operating, power the NodeMCU via
-    USB connection to a Linux computer and execut the following:
+    screen /dev/ttyUSB0 9600,cs8cls
+    to terminate Cntr-a :quit
 
-        screen /dev/ttyUSB0 9600,cs8cls
-
-    To terminate monitoring, enter:
-
-        CNTR-a :quit
+TESTING:
+    Just upload and observe.
 
 USAGE:
-    Place the IP address of the device (printed in debug message)
-    in a browser to see the web server output of the device.
+    Just upload and observe.
 
 REFERENCE MATERIALS:
     Dew-point Calculation - http://irtfweb.ifa.hawaii.edu/~tcs3/tcs3/Misc/Dewpoint_Calculation_Humidity_Sensor_E.pdf
@@ -243,7 +239,8 @@ void setup() {
     PRINT("--------------------------------------------------------------------------------");
     INFO("Starting Bosch BME280 Pressure - Humidity - Temp Sensor Test!");
     INFOS("bme280 version = ", version);
-    INFOS("bme280 MAC address = ", WiFi.macAddress());
+    INFOS("ESP8266 MAC address = ", WiFi.macAddress());
+    INFOD("ESP8266 chip ID = ", ESP.getChipId());
 
     // start reading the bme280 sensor
     if (!bme.begin(BME_I2C)) {

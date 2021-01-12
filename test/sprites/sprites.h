@@ -1,5 +1,6 @@
 
 /* -----------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      1.0.0
 
@@ -187,16 +188,16 @@ sprite[] = {
     { chevron, W_CHEVRON, F_CHEVRON },
     { heart, W_HEART, F_HEART },
     { arrow1, W_ARROW1, F_ARROW1 },
+    { arrow2, W_ARROW2, F_ARROW2 },
     { steamboat, W_STEAMBOAT, F_STEAMBOAT },
+    { sailboat, W_SAILBOAT, F_SAILBOAT },
     { fireball, W_FBALL, F_FBALL },
     { rocket, W_ROCKET, F_ROCKET },
+    { roll1, W_ROLL1, F_ROLL1 },
     { roll2, W_ROLL2, F_ROLL2 },
+    { pacman1, W_PMAN1, F_PMAN1 },
     { pacman2, W_PMAN2, F_PMAN2 },
     { lines, W_LINES, F_LINES },
-    { roll1, W_ROLL1, F_ROLL1 },
-    { sailboat, W_SAILBOAT, F_SAILBOAT },
-    { arrow2, W_ARROW2, F_ARROW2 },
-    { wave, W_WAVE, F_WAVE },
-    { pacman1, W_PMAN1, F_PMAN1 }
+    { wave, W_WAVE, F_WAVE }
 };
 

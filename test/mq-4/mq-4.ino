@@ -21,6 +21,9 @@ MONITOR:
 
         CNTR-a :quit
 
+TESTING:
+    Just upload and observe.
+
 USAGE:
     Place the IP address of the device (printed in debug message)
     in a browser to see the web server output of the device.

@@ -25,6 +25,16 @@ PHYSICAL DESIGN:
         CS or LD         D8            HSPICS or HCS
         CLK              D5            CLK or HCLK
 
+MONITOR:
+    screen /dev/ttyUSB0 9600,cs8cls
+    to terminate Cntr-a :quit
+
+TESTING:
+    Just upload and observe.
+
+USAGE:
+    Just upload and observe.
+
 REFERENCE MATERIALS:
     * UISwitch library can be found at https://github.com/MajicDesigns/MD_UISwitch
     * MD_MAX72XX library can be found at https://github.com/MajicDesigns/MD_MAX72XX
@@ -38,7 +48,6 @@ CREATED BY:
 ------------------------------------------------------------------------------*/
 
 #define DEBUG true    // activate debugging routings (print trace messages on serial port)
-
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
@@ -85,7 +94,7 @@ const char *msg[] = {
 MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);                          // HARDWARE SPI
 
 // version stamp
-#define VERSION "0.3.0"
+#define VERSION "1.0.0"
 #define VER VERSION " - "  __DATE__ " at " __TIME__
 const char version[] = VER;
 
@@ -95,12 +104,16 @@ const char version[] = VER;
 
 void setup(void) {
 
-    unsigned long tout;                           // time-out time
+    unsigned long tout;                       // time-out time
 
     Serial.begin(9600);
-    PRINT("\n\r-------------------------------------------------------");
-    INFO("Entered setup()...");
-    INFO("Initializing scrolling display...");
+    while (!Serial) {}                        // wait for serial port to connect
+
+    PRINT("--------------------------------------------------------------------------------");
+    INFO("Starting sprites!");
+    INFOS("sprites version = ", version);
+    //INFOS("ESP8266 MAC address = ", WiFi.macAddress());
+    INFOD("ESP8266 chip ID = ", ESP.getChipId());
 
     // initialize the display (aka Parola object)
     P.begin();                                        // initialize the display and data object

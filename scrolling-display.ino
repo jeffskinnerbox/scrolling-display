@@ -1,5 +1,6 @@
 
 /*------------------------------------------------------------------------------
+
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      0.0.2
 
@@ -46,6 +47,7 @@ SOURCES:
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
+
 ------------------------------------------------------------------------------*/
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
@@ -324,7 +326,8 @@ void setup() {
     PRINT("--------------------------------------------------------------------------------");
     INFO("Entering setup() for scrolling display");
     INFOS("scrolling display version = ", version);
-    INFOS("scrolling display MAC address = ", WiFi.macAddress());
+    INFOS("ESP8266 MAC address = ", WiFi.macAddress());
+    INFOD("ESP8266 chip ID = ", ESP.getChipId());
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
