@@ -12,7 +12,7 @@ DESCRIPTION:
     It creates a Telnet port on the ESP chip. You can then connect using a standard Telnet client to access the debugging output.
 
 PHYSICAL DESIGN:
-    Just ESP8266, nothe else required
+    Just ESP8266, nothing else required
 
 MONITOR:
     screen /dev/ttyUSB0 9600,cs8cls
@@ -48,19 +48,25 @@ CREATED BY:
 
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
-// basic-ota project's include files (~/src/scrolling-display/test/ota)
+// test-ota project's include files (~/src/scrolling-display/test/ota/test-ota)
 #include "credentials.h"
 
-// variables for blinking an LED with Millis (don't use delay)
-#define LED D0                          // ESP8266 Pin to which onboard LED is connected
-int ledState = LOW;                     // current LED state
-unsigned long previousTime = 0;         // stores last time LED was updated
-const unsigned long blink_rate = 1000;  // interval at which to blink LED (milliseconds)
+// ota required hostname and upload port
+# define OTAHOSTNAME "initial-ota"
+# define OTAPORT 8266
+
+// variables for blinking an LED
+#define LED D0               // ESP8266 Pin to which onboard LED is connected
+#define STDBLKRATE 1000      // interval at which to blink LED (milliseconds)
+#define OTABLKRATE 250       // interval at which to blink LED (milliseconds)
+
+// variables for OTA management
+#define MAXTIME 15000UL      // max time to wait for ota handler to engage
+bool ota_flag = true;        // if true, engage the ota handler
 
 // version stamp
-#define VER  __DATE__ " at " __TIME__
+#define VER OTAHOSTNAME " " __DATE__ " at " __TIME__
 const char version[] = VER;
-
 
 
 
@@ -84,26 +90,19 @@ void setupWiFi() {
         ESP.restart();
     }
 
-    //Serial.print("Successfully connected to access point ");
-    //Serial.println(WiFi.SSID());
-    //Serial.print("IP address is ");
-    //Serial.println(WiFi.localIP());
-    //Serial.print("WiFi setup exit status code is ");
-    //Serial.println(WiFi.status());
-
 }
 
 
 void setupOTA() {
 
-    // if not set, port defaults to 8266
-    ArduinoOTA.setPort(8266);
+    // if not set, port defaults to 8266 (3232 for esp32)
+    ArduinoOTA.setPort(OTAPORT);
 
     // if not set, hostname defaults to esp8266-<ChipID-in-Hex>
-    ArduinoOTA.setHostname("test-ota");
+    ArduinoOTA.setHostname(OTAHOSTNAME);
 
     // if not set, no authentication required by default
-    // ArduinoOTA.setPassword((const char *)"123");
+    ArduinoOTA.setPassword((const char *)"123");
 
     // Password can be set with it's md5 value as well
     // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
@@ -121,7 +120,7 @@ void setupOTA() {
         Serial.println("Started updating " + type);
     });
 
-    ArduinoOTA.onEnd([]() { Serial.println("\nUpdating ended"); });
+    ArduinoOTA.onEnd([]() { Serial.println("\n\rUpdating ended"); });
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
         Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
@@ -137,11 +136,6 @@ void setupOTA() {
     });
 
     ArduinoOTA.begin();
-
-    // provide status information concerning ota
-    //Serial.println("\n\rCompleted OTA provisioning");
-    //Serial.print("Hostname = ");
-    //Serial.println(ArduinoOTA.getHostname());
 
 }
 
@@ -161,6 +155,19 @@ void getFlashInfo() {
 }
 
 
+void blinkLED(unsigned long rate) {
+    unsigned long currentTime = millis();
+    static unsigned long previousTime = millis();
+
+    // blink LED to signal that you are OTA update ready
+    if (currentTime - previousTime >= rate) {
+        previousTime = currentTime;            // save the last time you blinked the LED
+        digitalWrite(LED, !digitalRead(LED));  // toggle led state
+    }
+
+}
+
+
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
@@ -169,7 +176,7 @@ void setup() {
     while (!Serial) {}          // wait for serial port to connect
 
     Serial.println("\n\n\rBooting ...");
-    Serial.printf("version / creation date = %s\n\r", version);
+    Serial.printf("Version = %s\n\r", version);
     Serial.printf("ESP8266 chip ID = %x\n\r", ESP.getChipId());
 
     setupWiFi();                // connect to wifi network
@@ -183,6 +190,7 @@ void setup() {
     Serial.println("\n\rESP8266 is OTA update ready");
     Serial.println(ArduinoOTA.getHostname());
     Serial.println(WiFi.localIP());
+    Serial.println(OTAPORT);
 
 }
 
@@ -190,16 +198,22 @@ void setup() {
 void loop() {
     static unsigned int i = 0;
     unsigned long currentTime = millis();
+    static unsigned long previousTime = millis();
+    static unsigned long elapsedTime;
 
-    ArduinoOTA.handle();                  // OTA handler, look for OTA update request
-
-    //loop to blink without delay
-    if (currentTime - previousTime >= blink_rate) {
-        previousTime = currentTime;       // save the last time you blinked the LED
-        ledState = not(ledState);         // if the LED is off turn it on and vice-versa
-        digitalWrite(LED, ledState);      // set the LED with the ledState of the variable
-
-        //Serial.printf("I'm in loop() waiting for work to do ... %u\n\r", ++i);
+    // if ota is being requested, activate the handler
+    if (ota_flag) {
+        while (currentTime - previousTime < MAXTIME) {
+            ArduinoOTA.handle();     // OTA handler, look for OTA update request
+            currentTime = millis();
+            blinkLED(OTABLKRATE);    // blink led at ota update rate
+            delay(10);
+        }
+        ota_flag = false;
     }
+
+    blinkLED(STDBLKRATE);            // blink led at standard rate
+
+    //Serial.printf("I'm in loop() waiting for work to do ... %u\n\r", ++i);
 
 }

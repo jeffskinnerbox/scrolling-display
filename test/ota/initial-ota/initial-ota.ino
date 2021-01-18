@@ -12,7 +12,7 @@ DESCRIPTION:
     It creates a Telnet port on the ESP chip. You can then connect using a standard Telnet client to access the debugging output.
 
 PHYSICAL DESIGN:
-    Just ESP8266, nothe else required
+    Just ESP8266, nothing else required
 
 MONITOR:
     screen /dev/ttyUSB0 9600,cs8cls
@@ -51,14 +51,17 @@ CREATED BY:
 // initial-ota project's include files (~/src/scrolling-display/test/ota/initial-ota)
 #include "credentials.h"
 
+// ota required hostname and upload port
+# define OTAHOSTNAME "initial-ota"
+# define OTAPORT 8266
+
 // variables for blinking an LED with Millis (don't use delay)
 #define LED D0                          // ESP8266 Pin to which onboard LED is connected
-int ledState = LOW;                     // current LED state
 unsigned long previousTime = 0;         // stores last time LED was updated
 const unsigned long blink_rate = 125;   // interval at which to blink LED (milliseconds)
 
 // version stamp
-#define VER  __DATE__ " at " __TIME__
+#define VER OTAHOSTNAME " " __DATE__ " at " __TIME__
 const char version[] = VER;
 
 
@@ -79,28 +82,19 @@ void setupWiFi() {
         ESP.restart();
     }
 
-    // provide status information concerning wifi
-    //Serial.println("\n\rSuccessfully connected to access point");
-    //Serial.print("Access Point = ");
-    //Serial.println(WiFi.SSID());
-    //Serial.print("IP Address = ");
-    //Serial.println(WiFi.localIP());
-    //Serial.print("WiFi setup exit status code = ");
-    //Serial.println(WiFi.status());
-
 }
 
 
 void setupOTA() {
 
-    // if not set, port defaults to 8266
-    ArduinoOTA.setPort(8266);
+    // if not set, port defaults to 8266 (3232 for esp32)
+    ArduinoOTA.setPort(OTAPORT);
 
     // if not set, hostname defaults to esp8266-<ChipID-in-Hex>
-    ArduinoOTA.setHostname("initial-ota");
+    ArduinoOTA.setHostname(OTAHOSTNAME);
 
     // if not set, defaults to no authentication required for ota
-    // ArduinoOTA.setPassword((const char *)"123");
+    ArduinoOTA.setPassword((const char *)"123");
 
     // Password can be set with it's md5 value as well
     // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
@@ -108,7 +102,7 @@ void setupOTA() {
 
     ArduinoOTA.onStart([]() { Serial.println("Start"); });
 
-    ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
+    ArduinoOTA.onEnd([]() { Serial.println("\n\rEnd"); });
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
         Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
@@ -121,14 +115,11 @@ void setupOTA() {
         else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
         else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
         else if (error == OTA_END_ERROR) Serial.println("End Failed");
+
+        ESP.restart();
     });
 
     ArduinoOTA.begin();
-
-    // provide status information concerning ota
-    //Serial.println("\n\rCompleted OTA provisioning");
-    //Serial.print("Hostname = ");
-    //Serial.println(ArduinoOTA.getHostname());
 
 }
 
@@ -141,7 +132,7 @@ void setup() {
     while (!Serial) {}          // wait for serial port to connect
 
     Serial.println("\n\n\rBooting ...");
-    Serial.printf("version / creation date = %s\n\r", version);
+    Serial.printf("Version = %s\n\r", version);
     Serial.printf("ESP8266 chip ID = %x\n\r", ESP.getChipId());
 
     setupWiFi();                // connect to wifi network
@@ -153,6 +144,7 @@ void setup() {
     Serial.println("\n\rESP8266 is OTA update ready");
     Serial.println(ArduinoOTA.getHostname());
     Serial.println(WiFi.localIP());
+    Serial.println(OTAPORT);
 
 }
 
@@ -165,11 +157,10 @@ void loop() {
 
     // blink LED to signal that you are OTA update ready
     if (currentTime - previousTime >= blink_rate) {
-        previousTime = currentTime;       // save the last time you blinked the LED
-        ledState = not(ledState);         // if the LED is off turn it on and vice-versa
-        digitalWrite(LED, ledState);      // set the LED with the ledState of the variable
-
-        //Serial.printf("I'm in loop() waiting for update ... %u\n\r", ++i);
+        previousTime = currentTime;            // save the last time you blinked the LED
+        digitalWrite(LED, !digitalRead(LED));  // toggle led state
     }
+
+    //Serial.printf("I'm in loop() waiting for update ... %u\n\r", ++i);
 
 }
