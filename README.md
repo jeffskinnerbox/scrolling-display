@@ -9,7 +9,8 @@ Version:      0.0.2
 </div>
 
 
----
+----
+
 
 # DESCRIPTION
 Test program for ESP8266 NodeMCU + cascaded MAX7219 dot matrix modules to create a scrolling text display.

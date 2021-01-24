@@ -54,11 +54,13 @@ CREATED BY:
 #include <SPI.h>
 #include <ESP8266WiFi.h>
 
+// Arduino libraries (~/src/Arduino/libraries)
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+
 // Arduino libraries (~/src/arduino/libraries)
 
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
-#include <MD_Parola.h>
-#include <MD_MAX72xx.h>
 
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
