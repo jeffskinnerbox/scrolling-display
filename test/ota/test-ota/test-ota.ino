@@ -16,7 +16,10 @@ PHYSICAL DESIGN:
 
 MONITOR:
     screen /dev/ttyUSB0 9600,cs8cls
-    to terminate Cntr-a :quit
+    to terminate Ctrl-a :quit
+
+    telnet test-ota.local
+    to terminate Ctrl-a quit
 
 TESTING:
     NA
@@ -43,6 +46,9 @@ CREATED BY:
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 
+// Arduino libraries (~/Arduino/libraries)
+#include <TelnetStream.h>
+
 // Arduino libraries (~/src/arduino/libraries)
 #include <WiFiUdp.h>
 
@@ -52,7 +58,8 @@ CREATED BY:
 #include "credentials.h"
 
 // ota required hostname and upload port
-# define OTAHOSTNAME "initial-ota"
+# define OTAPASSWORD "123"
+# define OTAHOSTNAME "test-ota"
 # define OTAPORT 8266
 
 // variables for blinking an LED
@@ -72,10 +79,6 @@ const char version[] = VER;
 
 //------------------------------ Helper Routines -------------------------------
 
-void telnetPrint() {
-}
-
-
 void setupWiFi() {
 
     Serial.print("ESP8266 MAC address = ");
@@ -93,16 +96,59 @@ void setupWiFi() {
 }
 
 
+void getFlashInfo() {
+
+    Serial.println("\n\rInformation concerning flash memory chip");
+
+    Serial.printf("Chip ID: %x hex\n\r", ESP.getFlashChipId());
+    Serial.printf("Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize());
+    Serial.printf("Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize());
+    Serial.printf("Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed());
+    Serial.printf("Chip Mode: %d\n\r", ESP.getFlashChipMode());
+    Serial.printf("Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap());
+    Serial.printf("Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation());  // 0% is clean, more than ~50% is not harmless
+
+}
+
+
+void blinkLED(unsigned long rate) {
+    unsigned long currentTime = millis();
+    static unsigned long previousTime = millis();
+
+    // blink LED to signal that you are OTA update ready
+    if (currentTime - previousTime >= rate) {
+        previousTime = currentTime;            // save the last time you blinked the LED
+        digitalWrite(LED, !digitalRead(LED));  // toggle led state
+    }
+
+}
+
+
+//-------------------------------- OTA Routines --------------------------------
+
+void TelnetStreamHandler() {
+
+    switch (TelnetStream.read()) {
+        case 'R':
+            TelnetStream.stop();
+            delay(100);
+            ESP.reset();
+            break;
+        case 'C':
+            TelnetStream.println("bye bye");
+            TelnetStream.flush();
+            TelnetStream.stop();
+            break;
+    }
+
+}
+
+
 void setupOTA() {
 
-    // if not set, port defaults to 8266 (3232 for esp32)
-    ArduinoOTA.setPort(OTAPORT);
-
-    // if not set, hostname defaults to esp8266-<ChipID-in-Hex>
-    ArduinoOTA.setHostname(OTAHOSTNAME);
-
-    // if not set, no authentication required by default
-    ArduinoOTA.setPassword((const char *)"123");
+    ArduinoOTA.setPort(OTAPORT);                       // if not set, port defaults to 8266 (3232 for esp32)
+    ArduinoOTA.setHostname(OTAHOSTNAME);               // if not set, hostname defaults to esp8266-<ChipID-in-Hex>
+    ArduinoOTA.setPassword((const char *)OTAPASSWORD); // if not set, no authentication required by default
 
     // Password can be set with it's md5 value as well
     // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
@@ -139,35 +185,6 @@ void setupOTA() {
 
 }
 
-
-void getFlashInfo() {
-
-    Serial.println("\n\rInformation concerning flash memory chip");
-
-    Serial.printf("Chip ID: %x hex\n\r", ESP.getFlashChipId());
-    Serial.printf("Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize());
-    Serial.printf("Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize());
-    Serial.printf("Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed());
-    Serial.printf("Chip Mode: %d\n\r", ESP.getFlashChipMode());
-    Serial.printf("Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap());
-    Serial.printf("Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation());  // 0% is clean, more than ~50% is not harmless
-
-}
-
-
-void blinkLED(unsigned long rate) {
-    unsigned long currentTime = millis();
-    static unsigned long previousTime = millis();
-
-    // blink LED to signal that you are OTA update ready
-    if (currentTime - previousTime >= rate) {
-        previousTime = currentTime;            // save the last time you blinked the LED
-        digitalWrite(LED, !digitalRead(LED));  // toggle led state
-    }
-
-}
-
-
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
@@ -187,33 +204,50 @@ void setup() {
 
     pinMode(LED, OUTPUT);       // set led pin as output so you can blink it
 
-    Serial.println("\n\rESP8266 is OTA update ready");
-    Serial.println(ArduinoOTA.getHostname());
-    Serial.println(WiFi.localIP());
-    Serial.println(OTAPORT);
+    Serial.println("\n\rESP8266 OTA update is enabled.  ota_flag = " + String(ota_flag));
+    Serial.println("hostname = " + ArduinoOTA.getHostname() + ".local");
+    Serial.print("ip address = "); Serial.println(WiFi.localIP());
+    Serial.println("OTA port = " + String(OTAPORT));
+
+    TelnetStream.begin();
+
+    Serial.println("TelnetStream enabled");
+    TelnetStream.println("TelnetStream enabled");
 
 }
 
 
 void loop() {
-    static unsigned int i = 0;
     unsigned long currentTime = millis();
     static unsigned long previousTime = millis();
-    static unsigned long elapsedTime;
+    static unsigned long elapsedTime, i = 0;
+
+    TelnetStreamHandler();
+
+    //TelnetStream.printf("ota_flag = %d\n\r", ota_flag);
 
     // if ota is being requested, activate the handler
     if (ota_flag) {
         while (currentTime - previousTime < MAXTIME) {
             ArduinoOTA.handle();     // OTA handler, look for OTA update request
             currentTime = millis();
-            blinkLED(OTABLKRATE);    // blink led at ota update rate
+            blinkLED(OTABLKRATE);    // blink led at ota update enabled rate
             delay(10);
         }
         ota_flag = false;
+        Serial.println("\n\rESP8266 OTA update is disabled.  ota_flag = " + String(ota_flag));
+        TelnetStream.println("\n\rESP8266 OTA update is disabled.  ota_flag = " + String(ota_flag));
     }
 
-    blinkLED(STDBLKRATE);            // blink led at standard rate
+    blinkLED(STDBLKRATE);            // blink led at standard rate (ota update disabled)
 
-    //Serial.printf("I'm in loop() waiting for work to do ... %u\n\r", ++i);
+    if (currentTime - previousTime < MAXTIME) {
+        currentTime = millis();
+    } else {
+        ++i;
+        previousTime = millis();
+        Serial.printf("I'm in loop() waiting for work to do ... %u\n\r", i);
+        TelnetStream.printf("I'm in loop() waiting for work to do ... %u\n\r", i);
+    }
 
 }

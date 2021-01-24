@@ -3,10 +3,14 @@ Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
 Version:      0.4.0
 -->
 
-![work-in-progress](http://worktrade.eu/img/uc.gif "These materials require additional work and are not ready for general use.")
+
+<div align="center">
+<img src="http://www.foxbyrd.com/wp-content/uploads/2018/02/file-4.jpg" title="These materials require additional work and are not ready for general use." align="center">
+</div>
 
 
------
+----
+
 
 * [ESP8266 Over The Air (OTA) Programming Without Reset Using Arduino IDE (Mac OSX and Windows)](https://www.youtube.com/watch?v=3aB85PuOQhY&t=20s)
 * [ESP8266 Arduino Core: OTA Updates](https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html)
@@ -21,8 +25,8 @@ Version:      0.4.0
 
 When working with microcontrollers with wireless capabilities,
 a nice add-on features is the ability to update the firmware wirelessly.
-OTA (Over the Air) update is the process of uploading firmware to an
-ESP module using a WiFi connection rather than a serial port.
+Upload OTA (Over the Air) is the process of uploading firmware to an
+ESP module using a WiFi connection rather than uploading on a serial port.
 Such functionality becomes extremely useful in case of limited or no physical access to the module.
 OTA may be done using: Arduino IDE, Web Browser, or HTTP Server.
 
@@ -42,10 +46,41 @@ then all subsequent uploads may be done over the air.
 * [Internet of Things with ESP8266 #4: Upload Programs Over the Air (OTA)](https://www.youtube.com/watch?v=GoQXOLB50HA)
 * [ESP8266 Programming Over The Air (OTA) Using Wi-Fi With Arduino IDE (Mac OSX and Windows)](https://www.youtube.com/watch?v=gFK2EDNpIeM)
 
-# Serial over WiFi
-I would like to be able to view serial monitor over wifi, but "Serial monitor is not supported on network ports such as <device ip address>"
-The Serial.print() sends data directly to the hardware serial pins so you need something that has a physical connection to those pins in order to read the data.
-It creates a Telnet port on the ESP chip. You can then connect using a standard Telnet client to access the debugging output.
+# Serial Debugging over WiFi
+One of the motivators for me to use OTA is to free myself of bring my device under development
+onto my workbench for coding/testing iterations.
+With OTA, I can remotely push firmware to my device,
+but how does one do the testing without the device physically near me
+so I have no access to the serial port for debugging?
+The ESP `Serial.print()` command sends data via serial communications and then out the USB.
+Instead, I need the equivalent to be sent over TCP/IP via WiFi.
+The old workhorse, Telnet, to the rescue!
+
+[Telnet][12] is a simple, light-weight client-server TCP/IP protocol that can be used
+to open a serial connection on a remote computer.
+Telnet establishes a virtual terminal connection emulator,
+using protocols to act like a physical terminal connected to a machine.
+
+>**NOTE:** Telnet is not a secure protocol and is unencrypted.
+>By monitoring a user's connection, anyone can access a person's username, password,
+>and other private information that is typed over the Telnet session in plaintext.
+>[Telnet has limited uses today][12], but remains popular for [testing for open ports][13],
+>and because of its light weight, it remains popular for serial communications with embedded systems.
+
+Fortunately, the ESP/Arduino libraries come with a [`telnet` implementation][14].
+Combine `telnet` with the traditional `Serial` debugging and you'll have all the bases covered.
+Some have built packages to do this,
+examples are [here][15] and [here][16]; both are in the Arduino Library Manager.
+You may want to build my own to get the greatest flexibility and control the software blot.
+I'm choosing to use [TelnetStream][16].
+
+Here are some good sources on this topic:
+
+* [Wireless Serial for ESP8266 using Telnet](https://www.youtube.com/watch?v=j9yW10OcahI)
+* [ESP32 OTA tutorial with tricks (incl. OTA debugging](https://www.youtube.com/watch?v=1pwqS_NUG7Q)
+* [ESPTelnet](https://github.com/LennartHennigs/ESPTelnet)
+* [TelnetStream: Arduino Stream implementation over Telnet for OTA logging and debugging][16]
+* [RemoteDebug Library](https://github.com/JoaoLopesF/RemoteDebug#usage)
 
 # Flash Size
 OTA is only possible with flash sizes of over 1M bytes
@@ -85,17 +120,55 @@ and globally unique DNS names on the Internet.
 ## OTA-program SPIFFS on the ESP8266
 * [OTA-program SPIFFS on the ESP8266](https://arduino.stackexchange.com/questions/74691/ota-program-spiffs-on-the-esp8266)
 
-## mDNS Tools
-* `avahi-browse` - Browse for mDNS/DNS-SD services using the Avahi daemon
-* `avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | cut -d\; -f8 | uniq`
-- this script will scan your network for Arduino OTA services and list IP address when found
-(derived from [here][05]).
+## Searching for OTA Devices Using mDNS Tools
+[Avahi][04] is a system which facilitates service discovery on a local network via the mDNS/DNS-SD protocol suite.
+[`avahi-browse`][17] looks for mDNS/DNS-SD services, using the Avahi daemon,
+and can return the hostnames of devices being managed via mDNS.
+Since OTA uses mDNS,
+this can be very useful when your searching for OTA -enabled device.
+For example (derived from [here][05] and [here][18]):
+
+```bash
+# dump information about arduino tcp services
+$ avahi-browse _arduino._tcp --resolve --parsable --terminate
+
++;wlan0;IPv4;test-ota;_arduino._tcp;local
++;eth0;IPv4;test-ota;_arduino._tcp;local
+=;eth0;IPv4;test-ota;_arduino._tcp;local;test-ota.local;192.168.1.44;8266;"tcp_check=no" "ssh_upload=no" "board="ESP8266_NODEMCU"" "auth_upload=yes"
+=;wlan0;IPv4;test-ota;_arduino._tcp;local;test-ota.local;192.168.1.44;8266;"tcp_check=no" "ssh_upload=no" "board="ESP8266_NODEMCU"" "auth_upload=yes"
+
+# scan your network for arduino ota services and list ip address when found
+$ avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | cut -d\; -f8 | uniq
+
+192.168.1.44
+```
 
 
------
+
+-------
 
 
-# Procedure to Use OTA with ESP8266
+
+# Uploading Firmware Over-The-Air (FOTA)
+Firmware over the air, FOTA, lets you upload your firmware (the sketch) wirelessly.
+It can be useful if your devices are not accessible and you want to update your firmware.
+
+>**NOTE:** A bootloader (also known as a boot program or bootstrap loader)
+>is system software that loads into the working memory of a microprocessor after start-up
+>and let you upload your firmware by USB or wirelessly, or Serial Peripheral Interface (SPI).
+>The bootloader resides in memory on an MCU in an area of ROM or flash memory
+>that is protected from getting written over without special tools.
+>This whole process of restarting your processor, executing the bootloader,
+>and uploading the firmware is called "booting".
+
+We use the `esptool` command line utility to communicate with the
+ESP8266 ROM based bootloader in microcontrollers.
+This bootloader assumes that the firmware to be loaded is originating from the USB interface,
+and the `esptool` negotiates with the ESP8266 bootloader and provides the firmware over the USB.
+The `espota.py` Python script does the equivalent, except it does FOTA over the WiFi connection.
+
+Procedure to Use OTA with ESP8266
+
 1. **Upload Basic OTA Firmware Serially -**
 Upload the sketch containing OTA firmware (i.e. `BasicOTA.ino`) serially.
 It’s a mandatory step, so that you’re able to do the next updates/uploads over-the-air.
@@ -130,7 +203,8 @@ make upload
 ### Step X: Serial Monitor
 Now, open the Serial Monitor at a baud rate of 9600.
 And press the RST button on ESP8266.
-If everything is OK, it will output the dynamic IP address obtained from your router. Note it down.
+If everything is OK, it will output the dynamic IP address obtained from your router.
+Note it down.
 
 ```bash
 # open serial monitor program
@@ -162,6 +236,7 @@ initial-ota.local
 ```
 
 ## Install Program via OTA Bootloader
+The OTA bootloader utility
 
 ```bash
 # enter directory where firmware to be uploaded via ota
@@ -202,10 +277,37 @@ Options:
 
 # using data from previous step, upload via ota
 python2 ~/.arduino15/packages/esp8266/hardware/esp8266/2.5.2/tools/espota.py -d  -i 192.168.1.44 -a 123 -f test-ota.esp8266.esp8266.nodemcuv2.bin
+```
 
-## Step X: Upload New Firmware Over-The-Air (OTA)
 
 http://192.168.1.44:8266
+
+
+--------
+
+
+## Step X: Wireless Serial Monitoring
+OTA is great for remotely push firmware to devices,
+but how does one do the testing without the device physically near me
+so I have no access to the serial port for debugging?
+The [old workhorse, Telnet][12], to the rescue!
+Telnet establishes a virtual terminal
+and communicates to open a serial connection over WiFi.
+The ESP/Arduino libraries come with a [`telnet` implementation][14].
+Combine `telnet` with the traditional `Serial` debugging and you'll have all the bases covered.
+There are Arduino packages making this easy,
+and I'm choosing to use [TelnetStream][16].
+
+Here are some good sources on this topic:
+
+* [Wireless Serial for ESP8266 using Telnet](https://www.youtube.com/watch?v=j9yW10OcahI)
+* [ESP32 OTA tutorial with tricks (incl. OTA debugging](https://www.youtube.com/watch?v=1pwqS_NUG7Q)
+* [ESPTelnet](https://github.com/LennartHennigs/ESPTelnet)
+* [TelnetStream: Arduino Stream implementation over Telnet for OTA logging and debugging][16]
+* [RemoteDebug Library](https://github.com/JoaoLopesF/RemoteDebug#usage)
+
+# Step X: Install TelnetStream
+arduino-cli lib install telnetstream
 
 
 
@@ -220,13 +322,13 @@ http://192.168.1.44:8266
 [08]:https://www.youtube.com/watch?v=ViDUfrM6-wM
 [09]:https://www.youtube.com/watch?v=xyc1gCjguRU
 [10]:https://github.com/esp8266/Arduino/issues/3553
-[11]:
-[12]:
-[13]:
-[14]:
-[15]:
-[16]:
-[17]:
-[18]:
+[11]:https://www.lifewire.com/what-does-telnet-do-2483642
+[12]:https://www.digitalcitizen.life/simple-questions-what-telnet-what-can-it-still-be-used/
+[13]:https://support.n4l.co.nz/s/article/How-to-use-Telnet-to-Check-the-Status-of-Ports
+[14]:https://github.com/LennartHennigs/ESPTelnet
+[15]:https://github.com/JoaoLopesF/RemoteDebug#usage
+[16]:https://github.com/jandrassy/TelnetStream
+[17]:https://www.systutorials.com/docs/linux/man/1-avahi-browse/
+[18]:https://github.com/platformio/platformio-core/issues/463
 [19]:
 [20]:
