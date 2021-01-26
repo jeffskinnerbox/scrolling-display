@@ -27,7 +27,7 @@
 #-------------------------------------------------------------------------------
 
 # name of program being created
-PROG = inital-ota
+PROG = basic-ota
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266

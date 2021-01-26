@@ -95,11 +95,11 @@ DIR := ${CURDIR}
 
 #-------------------------------------------------------------------------------
 
-all: upload                                     # build and then upload via usb
+#all: build upload                                # build and then upload via usb
 
-all-usb: upload                                 # build and then upload via usb
+#all-usb: upload                                 # build and then upload via usb
 
-all-ota: upload                                 # build and then upload via ota
+#all-ota: upload                                 # build and then upload via ota
 
 help:
 	@echo ' '
@@ -125,11 +125,13 @@ help:
 build:                                          # build the binary executable
 	$(CC) $(CC_FLAGS) $(DIR)
 
-upload: build                                   # flash the binary executable via usb
-upload-usb: build
+upload:                                         # flash the binary executable via usb
+upload-usb:
 	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(DIR)
 
-upload-ota: build                               # flash the binary executable via ota
+upload-ota:                                     # flash the binary executable via ota
+	$(DIR)/answerbot $(OTAIP) 23
+	sleep 3
 	$(UPLOAD_OTA) $(UPLOAD_OTA_FLAGS)
 
 erase:                                          # erase the entire flash

@@ -19,7 +19,7 @@ MONITOR:
     to terminate Ctrl-a :quit
 
     telnet test-ota.local
-    to terminate Ctrl-a quit
+    to terminate Ctrl-] quit
 
 TESTING:
     NA
@@ -129,13 +129,17 @@ void blinkLED(unsigned long rate) {
 void TelnetStreamHandler() {
 
     switch (TelnetStream.read()) {
-        case 'R':
+        case 'R':   // reboot the esp8266
+            Serial.println("\n\rRebooting ...");
+            TelnetStream.println("\n\rRebooting ...");
+            TelnetStream.flush();
             TelnetStream.stop();
             delay(100);
             ESP.reset();
             break;
-        case 'C':
-            TelnetStream.println("bye bye");
+        case 'C':   // drop telnet connection to esp8266
+            Serial.println("\n\rDropping telnet connection ... bye bye");
+            TelnetStream.println("\n\rDropping telnet connection ... bye bye");
             TelnetStream.flush();
             TelnetStream.stop();
             break;
@@ -211,8 +215,11 @@ void setup() {
 
     TelnetStream.begin();
 
-    Serial.println("TelnetStream enabled");
+    Serial.println("\n\rTelnetStream enabled");
     TelnetStream.println("TelnetStream enabled");
+
+    Serial.println("ESP8266 OTA update is enabled.  ota_flag = " + String(ota_flag));
+    TelnetStream.println("ESP8266 OTA update is enabled.  ota_flag = " + String(ota_flag));
 
 }
 
