@@ -48,11 +48,11 @@ CREATED BY:
 
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
-// initial-ota project's include files (~/src/scrolling-display/test/ota/initial-ota)
+// basic-ota project's include files (~/src/scrolling-display/test/ota/basic-ota)
 #include "credentials.h"
 
 // ota required hostname and upload port
-# define OTAHOSTNAME "initial-ota"
+# define OTAHOSTNAME "basic-ota"
 # define OTAPORT 8266
 
 // variables for blinking an LED with Millis (don't use delay)
