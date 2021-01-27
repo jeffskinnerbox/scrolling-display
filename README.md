@@ -17,9 +17,12 @@ Test program for ESP8266 NodeMCU + cascaded MAX7219 dot matrix modules to create
 Text will be dynamically pushed to the display via REST, MQTT, or Telegram APIs.
 
 Make the display accessible and controlable via:
+
 * MQTT - e.g. data sent to a MQTT broker
-* Network Attached - e.g. `echo -n "24,116" | nc -b -w 0 -u 192.168.1.196 1337`
-* Web Accessible - e.g. via a we browser interface
+* Network Attached - e.g. `echo -n "24,116" | nc -b -w 0 -u 192.168.1.44 1337`
+* Web Accessible - e.g. via a browser interface
+* Telnet - e.g. `telnet 192.168.1.44 23`
+* Telegram -
 
 
 # PHYSICAL DESIGN
@@ -50,7 +53,9 @@ In my case, this was:
 #define HARDWARE_TYPE MD_MAX72XX::ICSTATION_HW
 ```
 
----
+
+------
+
 
 # The Display
 I choose one of the many versions of the [MAX7219 dot matrix module][08]
@@ -173,7 +178,7 @@ Now use the `arduino-cli` and Makefile tools, compile the sketch.
 
 ```bash
 # compile the sketch
-make
+make build
 
 # upload the sketch
 make upload
