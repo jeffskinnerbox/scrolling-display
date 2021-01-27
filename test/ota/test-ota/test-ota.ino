@@ -2,14 +2,24 @@
 /*------------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.0.1
+Version:      0.5.0
 
 DESCRIPTION:
-    the first firmware upload has to be done over a serial port. If the OTA routines are correctly implemented in the sketch, then all subsequent uploads may be done over the air.
+    I would like to be able to view serial monitor over WiFi, but serial monitor
+    is not supported on IP network ports.  The Serial.print() sends data directly
+    to the hardware serial pins so you need something that has a physical
+    connection to those pins in order to read the data.
 
-    I would like to be able to view serial monitor over wifi, but "Serial monitor is not supported on network ports such as <device ip address>"
-    The Serial.print() sends data directly to the hardware serial pins so you need something that has a physical connection to those pins in order to read the data.
-    It creates a Telnet port on the ESP chip. You can then connect using a standard Telnet client to access the debugging output.
+    This program creates a Telnet port on the ESP chip. You can then connect
+    using a standard Telnet client to access the debugging output.
+
+    This program test the OTA capabilities of the ESP8266. I show you how to
+    turn on OTA updates temporaraly (up to 15 seconds after boot) and make use
+    of telnet to serial trace messages for debugging.
+
+    The first firmware upload has to be done over a serial port. If the OTA
+    routines are correctly implemented in the sketch, then all subsequent
+    uploads may be done over the air.
 
 PHYSICAL DESIGN:
     Just ESP8266, nothing else required
@@ -56,11 +66,6 @@ CREATED BY:
 
 // test-ota project's include files (~/src/scrolling-display/test/ota/test-ota)
 #include "credentials.h"
-
-// ota required hostname and upload port
-# define OTAPASSWORD "123"
-# define OTAHOSTNAME "test-ota"
-# define OTAPORT 8266
 
 // variables for blinking an LED
 #define LED D0               // ESP8266 Pin to which onboard LED is connected

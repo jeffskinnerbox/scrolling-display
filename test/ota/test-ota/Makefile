@@ -9,7 +9,7 @@
 #       make build
 #
 #   To flash the device
-#       make upload
+#       make upload-usb
 #       make upload-ota
 #
 #   To monitor execution of the device

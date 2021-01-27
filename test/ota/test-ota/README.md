@@ -1,6 +1,6 @@
 <!--
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.4.0
+Version:      0.5.0
 -->
 
 Important advice on sketch design...
@@ -82,15 +82,15 @@ and once connected, send it the character `r`.
 That is it.
 With that, the ESP8266 should reboot and we can proceed with the OTA of the firmware.
 
-Here is the `expect` script I need:
+Here is the `expect` script that works for me:
 
 ```
 #!/usr/bin/expect -f
 
 # grab the arguments off the command-line of this script
 set timeout 10               # timeout if you get no dialog
-set ip [lindex $argv 0]      # grab first argument
-set port [lindex $argv 1]    # grab second argument
+set ip [lindex $argv 0]      # grab commandline first argument
+set port [lindex $argv 1]    # grab commandline second argument
 
 # begin your interaction
 spawn telnet $ip $port       # startup telnet
@@ -101,9 +101,12 @@ send "R\r";                  # send 'R' to request reboot
 close
 ```
 
-This script is placed in the file `` and made executable (ie. ).
+This script is placed in the file `answerbot`,
+made executable (ie. `chmod a+x answerbot`)
+and then used with `Makefile` to suport the `update-ota` target.
 
 Sources of inspiration:
 
 * [Expect command and how to automate shell scripts like magic](https://likegeeks.com/expect-command/)
 * [Expect examples and tips](https://www.pantz.org/software/expect/expect_examples_and_tips.html)
+* [telnet-expect-example](https://github.com/aguther/example-telnet-expect)
