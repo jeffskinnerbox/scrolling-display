@@ -1,7 +1,27 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      0.3.0
+
+DESCRIPTION:
+Serial.println(val)
+Serial.println(val, format)
+
+val: the value to print. Allowed data types: any data type.
+format: specifies the number base (for integral data types) or number of decimal places (for floating point types).
+
+REFERENCE MATERIALS:
+https://www.arduino.cc/reference/en/language/functions/communication/serial/print/
+https://www.arduino.cc/reference/en/language/functions/communication/serial/println/
+Passing Different Types to Functions in C++ - https://www.dummies.com/programming/cpp/passing-different-types-to-functions-in-c/
+Templates in C++ - https://www.dummies.com/programming/cpp/templates-in-c/
+Function templates - http://www.cplusplus.com/doc/oldtutorial/templates/
+Template member functions - https://blog.feabhas.com/2014/07/template-member-functions/
+
+C++: “undefined reference to” templated class function - https://bytefreaks.net/programming-2/c/c-undefined-reference-to-templated-class-function
+
+CREATED BY:
+    jeffskinnerbox@yahoo.com
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
@@ -61,48 +81,127 @@ CREATED BY:
 
 #pragma once                 // compiler to skip subsequent includes of this file
 
-// debugging routings that print trace messages on serial port
-// using F() to load strings in flash memory, not RAM
-#define DEBUG true
+#define DEBUG  true    // activate trace message printing for debugging on serial
+#define TELNET false   // activate trace message printing for debugging via telnet
 
 #if DEBUG
-    #define PRT(s)         { Serial.print(F(s)); }                             // Print a string without newline
-    #define PRINT(s)       { Serial.println(F(s)); }                           // Print a string
-    #define PRINTD(s, v)   { Serial.print(F(s)); Serial.println(v, DEC); }     // Print a string followed by decimal
-    #define PRINTX(s, v)   { Serial.print(F(s)); Serial.println(v, HEX); }     // Print a string followed by hex
-    #define PRINTB(s, v)   { Serial.print(F(s)); Serial.println(v, BIN); }     // Print a string followed by binary
-    #define PRINTC(s, v)   { Serial.print(F(s)); Serial.println((char)v); }    // Print a string followed by char
-    #define PRINTS(s, v)   { Serial.print(F(s)); Serial.println(v); }          // Print a string followed by string
+#ifndef MYCLASS_HPP
+#define MYCLASS_HPP
+/*class DeBug {*/
+  //private:
+    //char *db_info = "\e[1;32mINFO:    \e[m";
+    //char *db_warn = "\e[1;33mWARNING: \e[m";
+    //char *db_error = "\e[1;31mERROR:   \e[m";
+    //char *db_fatal = "\e[1;37m\e[41mFATAL:   \e[m";
 
-    #define EXEC(s)        { s; }
-    #define FATAL(s)       { Serial.print(F("\e[1;37m\e[41mFATAL:   \e[m")); PRINT(s) }
+  //public:
+    //// constructors & destructors for the class
+    //DeBug(void);
+    //~DeBug(void);
 
-    #define INFO(s)        { Serial.print(F("\e[1;32mINFO:    \e[m")); PRINT(s) }
-    #define ERROR(s)       { Serial.print(F("\e[1;31mERROR:   \e[m")); PRINT(s) }
-    #define WARNING(s)     { Serial.print(F("\e[1;33mWARNING: \e[m")); PRINT(s) }
+    //// public methods
+    //void println(char *);
+    //void println(char *, char *);
+    //void println(char *, byte &);
+    //void println(char *, float);
+/*};*/
+class DeBug {
+  private:
+    char *db_info = "\e[1;32mINFO:    \e[m";
+    char *db_warn = "\e[1;33mWARNING: \e[m";
+    char *db_error = "\e[1;31mERROR:   \e[m";
+    char *db_fatal = "\e[1;37m\e[41mFATAL:   \e[m";
 
-    #define INFOD(s, v)    { Serial.print(F("\e[1;32mINFO:    \e[m")); Serial.print(F(s)); Serial.println(v, DEC); }
-    #define ERRORD(s, v)   { Serial.print(F("\e[1;31mERROR:   \e[m")); Serial.print(F(s)); Serial.println(v, DEC); }
-    #define WARNINGD(s, v) { Serial.print(F("\e[1;33mWARNING: \e[m")); Serial.print(F(s)); Serial.println(v, DEC); }
+  public:
+    // constructors & destructors for the class
+    /*DeBug(void);*/
+    /*~DeBug(void)*/;
+    inline DeBug(void) {};
+    inline ~DeBug(void) {};
 
-    #define INFOX(s, v)    { Serial.print(F("\e[1;32mINFO:    \e[m")); Serial.print(F(s)); Serial.println(v, HEX); }
-    #define ERRORX(s, v)   { Serial.print(F("\e[1;31mERROR:   \e[m")); Serial.print(F(s)); Serial.println(v, HEX); }
-    #define WARNINGX(s, v) { Serial.print(F("\e[1;33mWARNING: \e[m")); Serial.print(F(s)); Serial.println(v, HEX); }
+    // public methods
+    /*void println(char *);*/
+    /*template<typename T> void println(char *, T)*/;
 
-    #define INFOB(s, v)    { Serial.print(F("\e[1;32mINFO:    \e[m")); Serial.print(F(s)); Serial.println(v, BIN); }
-    #define ERRORB(s, v)   { Serial.print(F("\e[1;31mERROR:   \e[m")); Serial.print(F(s)); Serial.println(v, BIN); }
-    #define WARNINGB(s, v) { Serial.print(F("\e[1;33mWARNING: \e[m")); Serial.print(F(s)); Serial.println(v, BIN); }
+    inline void println(char *str) {
+        Serial.print(db_info);
+        Serial.println(str);
+    };
 
-    #define INFOC(s, v)    { Serial.print(F("\e[1;32mINFO:    \e[m")); Serial.print(F(s)); Serial.println((char)v); }
-    #define ERRORC(s, v)   { Serial.print(F("\e[1;31mERROR:   \e[m")); Serial.print(F(s)); Serial.println((char)v); }
-    #define WARNINGC(s, v) { Serial.print(F("\e[1;33mWARNING: \e[m")); Serial.print(F(s)); Serial.println((char)v); }
+    template<typename T>
+    inline void println(char *str, T var) {
+        Serial.print(db_info);
+        Serial.print(str);
+        Serial.println(var);
+    };
 
-    #define INFOS(s, v)    { Serial.print(F("\e[1;32mINFO:    \e[m")); Serial.print(F(s)); Serial.println(v); }
-    #define ERRORS(s, v)   { Serial.print(F("\e[1;31mERROR:   \e[m")); Serial.print(F(s)); Serial.println(v); }
-    #define WARNINGS(s, v) { Serial.print(F("\e[1;33mWARNING: \e[m")); Serial.print(F(s)); Serial.println(v); }
+    template<typename T, typename U>
+    inline void println(char *str, T var, U format) {
+        Serial.print(db_info);
+        Serial.print(str);
+        Serial.println(var, format);
+    };
+};
+#endif // MYCLASS_HPP
+
+
+
+
+
+//include template implemetation
+//#include "debug_template.h"
+
+
+
+
+// -----------------------------------------------------------------------------
+
+
+const char db_fatal[] = "\e[1;37m\e[41mFATAL:   \e[m";
+const char db_info[]= "\e[1;32mINFO:    \e[m";
+const char db_error[]= "\e[1;31mERROR:   \e[m";
+const char db_warn[]= "\e[1;33mWARNING: \e[m";
+
+// debugging routings that print trace messages on serial port
+// using F() to load static strings in flash memory, not RAM
+#define PRINT(s)          { Serial.print(F(s)); }                             // Print a string without newline
+#define PRINTNL(s)        { Serial.println(F(s)); }                           // Print a string
+#define PRINTF(s, f, v)   { Serial.print(F(s)); Serial.printf(f, v); }     // Print a string followed by format & variable
+#define PRINTD(s, v)   { Serial.print(F(s)); Serial.println(v, DEC); }     // Print a string followed by decimal
+#define PRINTX(s, v)   { Serial.print(F(s)); Serial.println(v, HEX); }     // Print a string followed by hex
+#define PRINTB(s, v)   { Serial.print(F(s)); Serial.println(v, BIN); }     // Print a string followed by binary
+#define PRINTC(s, v)   { Serial.print(F(s)); Serial.println((char)v); }    // Print a string followed by char
+#define PRINTS(s, v)   { Serial.print(F(s)); Serial.println(v); }          // Print a string followed by string
+
+#define EXEC(s)        { s; }
+#define FATAL(s)       { Serial.print(db_fatal); PRINTNL(s) }
+
+#define INFO(s)        { Serial.print(db_info); PRINTNL(s) }
+#define ERROR(s)       { Serial.print(db_error); PRINTNL(s) }
+#define WARNING(s)     { Serial.print(db_warn); PRINTNL(s) }
+
+#define INFOD(s, v)    { Serial.print(db_info); Serial.print(F(s)); Serial.println(v, DEC); }
+#define ERRORD(s, v)   { Serial.print(db_error); Serial.print(F(s)); Serial.println(v, DEC); }
+#define WARNINGD(s, v) { Serial.print(db_warn); Serial.print(F(s)); Serial.println(v, DEC); }
+
+#define INFOX(s, v)    { Serial.print(db_info); Serial.print(F(s)); Serial.println(v, HEX); }
+#define ERRORX(s, v)   { Serial.print(db_error); Serial.print(F(s)); Serial.println(v, HEX); }
+#define WARNINGX(s, v) { Serial.print(db_warn); Serial.print(F(s)); Serial.println(v, HEX); }
+
+#define INFOB(s, v)    { Serial.print(db_info); Serial.print(F(s)); Serial.println(v, BIN); }
+#define ERRORB(s, v)   { Serial.print(db_error); Serial.print(F(s)); Serial.println(v, BIN); }
+#define WARNINGB(s, v) { Serial.print(db_warn); Serial.print(F(s)); Serial.println(v, BIN); }
+
+#define INFOC(s, v)    { Serial.print(db_info); Serial.print(F(s)); Serial.println((char)v); }
+#define ERRORC(s, v)   { Serial.print(db_error); Serial.print(F(s)); Serial.println((char)v); }
+#define WARNINGC(s, v) { Serial.print(db_warn); Serial.print(F(s)); Serial.println((char)v); }
+
+#define INFOS(s, v)    { Serial.print(db_info); Serial.print(F(s)); Serial.println(v); }
+#define ERRORS(s, v)   { Serial.print(db_error); Serial.print(F(s)); Serial.println(v); }
+#define WARNINGS(s, v) { Serial.print(db_warn); Serial.print(F(s)); Serial.println(v); }
 #else
-    #define PRT(s)
     #define PRINT(s)
+    #define PRINTNL(s)
     #define PRINTD(s, v)
     #define PRINTX(s, v)
     #define PRINTB(s, v)
@@ -135,5 +234,6 @@ CREATED BY:
     #define INFOS(s, v)
     #define ERRORS(s, v)
     #define WARNINGS(s, v)
-#endif
+
+#endif // DEBUG
 

@@ -21,6 +21,8 @@ CREATED BY:
 // Arduino libraries (~/src/arduino/libraries)
 #include <Arduino.h>
 
+// Arduino libraries (~/Arduino/libraries)
+
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
@@ -67,7 +69,7 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     // make subsequent connection attempts to wifi
     tout = timeout + millis();                // milliseconds of time given to making connection attempt
     while(WiFi.status() != WL_CONNECTED) {
-        PRT(".");
+        PRINT(".");
         if (millis() > tout) {
             ERRORD("Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
@@ -75,7 +77,7 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
         delay(500);
     }
 
-    PRT(".\n\r");
+    PRINT(".\n\r");
     INFOS("Successfully connected to WiFi!  IP address is ", WiFi.localIP());
     INFOD("WiFi status exit code is ", WiFi.status());
 
@@ -89,7 +91,7 @@ void WiFiTools::wifiTerminate() {
 
     WiFi.disconnect();
 
-    PRINT("--------------------------------------------------------------------------------");
+    PRINTNL("--------------------------------------------------------------------------------");
 }
 
 
@@ -107,7 +109,7 @@ void WiFiTools::wifiScan() {
     }
 
     INFO("Network Scan Completed");
-    PRINT("--------------------------------------------------------------------------------");
+    PRINTNL("--------------------------------------------------------------------------------");
 }
 
 

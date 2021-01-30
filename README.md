@@ -184,6 +184,51 @@ make build
 make upload
 ```
 
+--------
+
+
+# DeBug.cpp / DeBug.h
+During the building of this project,
+I got a "undefined reference to template method" error.
+The problem emerged when I templatized a member function for my DeBug class.
+The articles in the **Sources** below contains
+[good description of writing a proper template member function][A],
+a [description of the source of the error seen][B] during the build process,
+and [some ways to work around this issue][C].
+This appear to be a know design flaw in some C++ compilers.
+
+A template is not like a function which can be compiled into byte code.
+It is just a pattern to generate such a function.
+If you put a template on its own into a `*.cpp` file, there is nothing to compile.
+Moreover, the explicite instanciation is actually not a template,
+but the starting point to make a function out of the template which ends up in the `*.obj` file.
+
+The bottomline is that you cannot separate the compilation
+of the function template (i.e. `*.cpp` file) from its declaration (i.e. `*.h`).
+Because of a quirk in the C++ compliler implementation (or should I say bug),
+the templeted member function is never compiled in the `cpp` file.
+As a rsult, the linker doesn't find it when you use it from another piece of code,
+and you ghet the "undefined reference to template method" error.
+You will not see this in all C++ compiler implementation,
+but its there within the Arduino / ESP tool set.
+
+Source:
+
+* [Template member functions](https://blog.feabhas.com/2014/07/template-member-functions/)
+* [Why can templates only be implemented in the header file?](https://stackoverflow.com/questions/495021/why-can-templates-only-be-implemented-in-the-header-file)
+* [Why can’t I separate the definition of my templates class from its declaration and put it inside a .cpp file?](https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl)
+* [“Undefined reference to” template class constructor [duplicate](https://stackoverflow.com/questions/8752837/undefined-reference-to-template-class-constructor)
+* [C++: “undefined reference to” templated class function](https://bytefreaks.net/programming-2/c/c-undefined-reference-to-templated-class-function)
+
+[A]:https://blog.feabhas.com/2014/07/template-member-functions
+[B]:https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+[C]:https://bytefreaks.net/programming-2/c/c-undefined-reference-to-templated-class-function
+[D]:
+[E]:
+
+
+
+
 
 
 [01]:https://www.amazon.com/gp/product/B010O1G1ES

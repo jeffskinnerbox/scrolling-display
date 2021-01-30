@@ -108,7 +108,10 @@ MessageStore Msg = MessageStore();
 // version stamp
 #define VERSION "0.0.2"
 #define VER VERSION " - "  __DATE__ " at " __TIME__
-const char version[] = VER;
+//const char version[] = VER;
+char version[] = VER;
+
+DeBug DB = DeBug();
 
 
 
@@ -309,7 +312,7 @@ void loadmsg(void) {
     yield();                                         // prevent the watchdog timer doing a reboot
 
     INFO("Exiting loadmsg()...");
-    PRINT("--------------------------------------------------------------------------------");
+    PRINTNL("--------------------------------------------------------------------------------");
 
 }
 
@@ -327,11 +330,18 @@ void setup() {
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
-    PRINT("--------------------------------------------------------------------------------");
+    PRINTNL("--------------------------------------------------------------------------------");
     INFO("Entering setup() for scrolling display");
     INFOS("scrolling display version = ", version);
     INFOS("ESP8266 MAC address = ", WiFi.macAddress());
     INFOD("ESP8266 chip ID = ", ESP.getChipId());
+
+    DB.println("--------------------------------------------------------------------------------");
+    DB.println("Entering setup() for scrolling display");
+    DB.println("scrolling display version = ", version);
+    DB.println("ESP8266 MAC address = ", WiFi.macAddress());
+    DB.println("ESP8266 chip ID = ", ESP.getChipId());
+    DB.println("ESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object

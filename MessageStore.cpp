@@ -25,6 +25,8 @@ CREATED BY:
 // Arduino libraries (~/src/arduino/libraries)
 #include <Arduino.h>
 
+// Arduino libraries (~/Arduino/libraries)
+
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // simple-display project's include files (~/src/scrolling-display/test/scrolling-display)
