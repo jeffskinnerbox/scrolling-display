@@ -15,6 +15,8 @@ CREATED BY:
 
 #define DEBUG true    // activate debugging routings (print trace messages on serial port)
 
+#define BUF 25
+
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <ESP8266WiFi.h>
 
@@ -29,7 +31,8 @@ CREATED BY:
 #include "debug.h"
 #include "WiFiHandler.h"
 
-#define BUF 25
+// declare object DB as external, and member of class DeBug
+extern DeBug DB;
 
 // ------------------------ Constructors & Destructors -------------------------
 
@@ -63,23 +66,23 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     timeout = tout;
 
     // attempt first connect to a WiFi network
-    INFOS("Attempting connection to WiFi SSID ", ssid);
+    DB.println(INFONEW, "Attempting connection to WiFi SSID ", ssid);
     WiFi.begin(ssid, password);
 
     // make subsequent connection attempts to wifi
     tout = timeout + millis();                // milliseconds of time given to making connection attempt
     while(WiFi.status() != WL_CONNECTED) {
-        PRINT(".");
+        DB.unformatted(".");
         if (millis() > tout) {
-            ERRORD("Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
+            DB.println(ERRORNEW, "Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
         delay(500);
     }
 
-    PRINT(".\n\r");
-    INFOS("Successfully connected to WiFi!  IP address is ", WiFi.localIP());
-    INFOD("WiFi status exit code is ", WiFi.status());
+    DB.unformatted(".\n\r");
+    DB.println(INFONEW, "Successfully connected to WiFi!  IP address is ", WiFi.localIP());
+    DB.println(INFONEW, "WiFi status exit code is ", WiFi.status());
 
     return true;
 }
@@ -87,29 +90,29 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
 
 // terminate the wifi connect
 void WiFiTools::wifiTerminate() {
-    INFOS("Disconnecting from WiFi with SSID ", WiFi.SSID());
+    DB.println(INFONEW, "Disconnecting from WiFi with SSID ", WiFi.SSID());
 
     WiFi.disconnect();
 
-    PRINTNL("--------------------------------------------------------------------------------");
+    DB.println(INFONEW, "--------------------------------------------------------------------------------");
 }
 
 
 // scan for nearby networks
 void WiFiTools::wifiScan() {
-    INFO("Starting Network Scan");
+    DB.println(INFONEW, "Starting Network Scan");
     byte numSsid = WiFi.scanNetworks();
 
     // print the list of networks seen
-    INFOD("Total number of SSIDs found: ", numSsid);
+    DB.println(INFONEW, "Total number of SSIDs found: ", numSsid);
 
     // print the name of each network found
     for (int thisNet = 0; thisNet<numSsid; thisNet++) {
-        INFOS("   ", WiFi.SSID(thisNet));
+        DB.println(INFONEW, "   ", WiFi.SSID(thisNet));
     }
 
-    INFO("Network Scan Completed");
-    PRINTNL("--------------------------------------------------------------------------------");
+    DB.println(INFONEW, "Network Scan Completed");
+    DB.println(INFONEW, "--------------------------------------------------------------------------------");
 }
 
 

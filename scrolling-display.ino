@@ -95,6 +95,10 @@ const uint8_t JUSTIFY_SET = 6;      // change the justification
 const uint8_t INVERSE_SET = 0;      // set/reset the display to inverse
 const uint16_t SCROLLPAUSE = 2000;  // ms of pause after finished displaying message
 
+// construct object DB as class DeBug
+// make sure to construct first to support other objects
+DeBug DB = DeBug();
+
 // Parola object constructor for software SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
@@ -110,8 +114,6 @@ MessageStore Msg = MessageStore();
 #define VER VERSION " - "  __DATE__ " at " __TIME__
 //const char version[] = VER;
 char version[] = VER;
-
-DeBug DB = DeBug();
 
 
 
@@ -198,7 +200,7 @@ void errorHandler(int error) {
 
     switch(error) {
         case 1:
-            FATAL("Can't go on without WiFi connection.  Press reset twice to fix.");
+            DB.println(FATALNEW, "Can't go on without WiFi connection.  Press reset twice to fix.");
             Msg.clear();
             Msg.addQueue("Can't go on without WiFi connection.");
             Msg.addQueue("Press reset twice to fix.");
@@ -214,14 +216,14 @@ void errorHandler(int error) {
             }
 
             // nothing can be done so restart
-            FATAL("Nothing can be done.  Doing an automatic restart.");
+            DB.println(FATALNEW, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
             break;
         default:
             // nothing can be done so restart
-            ERRORD("Unknown error code in errorHandler: ", error);
-            FATAL("Nothing can be done.  Doing an automatic restart.");
+            DB.println(ERRORNEW, "Unknown error code in errorHandler: ", error);
+            DB.println(FATALNEW, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
     }
@@ -264,7 +266,7 @@ void loadmsg(void) {
     char string[BUF_SIZE];
 
     // clear all old messages
-    INFO("Populating message queue with messages...");
+    DB.println(INFONEW, "Populating message queue with messages...");
     Msg.clearQueue();
     Msg.printQueue();
 
@@ -311,8 +313,8 @@ void loadmsg(void) {
     //delay(2000);
     yield();                                         // prevent the watchdog timer doing a reboot
 
-    INFO("Exiting loadmsg()...");
-    PRINTNL("--------------------------------------------------------------------------------");
+    DB.println(INFONEW, "Exiting loadmsg()...");
+    DB.println(INFONEW, "--------------------------------------------------------------------------------");
 
 }
 
@@ -330,18 +332,12 @@ void setup() {
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
-    PRINTNL("--------------------------------------------------------------------------------");
-    INFO("Entering setup() for scrolling display");
-    INFOS("scrolling display version = ", version);
-    INFOS("ESP8266 MAC address = ", WiFi.macAddress());
-    INFOD("ESP8266 chip ID = ", ESP.getChipId());
-
-    DB.println("--------------------------------------------------------------------------------");
-    DB.println("Entering setup() for scrolling display");
-    DB.println("scrolling display version = ", version);
-    DB.println("ESP8266 MAC address = ", WiFi.macAddress());
-    DB.println("ESP8266 chip ID = ", ESP.getChipId());
-    DB.println("ESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
+    DB.unformatted("\n\r");
+    DB.println(INFONEW, "--------------------------------------------------------------------------------");
+    DB.println(INFONEW, "Entering setup() for scrolling display");
+    DB.println(INFONEW, "scrolling display version = ", version);
+    DB.println(INFONEW, "ESP8266 MAC address = ", WiFi.macAddress());
+    DB.println(INFONEW, "ESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
@@ -396,7 +392,7 @@ void loop() {
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')
             P.displayText(Msg.get(top + cycle), SCROLLALIGN, SCROLLSPEED, SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
-            INFOS("Posting to display message = ", Msg.get(top + cycle));
+            DB.println(INFONEW, "Posting to display message = ", Msg.get(top + cycle));
         cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 
