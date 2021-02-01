@@ -13,9 +13,8 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
-#define DEBUG true    // activate debugging routings (print trace messages on serial port)
-
-#define BUF 25
+//#define DEBUG  true       // activate trace message printing for debugging on serial
+//#define TELNET false      // activate trace message printing for debugging via telnet
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <ESP8266WiFi.h>
@@ -30,6 +29,8 @@ CREATED BY:
 // simple-display project's include files (~/src/scrolling-display/test/simple-display)
 #include "debug.h"
 #include "WiFiHandler.h"
+
+#define BUF 25
 
 // declare object DB as external, and member of class DeBug
 extern DeBug DB;
@@ -66,23 +67,23 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     timeout = tout;
 
     // attempt first connect to a WiFi network
-    DB.println(INFONEW, "Attempting connection to WiFi SSID ", ssid);
+    DB.traceMsg(INFO, "Attempting connection to WiFi SSID ", ssid);
     WiFi.begin(ssid, password);
 
     // make subsequent connection attempts to wifi
     tout = timeout + millis();                // milliseconds of time given to making connection attempt
     while(WiFi.status() != WL_CONNECTED) {
-        DB.unformatted(".");
+        DB.print(".");
         if (millis() > tout) {
-            DB.println(ERRORNEW, "Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
+            DB.traceMsg(ERROR, "Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
         delay(500);
     }
 
-    DB.unformatted(".\n\r");
-    DB.println(INFONEW, "Successfully connected to WiFi!  IP address is ", WiFi.localIP());
-    DB.println(INFONEW, "WiFi status exit code is ", WiFi.status());
+    DB.print(".\n\r");
+    DB.traceMsg(INFO, "Successfully connected to WiFi!  IP address is ", WiFi.localIP());
+    DB.traceMsg(INFO, "WiFi status exit code is ", WiFi.status());
 
     return true;
 }
@@ -90,29 +91,29 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
 
 // terminate the wifi connect
 void WiFiTools::wifiTerminate() {
-    DB.println(INFONEW, "Disconnecting from WiFi with SSID ", WiFi.SSID());
+    DB.traceMsg(INFO, "Disconnecting from WiFi with SSID ", WiFi.SSID());
 
     WiFi.disconnect();
 
-    DB.println(INFONEW, "--------------------------------------------------------------------------------");
+    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
 }
 
 
 // scan for nearby networks
 void WiFiTools::wifiScan() {
-    DB.println(INFONEW, "Starting Network Scan");
+    DB.traceMsg(INFO, "Starting Network Scan");
     byte numSsid = WiFi.scanNetworks();
 
     // print the list of networks seen
-    DB.println(INFONEW, "Total number of SSIDs found: ", numSsid);
+    DB.traceMsg(INFO, "Total number of SSIDs found: ", numSsid);
 
     // print the name of each network found
     for (int thisNet = 0; thisNet<numSsid; thisNet++) {
-        DB.println(INFONEW, "   ", WiFi.SSID(thisNet));
+        DB.traceMsg(INFO, "   ", WiFi.SSID(thisNet));
     }
 
-    DB.println(INFONEW, "Network Scan Completed");
-    DB.println(INFONEW, "--------------------------------------------------------------------------------");
+    DB.traceMsg(INFO, "Network Scan Completed");
+    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
 }
 
 

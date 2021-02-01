@@ -18,9 +18,8 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
-//using namespace std;
-
-#define DEBUG true    // activate debugging routings (print trace messages on serial port)
+//#define DEBUG  true       // activate trace message printing for debugging on serial
+//#define TELNET false      // activate trace message printing for debugging via telnet
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 
@@ -66,14 +65,14 @@ MessageStore::MessageStore(int str_size, int que_size, int buf_size) {
             array[i] = array[0] + i * cols;
     }
 
-    DB.println(INFONEW, "store_size = ", store_size);
-    DB.println(INFONEW, "queue_size = ", queue_size);
-    DB.println(INFONEW, "total_size = ", total_size);
-    DB.println(INFONEW, "buffer_size = ", buffer_size);
-    DB.println(INFONEW, "store_top = ", store_top);
-    DB.println(INFONEW, "queue_top = ", queue_top);
-    DB.println(INFONEW, "queue_front = ", queue_front);
-    DB.println(INFONEW, "queue_rear = ", queue_rear);
+    DB.traceMsg(INFO, "store_size = ", store_size);
+    DB.traceMsg(INFO, "queue_size = ", queue_size);
+    DB.traceMsg(INFO, "total_size = ", total_size);
+    DB.traceMsg(INFO, "buffer_size = ", buffer_size);
+    DB.traceMsg(INFO, "store_top = ", store_top);
+    DB.traceMsg(INFO, "queue_top = ", queue_top);
+    DB.traceMsg(INFO, "queue_front = ", queue_front);
+    DB.traceMsg(INFO, "queue_rear = ", queue_rear);
 
 }
 
@@ -102,14 +101,14 @@ MessageStore::MessageStore(void) {
             array[i] = array[0] + i * cols;
     }
 
-    DB.println(INFONEW, "store_size = ", store_size);
-    DB.println(INFONEW, "queue_size = ", queue_size);
-    DB.println(INFONEW, "total_size = ", total_size);
-    DB.println(INFONEW, "buffer_size = ", buffer_size);
-    DB.println(INFONEW, "store_top = ", store_top);
-    DB.println(INFONEW, "queue_top = ", queue_top);
-    DB.println(INFONEW, "queue_front = ", queue_front);
-    DB.println(INFONEW, "queue_rear = ", queue_rear);
+    DB.traceMsg(INFO, "store_size = ", store_size);
+    DB.traceMsg(INFO, "queue_size = ", queue_size);
+    DB.traceMsg(INFO, "total_size = ", total_size);
+    DB.traceMsg(INFO, "buffer_size = ", buffer_size);
+    DB.traceMsg(INFO, "store_top = ", store_top);
+    DB.traceMsg(INFO, "queue_top = ", queue_top);
+    DB.traceMsg(INFO, "queue_front = ", queue_front);
+    DB.traceMsg(INFO, "queue_rear = ", queue_rear);
 
 }
 
@@ -189,7 +188,7 @@ bool  MessageStore::enQueue(char *str) {
 
     if ((queue_front == queue_top && queue_rear == queue_top + queue_size - 1)
             || (queue_rear == (queue_top + queue_front - 1)%(queue_size - 1))) {
-        DB.println(INFONEW, "Failed to add message to Queue. Queue is full.");
+        DB.traceMsg(INFO, "Failed to add message to Queue. Queue is full.");
         return false;
     }
 
@@ -218,7 +217,7 @@ char *MessageStore::deQueue(void) {
     char *data;
 
     if (queue_front == -1) {
-        DB.println(INFONEW, "Queue is empty.");
+        DB.traceMsg(INFO, "Queue is empty.");
         return NULL;
     }
 
@@ -247,7 +246,7 @@ void MessageStore::clearStore(void) {
     for (int i = store_top; i < store_top + store_size; i++)
         array[i][0] = '\0';
 
-    DB.println(INFONEW, "Simple store has been cleared.");
+    DB.traceMsg(INFO, "Simple store has been cleared.");
 
 }
 
@@ -263,14 +262,14 @@ void MessageStore::printStore(void) {
                 cnt++;
 
     // print headings
-    DB.println(INFONEW, "Number of elements in Simple Store are: ", cnt);
-    DB.println(INFONEW, "store_top = ", store_top);
-    DB.println(INFONEW, "store_size = ", store_size);
+    DB.traceMsg(INFO, "Number of elements in Simple Store are: ", cnt);
+    DB.traceMsg(INFO, "store_top = ", store_top);
+    DB.traceMsg(INFO, "store_size = ", store_size);
 
     // print the simple store contents
     for (int i = store_top; i < store_top + store_size; i++)
         if (array[i][0] != '\0')
-            DB.println(INFONEW, "\t", array[i]);
+            DB.traceMsg(INFO, "  ", array[i]);
 
 }
 
@@ -283,19 +282,19 @@ bool MessageStore::addStore(char *str) {
 
     // check size of message
     if (size > buffer_size) {
-        DB.println(ERRORNEW, "Attempting to add message longer then buffer in simple store. size = ", size);
-        DB.println(INFONEW, "Message buffer size: buffer_size = ", buffer_size);
+        DB.traceMsg(ERROR, "Attempting to add message longer then buffer in simple store. size = ", size);
+        DB.traceMsg(INFO, "Message buffer size: buffer_size = ", buffer_size);
         return false;
     }
 
     if (index < store_top || index > store_top + store_size - 1) {
-        DB.println(ERRORNEW, "Failed to add message to Store. Bad index.  index = ", index);
+        DB.traceMsg(ERROR, "Failed to add message to Store. Bad index.  index = ", index);
         return false;
     } else if (index < 0) {
-        DB.println(INFONEW, "Failed to add message to Store. Store is full.");
+        DB.traceMsg(INFO, "Failed to add message to Store. Store is full.");
         return false;
     } else {
-        DB.println(INFONEW, "Successfully adding message to Store.");
+        DB.traceMsg(INFO, "Successfully adding message to Store.");
         sprintf(array[index], str);
     }
 
@@ -311,16 +310,16 @@ bool MessageStore::addStore(char *str, int index) {
 
     // check size of message
     if (size > buffer_size) {
-        DB.println(ERRORNEW, "Attempting to add message longer then buffer in simple store. size = ", size);
-        DB.println(INFONEW, "Message buffer size: buffer_size = ", buffer_size);
+        DB.traceMsg(ERROR, "Attempting to add message longer then buffer in simple store. size = ", size);
+        DB.traceMsg(INFO, "Message buffer size: buffer_size = ", buffer_size);
         return false;
     }
 
     if (index < store_top || index > store_top + store_size - 1) {
-        DB.println(ERRORNEW, "Failed to add message to Store. Bad index.  index = ", index);
+        DB.traceMsg(ERROR, "Failed to add message to Store. Bad index.  index = ", index);
         return false;
     } else {
-        DB.println(INFONEW, "Successfully adding message to Store.");
+        DB.traceMsg(INFO, "Successfully adding message to Store.");
         sprintf(array[index], str);
     }
 
@@ -334,10 +333,10 @@ bool MessageStore::addStore(char *str, int index) {
 bool MessageStore::deleteStore(int index) {
 
     if (index < store_top || index > store_top + store_size) {
-        DB.println(ERRORNEW, "Failed to delete message from Store. Bad index. index = ", index);
+        DB.traceMsg(ERROR, "Failed to delete message from Store. Bad index. index = ", index);
         return false;
     } else {
-        DB.println(INFONEW, "Successfully deleted message from Store.");
+        DB.traceMsg(INFO, "Successfully deleted message from Store.");
         array[index][0] = '\0';
         return true;
     }
@@ -347,7 +346,7 @@ bool MessageStore::deleteStore(int index) {
 char *MessageStore::getStore(int index) {
 
     if (index < store_top || index >= store_top + store_size) {
-        DB.println(ERRORNEW, "Failed to get message from Store. Bad index. index = ", index);
+        DB.traceMsg(ERROR, "Failed to get message from Store. Bad index. index = ", index);
         return NULL;
     }
 
@@ -378,7 +377,7 @@ void MessageStore::clearQueue(void) {
 
     queue_front = queue_rear = -1;
 
-    DB.println(INFONEW, "Circular queue has been cleared.");
+    DB.traceMsg(INFO, "Circular queue has been cleared.");
 
 }
 
@@ -395,16 +394,16 @@ void MessageStore::printQueue(void) {
                 cnt++;
 
     // print controlling parameters
-    DB.println(INFONEW, "Number of elements in Queue are: ", cnt);
-    DB.println(INFONEW, "queue_top = ", queue_top);
-    DB.println(INFONEW, "queue_size = ", queue_size);
-    DB.println(INFONEW, "queue_front = ", queue_front);
-    DB.println(INFONEW, "queue_rear = ", queue_rear);
+    DB.traceMsg(INFO, "Number of elements in Queue are: ", cnt);
+    DB.traceMsg(INFO, "queue_top = ", queue_top);
+    DB.traceMsg(INFO, "queue_size = ", queue_size);
+    DB.traceMsg(INFO, "queue_front = ", queue_front);
+    DB.traceMsg(INFO, "queue_rear = ", queue_rear);
 
     // print the queue contents
     for (int i = queue_top; i < queue_top + queue_size; i++)
         if (array[i][0] != '\0')
-            DB.println(INFONEW, "\t", array[i]);
+            DB.traceMsg(INFO, "  ", array[i]);
 }
 
 
@@ -415,74 +414,18 @@ bool MessageStore::addQueue(char *str) {
 
     // check size of message
     if (size > buffer_size) {
-        DB.println(ERRORNEW, "Attempting to add message longer then buffer in circular queue. size = ", size);
-        DB.println(INFONEW, "Message buffer size: buffer_size = ", buffer_size);
+        DB.traceMsg(ERROR, "Attempting to add message longer then buffer in circular queue. size = ", size);
+        DB.traceMsg(INFO, "Message buffer size: buffer_size = ", buffer_size);
         return false;
     }
 
-/*
-    if ((queue_front == queue_top && queue_rear == queue_size - 1) || (queue_rear == (queue_front - 1)%(queue_size - 1))) {
-        INFO("Circular Queue is full. Removing element from end of message queue.");
-    } else if (queue_front == -1) {     // (room in queue) queue is empty, so insert into first element
-        queue_front = queue_rear = queue_top;
-        sprintf(array[queue_front], str);
-    } else if (queue_rear == queue_size - 1 && queue_front != queue_top) {
-        queue_rear = queue_top;
-        sprintf(array[queue_rear], str);
-    } else {
-        queue_rear++;
-        sprintf(array[queue_rear], str);
-    }
-*/
-
-/*
-    if (queue_front == queue_top && queue_rear == queue_size - 1 || queue_rear - queue_front == 1) {
-        INFO("Circular Queue is full. Removing element from end of message queue.");
-    }
-
-    if (queue_front == -1) {        // (room in queue) queue is empty, so insert into first element
-        queue_front = queue_top;
-        queue_rear = queue_top;
-        sprintf(array[queue_rear], str);
-        return true;
-    } else if (queue_rear >= queue_front && queue_front == queue_top) {
-        queue_rear++;
-        sprintf(array[queue_rear], str);
-        return true;
-    } else if (queue_rear == queue_top + queue_size - 1 && queue_front == queue_top) {
-        queue_front = queue_top + 1;
-        queue_rear = queue_top;
-        sprintf(array[queue_rear], str);
-        return true;
-    } else if (queue_front - queue_rear == 1 && queue_front != queue_top + queue_size - 1) {
-        queue_front++;
-        queue_rear++;
-        sprintf(array[queue_rear], str);
-        return true;
-    } else if (queue_front - queue_rear == 1 && queue_front != queue_top + queue_size - 1) {
-        queue_front = queue_top;
-        queue_rear++;
-        sprintf(array[queue_rear], str);
-        return true;
-    } else if (queue_front - queue_rear == 1 && queue_front == queue_top + queue_size - 1) {
-        queue_front = queue_top;
-        queue_rear++;
-        sprintf(array[queue_rear], str);
-        return true;
-    }
-
-    ERROR("You should never reach the point in MessageStore::addQueue.");
-    printQueue();
-    delay(50000);
-    return false;
-*/
 
     if ((queue_front == queue_top && queue_rear == queue_top + queue_size - 1) || (queue_rear == (queue_top + queue_front - 1)%(queue_size - 1))) {
         char *string = deQueue();
-        DB.println(INFONEW, "Queue is full. Removing element from circular queue = ", string);
+        DB.traceMsg(INFO, "Queue is full. Removing element from circular queue = ", string);
         return enQueue(str);
     } else {
-        DB.println(INFONEW, "Element added to circular queue = ", str);
+        DB.traceMsg(INFO, "Element added to circular queue = ", str);
         return enQueue(str);
     }
 
@@ -492,7 +435,7 @@ bool MessageStore::addQueue(char *str) {
 char *MessageStore::getQueue(int index) {
 
     if (index < queue_top || index >= queue_top + queue_size) {
-        DB.println(ERRORNEW, "Failed to get message from Queue. Bad index. index = ", index);
+        DB.traceMsg(ERROR, "Failed to get message from Queue. Bad index. index = ", index);
         return NULL;
     }
 
@@ -538,7 +481,7 @@ void MessageStore::clear(void) {
 char *MessageStore::get(int index) {
 
     if (index < store_top || index >= store_top + store_size + queue_size) {
-        DB.println(ERRORNEW, "Failed to get message from Queue. Bad index. index = ", index);
+        DB.traceMsg(ERROR, "Failed to get message from Queue. Bad index. index = ", index);
         return NULL;
     }
 
@@ -558,19 +501,19 @@ void MessageStore::print(void) {
                 cnt++;
 
     // print controlling parameters
-    DB.println(INFONEW, "Number of elements in MessageStore are: ", cnt);
-    DB.println(INFONEW, "store_size = ", store_size);
-    DB.println(INFONEW, "queue_size = ", queue_size);
-    DB.println(INFONEW, "total_size = ", total_size);
-    DB.println(INFONEW, "buffer_size = ", buffer_size);
-    DB.println(INFONEW, "store_top = ", store_top);
-    DB.println(INFONEW, "queue_top = ", queue_top);
-    DB.println(INFONEW, "queue_front = ", queue_front);
-    DB.println(INFONEW, "queue_rear = ", queue_rear);
+    DB.traceMsg(INFO, "Number of elements in MessageStore are: ", cnt);
+    DB.traceMsg(INFO, "store_size = ", store_size);
+    DB.traceMsg(INFO, "queue_size = ", queue_size);
+    DB.traceMsg(INFO, "total_size = ", total_size);
+    DB.traceMsg(INFO, "buffer_size = ", buffer_size);
+    DB.traceMsg(INFO, "store_top = ", store_top);
+    DB.traceMsg(INFO, "queue_top = ", queue_top);
+    DB.traceMsg(INFO, "queue_front = ", queue_front);
+    DB.traceMsg(INFO, "queue_rear = ", queue_rear);
 
     // print the queue contents
     for (int i = store_top; i < store_size + queue_size; i++)
         if (array[i][0] != '\0')
-            DB.println(INFONEW, "\t", array[i]);
+            DB.traceMsg(INFO, "  ", array[i]);
 }
 

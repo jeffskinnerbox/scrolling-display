@@ -50,15 +50,18 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
+//#define DEBUG  true       // activate trace message printing for debugging on serial
+//#define TELNET false      // activate trace message printing for debugging via telnet
+
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
 #include <ESP8266WiFi.h>
 
-// Arduino libraries (~/src/Arduino/libraries)
-#include <MD_Parola.h>
-#include <MD_MAX72xx.h>
+// Arduino libraries (~/Arduino/libraries)
 
 // Arduino libraries (~/src/arduino/libraries)
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
 
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
@@ -110,9 +113,7 @@ WiFiTools WT = WiFiTools();
 MessageStore Msg = MessageStore();
 
 // version stamp
-#define VERSION "0.0.2"
-#define VER VERSION " - "  __DATE__ " at " __TIME__
-//const char version[] = VER;
+#define VER "scrolling-display" " - "  __DATE__ " at " __TIME__
 char version[] = VER;
 
 
@@ -200,7 +201,7 @@ void errorHandler(int error) {
 
     switch(error) {
         case 1:
-            DB.println(FATALNEW, "Can't go on without WiFi connection.  Press reset twice to fix.");
+            DB.traceMsg(FATAL, "Can't go on without WiFi connection.  Press reset twice to fix.");
             Msg.clear();
             Msg.addQueue("Can't go on without WiFi connection.");
             Msg.addQueue("Press reset twice to fix.");
@@ -216,46 +217,18 @@ void errorHandler(int error) {
             }
 
             // nothing can be done so restart
-            DB.println(FATALNEW, "Nothing can be done.  Doing an automatic restart.");
+            DB.traceMsg(FATAL, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
             break;
         default:
             // nothing can be done so restart
-            DB.println(ERRORNEW, "Unknown error code in errorHandler: ", error);
-            DB.println(FATALNEW, "Nothing can be done.  Doing an automatic restart.");
+            DB.traceMsg(ERROR, "Unknown error code in errorHandler: ", error);
+            DB.traceMsg(FATAL, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
     }
 }
-
-
-//------------------------------------------------------------------------------
-
-
-
-/*
-// start listening for UDP messages on port localPort
-void startUDP() {
-    if (udp.begin(localPort))
-        Serial.print("\nStarting UDP for NTP connection.  ");
-    else
-        Serial.print("Failed to start UDP listener.  ");
-
-    Serial.print("Using local port ");
-    Serial.println(udp.localPort());
-}
-
-
-// stop listening for UDP messages on port localPort
-void stopUDP() {
-    Serial.print("Stopping UDP on local port ");
-    Serial.println(udp.localPort());
-    Serial.print("\n");
-
-    udp.stop();
-}
-*/
 
 
 
@@ -266,7 +239,7 @@ void loadmsg(void) {
     char string[BUF_SIZE];
 
     // clear all old messages
-    DB.println(INFONEW, "Populating message queue with messages...");
+    DB.traceMsg(INFO, "Populating message queue with messages...");
     Msg.clearQueue();
     Msg.printQueue();
 
@@ -313,8 +286,34 @@ void loadmsg(void) {
     //delay(2000);
     yield();                                         // prevent the watchdog timer doing a reboot
 
-    DB.println(INFONEW, "Exiting loadmsg()...");
-    DB.println(INFONEW, "--------------------------------------------------------------------------------");
+    DB.traceMsg(INFO, "Exiting loadmsg()...");
+    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
+
+}
+
+
+void getFlashInfo() {
+
+    DB.traceMsg(INFO, "\n\rInformation concerning flash memory chip");
+
+    DB.traceMsg(INFO, "\t\Chip ID: %x hex\n\r", ESP.getFlashChipId());
+    DB.traceMsg(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize());
+    DB.traceMsg(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize());
+    DB.traceMsg(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed());
+    DB.traceMsg(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode());
+    DB.traceMsg(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap());
+    DB.traceMsg(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation());  // 0% is clean, more than ~50% is not harmless
+
+}
+
+
+void getVersionInfo() {
+
+    DB.traceMsg(INFO, "\n\rInformation concerning application & ESP version");
+
+    DB.traceMsg(INFO, "\tscrolling-display.ino version = ", version);
+    DB.traceMsg(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
+    DB.traceMsg(INFO, "\tESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
 
 }
 
@@ -332,12 +331,11 @@ void setup() {
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
-    DB.unformatted("\n\r");
-    DB.println(INFONEW, "--------------------------------------------------------------------------------");
-    DB.println(INFONEW, "Entering setup() for scrolling display");
-    DB.println(INFONEW, "scrolling display version = ", version);
-    DB.println(INFONEW, "ESP8266 MAC address = ", WiFi.macAddress());
-    DB.println(INFONEW, "ESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
+    DB.print("\n\r");
+    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
+    DB.traceMsg(INFO, "Entering setup() for scrolling display");
+    getVersionInfo();
+    getFlashInfo();
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
@@ -380,6 +378,10 @@ void setup() {
         errorHandler(1);
 
     loadmsg();
+
+    DB.traceMsg(INFO, "Exiting setup() for scrolling display");
+    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
+
 }
 
 
@@ -392,7 +394,7 @@ void loop() {
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')
             P.displayText(Msg.get(top + cycle), SCROLLALIGN, SCROLLSPEED, SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
-            DB.println(INFONEW, "Posting to display message = ", Msg.get(top + cycle));
+            DB.traceMsg(INFO, "Posting to display message = ", Msg.get(top + cycle));
         cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 
