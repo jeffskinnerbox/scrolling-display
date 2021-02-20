@@ -50,7 +50,7 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
-//#define DEBUG  true       // activate trace message printing for debugging on serial
+#define DEBUG  true       // activate trace message printing for debugging on serial
 //#define TELNET false      // activate trace message printing for debugging via telnet
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
@@ -201,7 +201,7 @@ void errorHandler(int error) {
 
     switch(error) {
         case 1:
-            DB.traceMsg(FATAL, "Can't go on without WiFi connection.  Press reset twice to fix.");
+            DEBUGPRINT(FATAL, "Can't go on without WiFi connection.  Press reset twice to fix.");
             Msg.clear();
             Msg.addQueue("Can't go on without WiFi connection.");
             Msg.addQueue("Press reset twice to fix.");
@@ -217,14 +217,14 @@ void errorHandler(int error) {
             }
 
             // nothing can be done so restart
-            DB.traceMsg(FATAL, "Nothing can be done.  Doing an automatic restart.");
+            DEBUGPRINT(FATAL, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
             break;
         default:
             // nothing can be done so restart
-            DB.traceMsg(ERROR, "Unknown error code in errorHandler: ", error);
-            DB.traceMsg(FATAL, "Nothing can be done.  Doing an automatic restart.");
+            DEBUGPRINT(ERROR, "Unknown error code in errorHandler: ", error);
+            DEBUGPRINT(FATAL, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
     }
@@ -239,7 +239,7 @@ void loadmsg(void) {
     char string[BUF_SIZE];
 
     // clear all old messages
-    DB.traceMsg(INFO, "Populating message queue with messages...");
+    DEBUGPRINT(INFO, "Populating message queue with messages...");
     Msg.clearQueue();
     Msg.printQueue();
 
@@ -286,34 +286,34 @@ void loadmsg(void) {
     //delay(2000);
     yield();                                         // prevent the watchdog timer doing a reboot
 
-    DB.traceMsg(INFO, "Exiting loadmsg()...");
-    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
+    DEBUGPRINT(INFO, "Exiting loadmsg()...");
+    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
 
 }
 
 
 void getFlashInfo() {
 
-    DB.traceMsg(INFO, "\n\rInformation concerning flash memory chip");
+    DEBUGPRINT(INFO, "\n\rInformation concerning flash memory chip");
 
-    DB.traceMsg(INFO, "\t\Chip ID: %x hex\n\r", ESP.getFlashChipId());
-    DB.traceMsg(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize());
-    DB.traceMsg(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize());
-    DB.traceMsg(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed());
-    DB.traceMsg(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode());
-    DB.traceMsg(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap());
-    DB.traceMsg(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation());  // 0% is clean, more than ~50% is not harmless
+    DEBUGPRINT(INFO, "\t\Chip ID: %x hex\n\r", ESP.getFlashChipId());
+    DEBUGPRINT(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize());
+    DEBUGPRINT(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize());
+    DEBUGPRINT(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed());
+    DEBUGPRINT(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode());
+    DEBUGPRINT(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap());
+    DEBUGPRINT(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation());  // 0% is clean, more than ~50% is not harmless
 
 }
 
 
 void getVersionInfo() {
 
-    DB.traceMsg(INFO, "\n\rInformation concerning application & ESP version");
+    DEBUGPRINT(INFO, "\n\rInformation concerning application & ESP version");
 
-    DB.traceMsg(INFO, "\tscrolling-display.ino version = ", version);
-    DB.traceMsg(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
-    DB.traceMsg(INFO, "\tESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
+    DEBUGPRINT(INFO, "\tscrolling-display.ino version = ", version);
+    DEBUGPRINT(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
+    DEBUGPRINT(INFO, "\tESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
 
 }
 
@@ -332,8 +332,8 @@ void setup() {
     while (!Serial) {}                        // wait for serial port to connect
 
     DB.print("\n\r");
-    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
-    DB.traceMsg(INFO, "Entering setup() for scrolling display");
+    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
+    DEBUGPRINT(INFO, "Entering setup() for scrolling display");
     getVersionInfo();
     getFlashInfo();
 
@@ -379,8 +379,8 @@ void setup() {
 
     loadmsg();
 
-    DB.traceMsg(INFO, "Exiting setup() for scrolling display");
-    DB.traceMsg(INFO, "--------------------------------------------------------------------------------");
+    DEBUGPRINT(INFO, "Exiting setup() for scrolling display");
+    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
 
 }
 
@@ -394,7 +394,7 @@ void loop() {
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')
             P.displayText(Msg.get(top + cycle), SCROLLALIGN, SCROLLSPEED, SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
-            DB.traceMsg(INFO, "Posting to display message = ", Msg.get(top + cycle));
+            DEBUGPRINT(INFO, "Posting to display message = ", Msg.get(top + cycle));
         cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 
