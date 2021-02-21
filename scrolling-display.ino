@@ -53,22 +53,22 @@ CREATED BY:
 #define DEBUG  true       // activate trace message printing for debugging on serial
 #define TELNET false       // activate trace message printing for debugging via telnet
 
-// ESP8266 libraries (~/.arduino15/packages/esp8266)
+// found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
 #include <ESP8266WiFi.h>
 
-// Arduino libraries (~/Arduino/libraries)
+// found in Arduino libraries (~/Arduino/libraries)
 
-// Arduino libraries (~/src/arduino/libraries)
+// found in Arduino libraries (~/src/arduino/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 
-// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
+// found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
-// simple-display project's include files (~/src/scrolling-display/test/simple-display)
+// this project's include files
 #include "debug.h"
+#include "secrets.h"
 #include "WiFiHandler.h"
-#include "credentials.h"
 #include "MessageStore.h"
 
 #define ONE_SECOND    1000UL        // milliseconds in one second
@@ -98,13 +98,9 @@ const uint8_t JUSTIFY_SET = 6;      // change the justification
 const uint8_t INVERSE_SET = 0;      // set/reset the display to inverse
 const uint16_t SCROLLPAUSE = 2000;  // ms of pause after finished displaying message
 
-/*// instantiate object DB (true) or declare object DB as external (false)*/
-/*#if true*/
-/*DeBug DB = DeBug();     // construct object DB as class DeBug*/
-/*#else*/
-/*extern DeBug DB;        // declare object DB as external, and member of class DeBug*/
-/*#endif*/
-extern DeBug DB;        // declare object DB as external, and member of class DeBug
+
+// for trace messages/debugging, construct object DB as class DeBug
+extern DeBug DB;
 
 // Parola object constructor for software SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
@@ -335,9 +331,14 @@ void setup() {
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
+    DEBUGON(true, false);
+    DEBUGPRINT("\n\r");
+    DEBUGLOCATION();
+
     DEBUGPRINT("\n\r");
     DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
     DEBUGTRACE(INFO, "Entering setup() for scrolling display");
+
     getVersionInfo();
     getFlashInfo();
 

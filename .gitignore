@@ -12,6 +12,8 @@
 ### --------------------------- Project Specific --------------------------- ###
 credentials.h
 credentials.json
+secrets.h
+secrets.json
 
 
 ### ------------------------------- General -------------------------------- ###

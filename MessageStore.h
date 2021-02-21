@@ -24,6 +24,7 @@ CREATED BY:
 #define QUEUE_SIZE  5               // default size of message queue
 #define BUF_SIZE    80              // default max number of characters of a message
 
+
 class MessageStore {
   private:
     int store_size, store_top;      // size of and index into top of simple store

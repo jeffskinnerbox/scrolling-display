@@ -21,25 +21,20 @@ CREATED BY:
 #define DEBUG  true       // activate trace message printing for debugging on serial
 #define TELNET false       // activate trace message printing for debugging via telnet
 
-// ESP8266 libraries (~/.arduino15/packages/esp8266)
+// found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 
-// Arduino libraries (~/src/arduino/libraries)
+// found in Arduino libraries (~/src/arduino/libraries)
 #include <Arduino.h>
 
-// Arduino libraries (~/Arduino/libraries)
+// found in Arduino libraries (~/Arduino/libraries)
 
-// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
+// found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
-// simple-display project's include files (~/src/scrolling-display/test/scrolling-display)
+// this project's include files
 #include "debug.h"
 #include "MessageStore.h"
 
-/*// instantiate object DB (true) or declare object DB as external (false)*/
-//#if false
-//DeBug DB = DeBug();     // construct object DB as class DeBug
-//#else
-//extern DeBug DB;        // declare object DB as external, and member of class DeBug
-/*#endif*/
+
 extern DeBug DB;        // declare object DB as external, and member of class DeBug
 
 

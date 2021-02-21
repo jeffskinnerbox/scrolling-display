@@ -16,29 +16,24 @@ CREATED BY:
 #define DEBUG  true       // activate trace message printing for debugging on serial
 #define TELNET false       // activate trace message printing for debugging via telnet
 
-// ESP8266 libraries (~/.arduino15/packages/esp8266)
+// found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-// Arduino libraries (~/src/arduino/libraries)
+// found in Arduino libraries (~/src/arduino/libraries)
 
-// Arduino libraries (~/Arduino/libraries)
+// found in Arduino libraries (~/Arduino/libraries)
 
-// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
+// found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
-// simple-display project's include files (~/src/scrolling-display/test/simple-display)
+// this project's include files
 #include "debug.h"
 #include "WiFiHandler.h"
 
 #define BUF 25
 
-/*// instantiate object DB (true) or declare object DB as external (false)*/
-//#if false
-//DeBug DB = DeBug();     // construct object DB as class DeBug
-//#else
-//extern DeBug DB;        // declare object DB as external, and member of class DeBug
-/*#endif*/
-extern DeBug DB;        // declare object DB as external, and member of class DeBug
+// for trace messages/debugging, construct object DB as class DeBug
+extern DeBug DB;
 
 // ------------------------ Constructors & Destructors -------------------------
 
@@ -78,8 +73,7 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     // make subsequent connection attempts to wifi
     tout = timeout + millis();                // milliseconds of time given to making connection attempt
     while(WiFi.status() != WL_CONNECTED) {
-        //DEBUGPRINT(".");
-        DEBUGTRACE(UNFORMATED, ".");
+        DEBUGPRINT(".");
         if (millis() > tout) {
             DEBUGTRACE(ERROR, "Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;

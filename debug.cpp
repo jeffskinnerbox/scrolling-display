@@ -1,80 +1,44 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.5.0
+Version:      0.6.0
 
 DESCRIPTION:
 
 REFERENCE MATERIALS:
-    The ANSI escape sequences set screen attributes, such as bold text,
-    and color of foreground and background.
-
-    Standard Colors
-        'e[0;30m'           # Black
-        'e[0;31m'           # Red
-        'e[0;32m'           # Green
-        'e[0;33m'           # Yellow
-        'e[0;34m'           # Blue
-        'e[0;35m'           # Purple
-        'e[0;36m'           # Cyan
-        'e[0;37m'           # White
-
-    Bold Colors
-        'e[1;30m'           # Bold Black
-        'e[1;31m'           # Bold Red
-        'e[1;32m'           # Bold Green
-        'e[1;33m'           # Bold Yellow
-        'e[1;34m'           # Bold Blue
-        'e[1;35m'           # Bold Purple
-        'e[1;36m'           # Bold Cyan
-        'e[1;37m'           # Bold White
-
-    Underline
-        'e[4;30m'           # Underline Black
-        'e[4;31m'           # Underline Red
-        'e[4;32m'           # Underline Green
-        'e[4;33m'           # Underline Yellow
-        'e[4;34m'           # Underline Blue
-        'e[4;35m'           # Underline Purple
-        'e[4;36m'           # Underline Cyan
-        'e[4;37m'           # Underline White
-
-    Background Colors
-        'e[40m'             # Background Black
-        'e[41m'             # Background Red
-        'e[42m'             # Background Green
-        'e[43m'             # Background Yellow
-        'e[44m'             # Background Blue
-        'e[45m'             # Background Purple
-        'e[46m'             # Background Cyan
-        'e[47m'             # Background White
-
-    Other
-        '\e[m'              # Color Reset
-        '\e[1;37m\e[41m'    # Bold White on Red Background
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
 
 ----------------------------------------------------------------------------- */
 
-// ESP8266 libraries (~/.arduino15/packages/esp8266)
+// found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-// Arduino libraries (~/Arduino/libraries)
+// found in Arduino libraries (~/Arduino/libraries)
 
-// Arduino libraries (~/src/arduino/libraries)
+// found in Arduino libraries (~/src/arduino/libraries)
 
-// Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
+// found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
+// for trace messages/debugging, found in this directory
 #include "debug.h"
+
+#define COLS      30        // max characters in labels
+#define ROWS       5        // number of labels (see list in constructor below)
 
 
 // ------------------------ Constructors & Destructors -------------------------
 
 // constructors for the class
 DeBug::DeBug(void) {
+
+    debug = true;      // flag to turn on/off debugging trace messages
+    preamble = false;  // flag to turn on/off preamble for trace messages
+    cols = COLS;        // max characters in labels
+    rows = ROWS;        // number of labels
+
     // create matrix used to store trace message labels
     label = new char*[rows];
     if (rows) {
@@ -88,7 +52,7 @@ DeBug::DeBug(void) {
     label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
     label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
     label[FATAL] =      "\e[1;37m\e[41mFATAL:   \e[m";  // bold White font on red background
-    label[UNFORMATED] = "";                             // unformatted
+    label[UNLABELED] =  "";                             // no labels
 };
 
 
@@ -101,7 +65,23 @@ DeBug::~DeBug(void) {
 
 // ------------------------------ Private Methods ------------------------------
 
+// print file name, function name, and line number
+void DeBug::location() {
+    Serial.print("NOT IMPLEMENTED YET!: ");
+}
+
+
 // ------------------------------- Public Methods ------------------------------
+
+void DeBug::debugOnOff(bool flag) {
+    debug = flag;
+}
+
+
+void DeBug::preambleOnOff(bool flag) {
+    preamble = flag;
+}
+
 
 template<typename T>
 void DeBug::printMsg(T var) {
@@ -126,7 +106,7 @@ void DeBug::printMsg(T *str, U var, Z format) {
 void DeBug::traceMsg(int lev, char *str) {
     if (!debug) return;
     if (preamble) location();
-    if (lev != UNFORMATED) {
+    if (lev != UNLABELED) {
         Serial.print(label[lev]);
         Serial.println(str);
     } else {
@@ -138,7 +118,7 @@ template<typename T>
 void DeBug::traceMsg(int lev, char *str, T var) {
     if (!debug) return;
     if (preamble) location();
-    if (lev != UNFORMATED) {
+    if (lev != UNLABELED) {
         Serial.print(label[lev]);
         Serial.print(str);
         Serial.println(var);
@@ -152,7 +132,7 @@ template<typename T, typename U>
 void DeBug::traceMsg(int lev, char *str, T var, U format) {
     if (!debug) return;
     if (preamble) location();
-    if (lev != UNFORMATED) {
+    if (lev != UNLABELED) {
         Serial.print(label[lev]);
         Serial.printf(str, var, format);
     } else {
@@ -161,6 +141,7 @@ void DeBug::traceMsg(int lev, char *str, T var, U format) {
     }
 };
 
+// ---------------- Explicitly Instantiate All Needed Templates ----------------
 
 template void DeBug::printMsg<int>(int);
 template void DeBug::printMsg<char const*>(char const*);
@@ -181,3 +162,4 @@ template void DeBug::traceMsg<unsigned char>(int, char*, unsigned char);
 
 // for trace messages/debugging, construct object DB as class DeBug
 DeBug DB = DeBug();
+
