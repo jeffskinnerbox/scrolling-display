@@ -51,7 +51,7 @@ CREATED BY:
 ------------------------------------------------------------------------------*/
 
 #define DEBUG  true       // activate trace message printing for debugging on serial
-//#define TELNET false      // activate trace message printing for debugging via telnet
+#define TELNET false       // activate trace message printing for debugging via telnet
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
@@ -98,9 +98,13 @@ const uint8_t JUSTIFY_SET = 6;      // change the justification
 const uint8_t INVERSE_SET = 0;      // set/reset the display to inverse
 const uint16_t SCROLLPAUSE = 2000;  // ms of pause after finished displaying message
 
-// construct object DB as class DeBug
-// make sure to construct first to support other objects
-DeBug DB = DeBug();
+/*// instantiate object DB (true) or declare object DB as external (false)*/
+/*#if true*/
+/*DeBug DB = DeBug();     // construct object DB as class DeBug*/
+/*#else*/
+/*extern DeBug DB;        // declare object DB as external, and member of class DeBug*/
+/*#endif*/
+extern DeBug DB;        // declare object DB as external, and member of class DeBug
 
 // Parola object constructor for software SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
@@ -201,7 +205,7 @@ void errorHandler(int error) {
 
     switch(error) {
         case 1:
-            DEBUGPRINT(FATAL, "Can't go on without WiFi connection.  Press reset twice to fix.");
+            DEBUGTRACE(FATAL, "Can't go on without WiFi connection.  Press reset twice to fix.");
             Msg.clear();
             Msg.addQueue("Can't go on without WiFi connection.");
             Msg.addQueue("Press reset twice to fix.");
@@ -217,14 +221,14 @@ void errorHandler(int error) {
             }
 
             // nothing can be done so restart
-            DEBUGPRINT(FATAL, "Nothing can be done.  Doing an automatic restart.");
+            DEBUGTRACE(FATAL, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
             break;
         default:
             // nothing can be done so restart
-            DEBUGPRINT(ERROR, "Unknown error code in errorHandler: ", error);
-            DEBUGPRINT(FATAL, "Nothing can be done.  Doing an automatic restart.");
+            DEBUGTRACE(ERROR, "Unknown error code in errorHandler: ", error);
+            DEBUGTRACE(FATAL, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
             ESP.reset();
     }
@@ -239,7 +243,7 @@ void loadmsg(void) {
     char string[BUF_SIZE];
 
     // clear all old messages
-    DEBUGPRINT(INFO, "Populating message queue with messages...");
+    DEBUGTRACE(INFO, "Populating message queue with messages...");
     Msg.clearQueue();
     Msg.printQueue();
 
@@ -286,34 +290,34 @@ void loadmsg(void) {
     //delay(2000);
     yield();                                         // prevent the watchdog timer doing a reboot
 
-    DEBUGPRINT(INFO, "Exiting loadmsg()...");
-    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
-
-}
-
-
-void getFlashInfo() {
-
-    DEBUGPRINT(INFO, "\n\rInformation concerning flash memory chip");
-
-    DEBUGPRINT(INFO, "\t\Chip ID: %x hex\n\r", ESP.getFlashChipId());
-    DEBUGPRINT(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize());
-    DEBUGPRINT(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize());
-    DEBUGPRINT(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed());
-    DEBUGPRINT(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode());
-    DEBUGPRINT(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap());
-    DEBUGPRINT(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation());  // 0% is clean, more than ~50% is not harmless
+    DEBUGTRACE(INFO, "Exiting loadmsg()...");
+    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
 
 }
 
 
 void getVersionInfo() {
 
-    DEBUGPRINT(INFO, "\n\rInformation concerning application & ESP version");
+    DEBUGTRACE(INFO, "Information concerning application & ESP version");
 
-    DEBUGPRINT(INFO, "\tscrolling-display.ino version = ", version);
-    DEBUGPRINT(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
-    DEBUGPRINT(INFO, "\tESP8266 chip ID (HEX) = ", ESP.getChipId(), HEX);
+    DEBUGTRACE(INFO, "\tVersion = ", version);
+    DEBUGTRACE(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
+    DEBUGTRACE(INFO, "\tESP8266 chip ID (HEX) = %X\n\r", ESP.getChipId(), HEX);
+
+}
+
+
+void getFlashInfo() {
+
+    DEBUGTRACE(INFO, "Information concerning flash memory chip");
+
+    DEBUGTRACE(INFO, "\t\Chip ID (HEX): %X\n\r", ESP.getFlashChipId(), HEX);
+    DEBUGTRACE(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize(), DEC);
+    DEBUGTRACE(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize(), DEC);
+    DEBUGTRACE(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed(), DEC);
+    DEBUGTRACE(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode(), DEC);
+    DEBUGTRACE(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap(), DEC);
+    DEBUGTRACE(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation(), DEC);  // 0% is clean, more than ~50% is not harmless
 
 }
 
@@ -331,9 +335,9 @@ void setup() {
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
-    DB.print("\n\r");
-    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
-    DEBUGPRINT(INFO, "Entering setup() for scrolling display");
+    DEBUGPRINT("\n\r");
+    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
+    DEBUGTRACE(INFO, "Entering setup() for scrolling display");
     getVersionInfo();
     getFlashInfo();
 
@@ -379,8 +383,8 @@ void setup() {
 
     loadmsg();
 
-    DEBUGPRINT(INFO, "Exiting setup() for scrolling display");
-    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
+    DEBUGTRACE(INFO, "Exiting setup() for scrolling display");
+    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
 
 }
 
@@ -394,7 +398,7 @@ void loop() {
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')
             P.displayText(Msg.get(top + cycle), SCROLLALIGN, SCROLLSPEED, SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
-            DEBUGPRINT(INFO, "Posting to display message = ", Msg.get(top + cycle));
+            DEBUGTRACE(INFO, "Posting to display message = ", Msg.get(top + cycle));
         cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 

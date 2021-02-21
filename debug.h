@@ -85,136 +85,120 @@ CREATED BY:
 
 ----------------------------------------------------------------------------- */
 
-#pragma once              // compiler to skip subsequent includes of this file
+#pragma once                // compiler to skip subsequent includes of this file
 
-#define DEBUG  true       // activate trace message printing for debugging on serial
-#define TELNET false      // activate trace message printing for debugging via telnet
+#define DEBUG  true         // activate trace message printing for debugging on serial
+#define TELNET false        // activate trace message printing for debugging via telnet
 
-#define COLS      30      // max characters in labels
-#define ROWS       5      // number of labels (see list below)
-#define INFO       0      // index into labels for printing information trace message
-#define WARN       1      // index into labels for printing warning trace message
-#define ERROR      2      // index into labels for printing error trace message
-#define FATAL      3      // index into labels for printing fatal trace message
-#define UNFORMATED 4      // index into labels for printing unformatted text
+#define COLS      30        // max characters in labels
+#define ROWS       5        // number of labels (see list below)
+
+#define INFO       0        // index into labels for printing information trace message
+#define WARN       1        // index into labels for printing warning trace message
+#define ERROR      2        // index into labels for printing error trace message
+#define FATAL      3        // index into labels for printing fatal trace message
+#define UNFORMATED 4        // index into labels for printing unformatted text
 
 class DeBug {
-  // private variables
   private:
-    bool debug = true;    // flag to turn on/off debugging trace messages
-    bool preamble = false; // flag to turn on/off preamble for trace messages
-    int cols = COLS;      // max characters in labels
-    int rows = ROWS;      // number of labels
-    char **label = NULL;  // memory array used to store labels
-
-  public:
-    // constructors for the class
-    inline DeBug(void) {
-        // create matrix used to store trace message labels
-        label = new char*[rows];
-        if (rows) {
-            label[0] = new char[rows * cols];
-            for (int i = 1; i < rows; ++i)
-                label[i] = label[0] + i * cols;
-        }
-
-        // initialize trace message labels
-        label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
-        label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
-        label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
-        label[FATAL] =      "\e[1;37m\e[41mFATAL:   \e[m";  // bold White font on red background
-        label[UNFORMATED] = "";                             // unformatted
-    };
-
-    // destructors for the class
-    inline ~DeBug(void) {
-        // delete array used to store trace message labels
-        if (rows) delete [] label[0];
-        delete [] label;
-    };
+    // private variables
+    bool debug = true;      // flag to turn on/off debugging trace messages
+    bool preamble = false;  // flag to turn on/off preamble for trace messages
+    int cols = COLS;        // max characters in labels
+    int rows = ROWS;        // number of labels
+    char **label = NULL;    // memory array used to store labels
 
     // private methods
     inline void location() { Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__); };
+
+  public:
+    // constructors & destructors for the class
+    DeBug(void);
+    ~DeBug(void);
 
     // public methods
     inline void OnOff(bool flag) { debug = flag; }
 
     //----------------------------------------------
 
-    template<typename T>
-    inline void print(T var) {
-        if (!debug) return;
-        Serial.print(var);
-    }
+/*    template<typename T>*/
+    //inline void printMsg(T var) {
+        //if (!debug) return;
+        //Serial.print(var);
+    //}
 
-    template<typename T, typename U>
-    inline void print(T str, U var) {
-        if (!debug) return;
-        Serial.print(str);
-        Serial.print(var);
-    }
+    //template<typename T, typename U>
+    //inline void printMsg(T str, U var) {
+        //if (!debug) return;
+        //Serial.print(str);
+        //Serial.print(var);
+    //}
 
-    template<typename T, typename U, typename Z>
-    inline void print(T *str, U var, Z format) {
-        if (!debug) return;
-        Serial.print(str);
-        Serial.print(var, format);
-    }
+    //template<typename T, typename U, typename Z>
+    //inline void printMsg(T *str, U var, Z format) {
+        //if (!debug) return;
+        //Serial.print(str);
+        //Serial.print(var, format);
+    /*}*/
+
+    template<typename T> void printMsg(T var);
+    template<typename T, typename U> void printMsg(T str, U var);
+    template<typename T, typename U, typename Z> void printMsg(T *str, U var, Z format);
 
     //----------------------------------------------
 
-    inline void traceMsg(int lev, char *str) {
-        if (!debug) return;
-        if (preamble) location();
-        if (lev != UNFORMATED) {
-            Serial.print(label[lev]);
-            Serial.println(str);
-        } else {
-            print(str);
-        }
-    };
+/*    inline void traceMsg(int lev, char *str) {*/
+        //if (!debug) return;
+        //if (preamble) location();
+        //if (lev != UNFORMATED) {
+            //Serial.print(label[lev]);
+            //Serial.println(str);
+        //} else {
+            //printMsg(str);
+        //}
+    //};
 
-    template<typename T>
-    inline void traceMsg(int lev, char *str, T var) {
-        if (!debug) return;
-        if (preamble) location();
-        if (lev != UNFORMATED) {
-            Serial.print(label[lev]);
-            Serial.print(str);
-            Serial.println(var);
-        } else {
-            print(str);
-            print(var);
-        }
-    };
+    //template<typename T>
+    //inline void traceMsg(int lev, char *str, T var) {
+        //if (!debug) return;
+        //if (preamble) location();
+        //if (lev != UNFORMATED) {
+            //Serial.print(label[lev]);
+            //Serial.print(str);
+            //Serial.println(var);
+        //} else {
+            //printMsg(str);
+            //printMsg(var);
+        //}
+    //};
 
-    template<typename T, typename U>
-    inline void traceMsg(int lev, char *str, T var, U format) {
-        if (!debug) return;
-        if (preamble) location();
-        if (lev != UNFORMATED) {
-            Serial.print(label[lev]);
-            Serial.print(str);
-            Serial.println(var, format);
-        } else {
-            print(str);
-            print(var, format);
-        }
-    };
+    //template<typename T, typename U>
+    //inline void traceMsg(int lev, char *str, T var, U format) {
+        //if (!debug) return;
+        //if (preamble) location();
+        //if (lev != UNFORMATED) {
+            //Serial.print(label[lev]);
+            //Serial.printf(str, var, format);
+        //} else {
+            //printMsg(str);
+            //printMsg(var, format);
+        //}
+    /*};*/
+
+    void traceMsg(int lev, char *str);
+    template<typename T> void traceMsg(int lev, char *str, T var);
+    template<typename T, typename U> void traceMsg(int lev, char *str, T var, U format);
+
 };
-
 
 
 // -----------------------------------------------------------------------------
 
-/*#if DEBUG*/
-//#define PRINT(s)  { Serial.print(F(s)); }                             // Print a string without newline
-//#define EXEC(s)   { s; }
-//#else // DEBUG
-//#define PRINT(s)
-//#define EXEC(s)
-/*#endif // DEBUG*/
 
-#define DEBUGPRINT(lev, ...) \
-    do { if (DEBUG) DB.traceMsg(lev, __VA_ARGS__); } while (0)
+
+#define DEBUGTRACE(lev, ...) \
+    do { if (DEBUG) DB.traceMsg(lev, __VA_ARGS__); } while(0)
+
+#define DEBUGPRINT(...) \
+    do { if (DEBUG) DB.printMsg(__VA_ARGS__); } while(0)
 

@@ -14,13 +14,13 @@ CREATED BY:
 ------------------------------------------------------------------------------*/
 
 #define DEBUG  true       // activate trace message printing for debugging on serial
-#define TELNET false      // activate trace message printing for debugging via telnet
+#define TELNET false       // activate trace message printing for debugging via telnet
 
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
+#include <Arduino.h>
 #include <ESP8266WiFi.h>
 
 // Arduino libraries (~/src/arduino/libraries)
-#include <Arduino.h>
 
 // Arduino libraries (~/Arduino/libraries)
 
@@ -32,8 +32,13 @@ CREATED BY:
 
 #define BUF 25
 
-// declare object DB as external, and member of class DeBug
-extern DeBug DB;
+/*// instantiate object DB (true) or declare object DB as external (false)*/
+//#if false
+//DeBug DB = DeBug();     // construct object DB as class DeBug
+//#else
+//extern DeBug DB;        // declare object DB as external, and member of class DeBug
+/*#endif*/
+extern DeBug DB;        // declare object DB as external, and member of class DeBug
 
 // ------------------------ Constructors & Destructors -------------------------
 
@@ -67,23 +72,24 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
     timeout = tout;
 
     // attempt first connect to a WiFi network
-    DEBUGPRINT(INFO, "Attempting connection to WiFi SSID ", ssid);
+    DEBUGTRACE(INFO, "Attempting connection to WiFi SSID ", ssid);
     WiFi.begin(ssid, password);
 
     // make subsequent connection attempts to wifi
     tout = timeout + millis();                // milliseconds of time given to making connection attempt
     while(WiFi.status() != WL_CONNECTED) {
-        DB.print(".");
+        //DEBUGPRINT(".");
+        DEBUGTRACE(UNFORMATED, ".");
         if (millis() > tout) {
-            DEBUGPRINT(ERROR, "Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
+            DEBUGTRACE(ERROR, "Failed to connect to WiFi!  WiFi status exit code is ", WiFi.status());
             return false;
         }
         delay(500);
     }
 
-    DB.print(".\n\r");
-    DEBUGPRINT(INFO, "Successfully connected to WiFi!  IP address is ", WiFi.localIP());
-    DEBUGPRINT(INFO, "WiFi status exit code is ", WiFi.status());
+    DEBUGPRINT(".\n\r");
+    DEBUGTRACE(INFO, "Successfully connected to WiFi!  IP address is ", WiFi.localIP());
+    DEBUGTRACE(INFO, "WiFi status exit code is ", WiFi.status());
 
     return true;
 }
@@ -91,29 +97,29 @@ bool WiFiTools::wifiConnect(char *id, char *pass, unsigned long tout) {
 
 // terminate the wifi connect
 void WiFiTools::wifiTerminate() {
-    DEBUGPRINT(INFO, "Disconnecting from WiFi with SSID ", WiFi.SSID());
+    DEBUGTRACE(INFO, "Disconnecting from WiFi with SSID ", WiFi.SSID());
 
     WiFi.disconnect();
 
-    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
+    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
 }
 
 
 // scan for nearby networks
 void WiFiTools::wifiScan() {
-    DEBUGPRINT(INFO, "Starting Network Scan");
+    DEBUGTRACE(INFO, "Starting Network Scan");
     byte numSsid = WiFi.scanNetworks();
 
     // print the list of networks seen
-    DEBUGPRINT(INFO, "Total number of SSIDs found: ", numSsid);
+    DEBUGTRACE(INFO, "Total number of SSIDs found: ", numSsid);
 
     // print the name of each network found
     for (int thisNet = 0; thisNet<numSsid; thisNet++) {
-        DEBUGPRINT(INFO, "   ", WiFi.SSID(thisNet));
+        DEBUGTRACE(INFO, "   ", WiFi.SSID(thisNet));
     }
 
-    DEBUGPRINT(INFO, "Network Scan Completed");
-    DEBUGPRINT(INFO, "--------------------------------------------------------------------------------");
+    DEBUGTRACE(INFO, "Network Scan Completed");
+    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
 }
 
 
