@@ -50,12 +50,13 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
-#define DEBUG  true       // activate trace message printing for debugging on serial
-#define TELNET false       // activate trace message printing for debugging via telnet
+//#define DEBUG  true       // activate trace message printing for debugging on serial
+//#define TELNET false       // activate trace message printing for debugging via telnet
 
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 
 // found in Arduino libraries (~/Arduino/libraries)
 
@@ -331,9 +332,8 @@ void setup() {
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
-    DEBUGON(true, false);
+    DEBUGBEGIN();
     DEBUGPRINT("\n\r");
-    DEBUGLOCATION();
 
     DEBUGPRINT("\n\r");
     DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
@@ -395,6 +395,8 @@ void loop() {
     static int cycle = 0;                      // message number being displayed
     static int top = Msg.top();
     static int size = Msg.size();
+
+    DEBUGHANDLER();
 
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')

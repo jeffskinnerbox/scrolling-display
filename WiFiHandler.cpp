@@ -13,8 +13,8 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
-#define DEBUG  true       // activate trace message printing for debugging on serial
-#define TELNET false       // activate trace message printing for debugging via telnet
+//#define DEBUG  true       // activate trace message printing for debugging on serial
+//#define TELNET false       // activate trace message printing for debugging via telnet
 
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <Arduino.h>
