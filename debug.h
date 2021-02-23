@@ -87,20 +87,27 @@ class DeBug {
 // -----------------------------------------------------------------------------
 
 
+// use this to create a labeled trace message
 #define DEBUGTRACE(lev, ...) \
     do { if (DEBUG) DB.traceMsg(lev, __VA_ARGS__); } while(0)
 
+// use this to print an unlabeled message
 #define DEBUGPRINT(...) \
     do { if (DEBUG) DB.printMsg(__VA_ARGS__); } while(0)
 
+// use this to turn on/off trace messages within the programss flow
 #define DEBUGON(db, tl, pr) \
     do { if (DEBUG) { DB.debugOnOff(db); DB.telnetOnOff(tl); DB.preambleOnOff(pr); } } while(0)
 
+// NOT IMPLEMENTED YET: will provide file name + function name + line number
 #define DEBUGLOCATION() \
     do { if (DEBUG) Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__); } while(0)
 
+// place this macro within the setup() function
 #define DEBUGBEGIN() \
     do { if (DEBUG) DB.debugBegin(); } while(0)
 
+// place this macro within the loop() function
 #define DEBUGHANDLER() \
     do { if (DEBUG) DB.TelnetHandler(); } while(0)
+

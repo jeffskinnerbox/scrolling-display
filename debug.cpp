@@ -51,9 +51,10 @@ CREATED BY:
 #define ROWS       5        // number of labels (see list in constructor below)
 
 
+
 // ------------------------ Constructors & Destructors -------------------------
 
-// constructors for the class
+// default constructors for the class
 DeBug::DeBug(void) {
 
     serial = true;      // flag to turn on/off serial trace messages
@@ -80,6 +81,7 @@ DeBug::DeBug(void) {
 }
 
 
+// constructors for the class
 DeBug::DeBug(bool s, bool t, bool p) {
 
     serial = s;         // flag to turn on/off serial trace messages
@@ -113,6 +115,8 @@ DeBug::~DeBug(void) {
     delete [] label;
 };
 
+
+
 // ------------------------------ Private Methods ------------------------------
 
 // print file name, function name, and line number
@@ -120,6 +124,7 @@ void DeBug::location() {
     if (serial) Serial.print("NOT IMPLEMENTED YET!: ");
     if (telnet) TelnetStream.print("NOT IMPLEMENTED YET!: ");
 }
+
 
 
 // ------------------------------- Public Methods ------------------------------
@@ -152,13 +157,13 @@ void DeBug::preambleOnOff(bool flag) {
 
 void DeBug::TelnetHandler() {
 
-    if (!telnet) return;
-
     switch (TelnetStream.read()) {
         case 'R':   // reboot the esp8266
             Serial.println("\n\rRebooting ...");
             TelnetStream.println("\n\rRebooting ...");
+            Serial.flush();
             TelnetStream.flush();
+            Serial.end();
             TelnetStream.stop();
             delay(100);
             ESP.reset();
@@ -166,8 +171,19 @@ void DeBug::TelnetHandler() {
         case 'C':   // drop telnet connection to esp8266
             Serial.println("\n\rDropping telnet connection ... bye bye");
             TelnetStream.println("\n\rDropping telnet connection ... bye bye");
+            Serial.flush();
             TelnetStream.flush();
+            Serial.end();
             TelnetStream.stop();
+            break;
+        case 's':   // toggle on/off serial trace messages
+            serial = !serial;
+            break;
+        case 't':   // toggle on/off telnet trace messages
+            telnet = !telnet;
+            break;
+        case 'p':   // toggle on/off preamble for trace messages
+            preamble = !preamble;
             break;
     }
 
@@ -281,7 +297,8 @@ void DeBug::traceMsg(int lev, char *str, T var, U format) {
 }
 
 
-// ---------------- Explicitly Instantiate All Needed Templates ----------------
+
+// ------------------ Explicitly Declare All Needed Functions ------------------
 
 template void DeBug::printMsg<int>(int);
 template void DeBug::printMsg<char const*>(char const*);
@@ -299,6 +316,9 @@ template void DeBug::traceMsg<IPAddress>(int, char*, IPAddress);
 template void DeBug::traceMsg<wl_status_t>(int, char*, wl_status_t);
 template void DeBug::traceMsg<unsigned char>(int, char*, unsigned char);
 
+
+
+// --------------------------- Construct DeBug Object --------------------------
 
 // for trace messages/debugging, construct object DB as class DeBug
 DeBug DB = DeBug(true, true, false);
