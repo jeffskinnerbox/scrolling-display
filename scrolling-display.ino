@@ -332,7 +332,7 @@ void setup() {
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
-    DEBUGBEGIN();
+    DEBUGSETUP();
     DEBUGPRINT("\n\r");
 
     DEBUGPRINT("\n\r");
@@ -396,7 +396,7 @@ void loop() {
     static int top = Msg.top();
     static int size = Msg.size();
 
-    DEBUGHANDLER();
+    DEBUGLOOP();
 
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')

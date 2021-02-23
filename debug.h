@@ -104,10 +104,10 @@ class DeBug {
     do { if (DEBUG) Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__); } while(0)
 
 // place this macro within the setup() function
-#define DEBUGBEGIN() \
+#define DEBUGSETUP() \
     do { if (DEBUG) DB.debugBegin(); } while(0)
 
 // place this macro within the loop() function
-#define DEBUGHANDLER() \
+#define DEBUGLOOP() \
     do { if (DEBUG) DB.TelnetHandler(); } while(0)
 
