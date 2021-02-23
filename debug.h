@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.7.0
+Version:      0.8.0
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
@@ -96,8 +96,8 @@ class DeBug {
     do { if (DEBUG) DB.printMsg(__VA_ARGS__); } while(0)
 
 // use this to turn on/off trace messages within the programss flow
-#define DEBUGON(db, tl, pr) \
-    do { if (DEBUG) { DB.debugOnOff(db); DB.telnetOnOff(tl); DB.preambleOnOff(pr); } } while(0)
+#define DEBUGON(s, t, p) \
+    do { if (DEBUG) { DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p); } } while(0)
 
 // NOT IMPLEMENTED YET: will provide file name + function name + line number
 #define DEBUGLOCATION() \
