@@ -31,6 +31,11 @@
 #
 #-------------------------------------------------------------------------------
 
+DEBUG ?= 0
+
+# Use Bash shell instead of the default /bin/sh
+SHELL := /bin/bash
+
 # name of program being created
 PROG = scrolling-display
 
@@ -42,10 +47,10 @@ BOARD =   nodemcuv2
 # serial port used by the board
 PORT = /dev/ttyUSB0
 
+#-------------------------------------------------------------------------------
+
 # optional verbose compile/upload flag
 #VERBOSE = -v
-
-#-------------------------------------------------------------------------------
 
 # fully qualified board name (FQBN)
 FQBN = $(PACKAGE):$(ARCH):$(BOARD)
@@ -73,15 +78,16 @@ UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
 #-------------------------------------------------------------------------------
 
+
 .PHONY: build upload clean erase size           # explicitly declare these target to be phony
 
 all: build upload                               # build and then upload
 
 build:                                          # build the binary executable
-	$(CC) $(CC_FLAGS) $(PWD)
+	$(CC) $(CC_FLAGS) $(CURDIR)
 
 upload: 										# up load the binary executable
-	$(UPLOAD) $(UPLOAD_FLAGS) $(PWD)
+	$(UPLOAD) $(UPLOAD_FLAGS) $(CURDIR)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)
