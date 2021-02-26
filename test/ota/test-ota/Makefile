@@ -12,6 +12,10 @@
 #       make upload-usb
 #       make upload-ota
 #
+#   To build the executable and flash the device
+#       make
+#       make all
+#
 #   To monitor execution of the device
 #       screen /dev/ttyUSB0 9600,cs8cls
 #       to terminate Ctrl-a :quit
@@ -50,19 +54,16 @@ BOARD =   nodemcuv2
 # serial port used by the board
 PORT = /dev/ttyUSB0
 
+#------------------------- names, tools, flags, paths --------------------------
+
 # optional verbose compile/upload flag
 #VERBOSE = -v
-
-#-------------------------------------------------------------------------------
 
 # fully qualified board name (FQBN)
 FQBN = $(PACKAGE):$(ARCH):$(BOARD)
 
 # location of the esptool used for usb flashing
 ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/2.6.1/esptool.py
-
-# location of the espota.py used for ota flashing
-ESPOTATOOL = /home/jeff/.arduino15/packages/esp8266/hardware/esp8266/2.5.2/tools/espota.py
 
 # string within names given to .bin and .elf files
 VAR = $(shell echo $(FQBN) | tr ':' '.')
@@ -74,32 +75,41 @@ BUILD_PATH = $(BUILD)/build
 # paths to libraries and include files
 LIBS = "/home/jeff/src/arduino/sketchbooks/libraries"
 
+#---------------------------------- compiler -----------------------------------
+
 # compiler and compiler flags
 CC = arduino-cli compile
 CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-path=$(BUILD) --libraries $(LIBS)
+
+#--------------------------------- usb upload ----------------------------------
+
+# usb firmware flasher and flags
+UPLOAD_USB = arduino-cli upload
+UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
+
+#--------------------------------- ota upload ----------------------------------
+
+# location of the espota.py used for ota flashing
+ESPOTATOOL = /home/jeff/.arduino15/packages/esp8266/hardware/esp8266/2.5.2/tools/espota.py
 
 # set ota password, ip address, and port for device
 OTAPASS = "123"
 OTAIP = $(shell (avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | grep $(PROG).local | cut -d\; -f8 | uniq))
 OTAPORT = $(shell (avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | grep $(PROG).local | cut -d\; -f9 | uniq))
 
-# usb firmware flasher and flags 
-UPLOAD_USB = arduino-cli upload
-UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
-
-# ota firmware flasher and flags 
-UPLOAD_OTA = python2 $(ESPOTATOOL) 
+# ota firmware flasher and flags
+UPLOAD_OTA = python2 $(ESPOTATOOL)
 UPLOAD_OTA_FLAGS = -d -i $(OTAIP) -p $(OTAPORT) -a $(OTAPASS) -f $(PROG).$(PACKAGE).$(ARCH).$(BOARD).bin
-
-DIR := ${CURDIR}
 
 #-------------------------------------------------------------------------------
 
-#all: build upload                                # build and then upload via usb
 
-#all-usb: upload                                 # build and then upload via usb
+# explicitly declare these target to be phony
+.PHONY: help build upload upload-ota clean erase size
 
-#all-ota: upload                                 # build and then upload via ota
+all: build upload                               # build and then upload via usb
+
+all-ota: build upload-ota                       # build and then upload via ota
 
 help:
 	@echo ' '
@@ -108,11 +118,9 @@ help:
 	@echo 'Usage:'
 	@echo '   make              create all files and flash device via usb'
 	@echo '   make all          create all files and flash device via usb'
-	@echo '   make all-usb      create all files and flash device via usb'
 	@echo '   make all-ota      create all files and flash device via ota'
 	@echo '   make build        compile the code and create the *.elf file'
 	@echo '   make upload       create the *.bin file and flash device via usb'
-	@echo '   make upload-usb   create the *.bin file and flash device via usb'
 	@echo '   make upload-ota   create the *.bin file and flash device via ota'
 	@echo '   make erase        erease the entire flash from the device and exit'
 	@echo '   make size         print the flash size within the device and exit'
@@ -123,11 +131,10 @@ help:
 	@echo ' '
 
 build:                                          # build the binary executable
-	$(CC) $(CC_FLAGS) $(DIR)
+	$(CC) $(CC_FLAGS) $(CURDIR)
 
 upload:                                         # flash the binary executable via usb
-upload-usb:
-	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(DIR)
+	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
 
 upload-ota:                                     # flash the binary executable via ota
 	$(DIR)/answerbot $(OTAIP) 23
@@ -143,8 +150,4 @@ size:                                           # determine the flash size
 clean:                                          # delete all binaries and object files
 	rm -r --force $(BUILD)
 	rm --force *.bin *.elf *.hex
-
-# explicitly declare these target to be phony
-.PHONY: help build upload upload-usb upload-ota clean erase size
-
 

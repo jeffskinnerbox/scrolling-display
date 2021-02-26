@@ -65,10 +65,10 @@ CREATED BY:
 // Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // test-ota project's include files (~/src/scrolling-display/test/ota/test-ota)
-#include "credentials.h"
+#include "secrets.h"
 
 // variables for blinking an LED
-#define LED D0               // ESP8266 Pin to which onboard LED is connected
+#define PCBLED D0            // ESP8266 Pin to which onboard LED is connected
 #define STDBLKRATE 1000      // interval at which to blink LED (milliseconds)
 #define OTABLKRATE 250       // interval at which to blink LED (milliseconds)
 
@@ -122,11 +122,12 @@ void blinkLED(unsigned long rate) {
 
     // blink LED to signal that you are OTA update ready
     if (currentTime - previousTime >= rate) {
-        previousTime = currentTime;            // save the last time you blinked the LED
-        digitalWrite(LED, !digitalRead(LED));  // toggle led state
+        previousTime = currentTime;                  // save the last time you blinked the LED
+        digitalWrite(PCBLED, !digitalRead(PCBLED));  // toggle led state
     }
 
 }
+
 
 
 //-------------------------------- OTA Routines --------------------------------
@@ -194,6 +195,8 @@ void setupOTA() {
 
 }
 
+
+
 //------------------------------- Main Routines --------------------------------
 
 void setup() {
@@ -205,13 +208,13 @@ void setup() {
     Serial.printf("Version = %s\n\r", version);
     Serial.printf("ESP8266 chip ID = %x\n\r", ESP.getChipId());
 
-    setupWiFi();                // connect to wifi network
+    setupWiFi();                // connect esp8266 to wifi network
 
     setupOTA();                 // make esp8266 ready for ota support
 
     getFlashInfo();             // get a sense of memory to support OTA (maybe)
 
-    pinMode(LED, OUTPUT);       // set led pin as output so you can blink it
+    pinMode(PCBLED, OUTPUT);    // set led pin as output so you can blink it
 
     Serial.println("\n\rESP8266 OTA update is enabled.  ota_flag = " + String(ota_flag));
     Serial.println("hostname = " + ArduinoOTA.getHostname() + ".local");
