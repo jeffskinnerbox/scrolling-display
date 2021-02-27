@@ -293,32 +293,6 @@ void loadmsg(void) {
 }
 
 
-void getVersionInfo() {
-
-    DEBUGTRACE(INFO, "Information concerning application & ESP version");
-
-    DEBUGTRACE(INFO, "\tVersion = ", version);
-    DEBUGTRACE(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
-    DEBUGTRACE(INFO, "\tESP8266 chip ID (HEX) = %X\n\r", ESP.getChipId(), HEX);
-
-}
-
-
-void getFlashInfo() {
-
-    DEBUGTRACE(INFO, "Information concerning flash memory chip");
-
-    DEBUGTRACE(INFO, "\t\Chip ID (HEX): %X\n\r", ESP.getFlashChipId(), HEX);
-    DEBUGTRACE(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize(), DEC);
-    DEBUGTRACE(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize(), DEC);
-    DEBUGTRACE(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed(), DEC);
-    DEBUGTRACE(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode(), DEC);
-    DEBUGTRACE(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap(), DEC);
-    DEBUGTRACE(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation(), DEC);  // 0% is clean, more than ~50% is not harmless
-
-}
-
-
 
 //------------------------------- Main Routines --------------------------------
 
@@ -339,8 +313,8 @@ void setup() {
     DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
     DEBUGTRACE(INFO, "Entering setup() for scrolling display");
 
-    getVersionInfo();
-    getFlashInfo();
+    DEBUGTRACE(INFO, "\tApplication Version = ", version);
+    DEBUGINFO();
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object

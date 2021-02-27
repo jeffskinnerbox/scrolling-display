@@ -155,6 +155,23 @@ void DeBug::preambleOnOff(bool flag) {
 }
 
 
+void DeBug::printInfo() {
+
+    traceMsg(INFO, "Information concerning ESP & flash memory chip:");
+
+    traceMsg(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
+    traceMsg(INFO, "\tESP8266 chip ID (HEX) = %X\n\r", ESP.getChipId(), HEX);
+    traceMsg(INFO, "\t\Chip ID (HEX): %X\n\r", ESP.getFlashChipId(), HEX);
+    traceMsg(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize(), DEC);
+    traceMsg(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize(), DEC);
+    traceMsg(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed(), DEC);
+    traceMsg(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode(), DEC);
+    traceMsg(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap(), DEC);
+    traceMsg(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation(), DEC);  // 0% is clean, more than ~50% is not harmless
+
+}
+
+
 void DeBug::TelnetHandler() {
 
     switch (TelnetStream.read()) {
@@ -301,21 +318,20 @@ void DeBug::traceMsg(int lev, char *str, T var, U format) {
 // ------------------ Explicitly Declare All Needed Functions ------------------
 
 template void DeBug::printMsg<int>(int);
+template void DeBug::printMsg<char*>(char*);
+template void DeBug::printMsg<wl_status_t>(wl_status_t);
 template void DeBug::printMsg<char const*>(char const*);
 template void DeBug::printMsg<unsigned int, int>(unsigned int, int);
-template void DeBug::printMsg<wl_status_t>(wl_status_t);
 
-template void DeBug::printMsg<char*>(char*);
 template void DeBug::traceMsg<int>(int, char*, int);
 template void DeBug::traceMsg<char*>(int, char*, char*);
 template void DeBug::traceMsg<String>(int, char*, String);
-template void DeBug::traceMsg<unsigned int, int>(int, char*, unsigned int, int);
-template void DeBug::traceMsg<unsigned char, int>(int, char*, unsigned char, int);
-template void DeBug::traceMsg<FlashMode_t, int>(int, char*, FlashMode_t, int);
 template void DeBug::traceMsg<IPAddress>(int, char*, IPAddress);
 template void DeBug::traceMsg<wl_status_t>(int, char*, wl_status_t);
 template void DeBug::traceMsg<unsigned char>(int, char*, unsigned char);
-
+template void DeBug::traceMsg<FlashMode_t, int>(int, char*, FlashMode_t, int);
+template void DeBug::traceMsg<unsigned int, int>(int, char*, unsigned int, int);
+template void DeBug::traceMsg<unsigned char, int>(int, char*, unsigned char, int);
 
 
 // --------------------------- Construct DeBug Object --------------------------

@@ -73,6 +73,7 @@ class DeBug {
     void telnetOnOff(bool);
     void preambleOnOff(bool);
     void TelnetHandler(void);
+    void printInfo(void);
 
     template<typename T> void printMsg(T);
     template<typename T, typename U> void printMsg(T, U);
@@ -98,6 +99,10 @@ class DeBug {
 // use this to turn on/off trace messages within the programss flow
 #define DEBUGON(s, t, p) \
     do { if (DEBUG) { DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p); } } while(0)
+
+// use this to print information concerning ESP & flash memory chip
+#define DEBUGINFO(...) \
+    do { if (DEBUG) DB.printInfo(); } while(0)
 
 // NOT IMPLEMENTED YET: will provide file name + function name + line number
 #define DEBUGLOCATION() \
