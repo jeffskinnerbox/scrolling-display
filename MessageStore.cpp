@@ -2,7 +2,7 @@
 /*------------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.2.0
+Version:      0.9.0
 
 DESCRIPTION:
     This object implements two data structure in a single array.
@@ -18,8 +18,7 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
-//#define DEBUG  true       // activate trace message printing for debugging on serial
-//#define TELNET false       // activate trace message printing for debugging via telnet
+#define TDEBUG  false       // activate trace message printing for debugging
 
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 
@@ -31,7 +30,7 @@ CREATED BY:
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // this project's include files
-#include "debug.h"
+#include "Debug.h"
 #include "MessageStore.h"
 
 
@@ -129,7 +128,7 @@ MessageStore::~MessageStore(void) {
 // --------------------- Private Methods for Simple Store ----------------------
 
 // return index of next empty message in store, return -1 if simple store is full
-int MessageStore::indexStore() {
+int MessageStore::indexStore(void) {
 
     for (int i = store_top; i < store_top + store_size; i++)
         if (array[i][0] == '\0') {
@@ -141,7 +140,7 @@ int MessageStore::indexStore() {
 
 
 // return the number of messages in simple store
-int MessageStore::countStore() {
+int MessageStore::countStore(void) {
 
     int cnt = 0;
 
@@ -158,7 +157,7 @@ int MessageStore::countStore() {
 // -------------------- Private Methods for Circular Queue ---------------------
 
 // return index of next empty message in queue, return -1 if queue is full
-int MessageStore::indexQueue() {
+int MessageStore::indexQueue(void) {
 
     for (int i = queue_top; i < queue_top + queue_size; i++)
         if (array[i][0] == '\0') {
@@ -170,7 +169,7 @@ int MessageStore::indexQueue() {
 
 
 // return the number of messages in queue
-int MessageStore::countQueue() {
+int MessageStore::countQueue(void) {
 
     int cnt = 0;
 
@@ -354,13 +353,13 @@ char *MessageStore::getStore(int index) {
 }
 
 
-int MessageStore::topStore() {
+int MessageStore::topStore(void) {
 
     return store_top;
 }
 
 
-int MessageStore::sizeStore() {
+int MessageStore::sizeStore(void) {
 
     return store_size;
 }
@@ -444,13 +443,13 @@ char *MessageStore::getQueue(int index) {
 }
 
 
-int MessageStore::topQueue() {
+int MessageStore::topQueue(void) {
 
     return queue_top;
 }
 
 
-int MessageStore::sizeQueue() {
+int MessageStore::sizeQueue(void) {
 
     return queue_size;
 }
@@ -459,7 +458,7 @@ int MessageStore::sizeQueue() {
 
 // -------------------------- Methods for MessageStore -------------------------
 
-int MessageStore::top() {
+int MessageStore::top(void) {
 
     return store_top;
 }

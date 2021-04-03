@@ -1,6 +1,6 @@
 <!--
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.0.2
+Version:      0.9.0
 -->
 
 
@@ -68,6 +68,56 @@ I specific used the MAX7219 Dot Matrix Module 4-in-1 Display
 (at [Amazon][06] or much cheaper at [Banggood][07] and where I got mine).
 
 The key tool to drive this display is the [Marco Colli's MajicDesigns MD_Parola][09] library.
+
+# Setting Hostname
+By default, each ESP8266 uses the last six hexdecimal digits of its MAC address
+prefixed by `ESP_` to make its hostname unique (e.g. `ESP_B19F40`).
+You can change this from within your sketch by calling `WiFi.hostname()`
+and passing the function a string containing the new hostname.
+This call **MUST** occur before you start the connection with `WiFi.begin()`.
+
+# Using .local Hostnames
+A hostname is a name assigned to a device on a network to more easily distinguish
+between devices instead of using a IP addresses.
+Hostnames can be resolved on a LAN without using a custom DNS
+or specifying static IP addresses through the router.
+To do so, devices connected to the network must be running a Zero Configuration Networking (Zeroconf) service
+which then allows any device to be referenced by adding `.local` to its hostname.
+
+On Linux, the Zeroconf service is called Avahi.
+Avahi supports service discovery via the mDNS/DNS-SD protocol suite.
+This enables you to plug your computer into a network
+and instantly be able to view hostnames and services on your LAN,
+much like you would with DNS on the Internet.
+
+The big advantage of mDNS is that we don’t need to know the IP address assigned to the ESP8266 to access the HTTP webserver running on it. On top of that, we don’t need to deploy a dedicated server just to do the resolution of names into IPs.
+
+So, we can just define that the ESP8266 will be listening on something like `myesp.local` and we can just access the server in a web browser by typing `http://myesp.local/path` instead of having to know the IP address. Besides this enhancement, the HTTP web server will work the same as it did before.
+
+In order for this example to work, the machine that is accessing the ESP8266 web server also needs to support mDNS. Otherwise, it won’t be able to send the query needed to receive the resolved IP.
+
+```bash
+# install avahi suite
+sudo apt-get install avahi-daemon avahi-discover avahi-utils libnss-mdns mdns-scan
+
+# check if avahi daemon is running
+sudo systemctl status avahi-daemon
+
+# scan for mDNS/DNS-SD services published on the local network
+$ mdns-scan
++ googlerpc._googlerpc._tcp.local
++ Chromecast-1aa07ba95aaa5b96c2c6db5ba7b23e35._googlecast._tcp.local
++ 1aa07ba9-5aaa-5b96-c2c6-db5ba7b23e35._googlezone._tcp.local
++ HP LaserJet P2035 @ desktop._printer._tcp.local
++ HP LaserJet P2035 @ desktop._ipps._tcp.local
++ HP LaserJet P2035 @ desktop._ipp._tcp.local
++ Philips Hue - 4A1515._hue._tcp.local
++ Philips hue - 4A1515._hap._tcp.local
+Browsing ...
+
+# browse for mDNS/DNS-SD services using the Avahi daemon
+avahi-browse --all
+```
 
 # Build
 ```bash
@@ -183,6 +233,119 @@ make build
 # upload the sketch
 make upload
 ```
+
+
+--------
+
+
+Important advice on sketch design...
+
+* [ESP32 OTA tutorial with tricks (incl. OTA debugging](https://www.youtube.com/watch?v=1pwqS_NUG7Q)
+
+**You'll need to install TelnetStream**
+arduino-cli lib search telnetstream
+arduino-cli lib install "TelnetStream"
+
+**telnet address**
+telnet 192.168.1.44
+telnet test-ota.local
+
+to terminnate telnet - `ctrl+]` then `quit`.
+
+to terminnate screen - `ctrl+a` then `:quit`.
+
+
+```bash
+$ avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | cut -d\; -f7-9 | uniq | tr ";" "\n"
+test-ota.local
+192.168.1.44
+8266
+```
+
+```bash
+python2 /home/jeff/.arduino15/packages/esp8266/hardware/esp8266/2.5.2/tools/espota.py -d  -i 192.168.1.44 -a 123 -f test-ota.esp8266.esp8266.nodemcuv2.bin
+```
+
+
+# get ip address, hostname, and ota port
+```bash
+OTAIP = $(avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | cut -d\; -f8
+| uniq)
+OTAHOST = $(avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | cut -d\; -f7
+| uniq)
+OTAPORT = $(avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | cut -d\; -f9
+| uniq)
+
+# password for ota
+PASSWORD = "123"
+
+# location of the espota.py used for ota flashing
+ESPOTATOOL =/home/jeff/arduino15/packages/esp8266/hardware/esp8266/2.5.2/tools/espota.py
+
+
+$(ESPOTATOOL) -d -i $(OTAIP) -a $(PASSWORD) -f $(PROG).$(PACKAGE).$(ARCH).$(BOARD).bin
+```
+
+
+
+
+
+# Expect Script
+The `expect` command, or Expect scripting language,
+is a language that talks with your interactive programs or scripts that require user dialog.
+`expect` scripting language works by expecting input,
+then the `expect` script will send the response without any user interaction.
+The primary `expect` command which used for interaction are:
+
+* **spawn** - The spawn command starts a script or a program like the shell, FTP, Telnet, SSH, SCP, and so on.
+* **interact** - The interact command allows you to define a predefined user interaction.
+* **expect** - The `expect` command waits for input.
+* **send** - The send command sends a reply to a script or a program.
+
+`expect` also has a companion utility called `autoexpect`.
+You can use it to build an `expect` script automatically,
+but no need to use it here because our dialog with `telnet` is simple.
+
+```bash
+# install the expect tools
+sudo apt-get install expect
+```
+
+In our case here,
+we want to reach out to the ESP8266 device via `telnet`,
+and once connected, send it the character `r`.
+That is it.
+With that, the ESP8266 should reboot and we can proceed with the OTA of the firmware.
+
+Here is the `expect` script that works for me:
+
+```
+#!/usr/bin/expect -f
+
+# grab the arguments off the command-line of this script
+set timeout 10               # timeout if you get no dialog
+set ip [lindex $argv 0]      # grab commandline first argument
+set port [lindex $argv 1]    # grab commandline second argument
+
+# begin your interaction
+spawn telnet $ip $port       # startup telnet
+expect "'^]'." sleep .1;     # wait for the characters "'^]'." and sleep before sending
+send "R\r";                  # send 'R' to request reboot
+
+# terminate the connection
+close
+```
+
+This script is placed in the file `answerbot`,
+made executable (ie. `chmod a+x answerbot`)
+and then used with `Makefile` to suport the `update-ota` target.
+
+Sources of inspiration:
+
+* [Expect command and how to automate shell scripts like magic](https://likegeeks.com/expect-command/)
+* [Expect examples and tips](https://www.pantz.org/software/expect/expect_examples_and_tips.html)
+* [telnet-expect-example](https://github.com/aguther/example-telnet-expect)
+
 
 --------
 

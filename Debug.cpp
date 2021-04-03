@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.8.0
+Version:      0.9.0
 
 DESCRIPTION:
 
@@ -45,7 +45,7 @@ CREATED BY:
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // for trace messages/debugging, found in this directory
-#include "debug.h"
+#include "Debug.h"
 
 #define COLS      30        // max characters in labels
 #define ROWS       5        // number of labels (see list in constructor below)
@@ -75,9 +75,8 @@ DeBug::DeBug(void) {
     label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
     label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
     label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
-    label[FATAL] =      "\e[1;37m\e[41mFATAL:   \e[m";  // bold White font on red background
+    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
     label[UNLABELED] =  "";                             // no labels
-
 }
 
 
@@ -102,7 +101,7 @@ DeBug::DeBug(bool s, bool t, bool p) {
     label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
     label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
     label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
-    label[FATAL] =      "\e[1;37m\e[41mFATAL:   \e[m";  // bold White font on red background
+    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
     label[UNLABELED] =  "";                             // no labels
 
 }
@@ -119,8 +118,30 @@ DeBug::~DeBug(void) {
 
 // ------------------------------ Private Methods ------------------------------
 
+// print status of Debug object
+void DeBug::printStatus(void) {
+
+    Serial.printf("Serial print flag = %s\r\n", serial ? "true" : "false");
+    Serial.printf("Telnet print flag = %s\r\n", telnet ? "true" : "false");
+    Serial.printf("Preamble print flag = %s\r\n", preamble ? "true" : "false");
+
+    TelnetStream.printf("Serial print flag = %s\r\n", serial ? "true" : "false");
+    TelnetStream.printf("Telnet print flag = %s\r\n", telnet ? "true" : "false");
+    TelnetStream.printf("Preamble print flag = %s\r\n", preamble ? "true" : "false");
+
+/*    Serial.println("Serial print flag = " + String(serial));*/
+    //Serial.println("Telnet print flag = " + String(telnet));
+    //Serial.println("Preamble print flag = " + String(preamble));
+
+    //TelnetStream.println("Serial print flag = " + String(serial));
+    //TelnetStream.println("Telnet print flag = " + String(telnet));
+    /*TelnetStream.println("Preamble print flag = " + String(preamble));*/
+
+}
+
+
 // print file name, function name, and line number
-void DeBug::location() {
+void DeBug::location(void) {
     if (serial) Serial.print("NOT IMPLEMENTED YET!: ");
     if (telnet) TelnetStream.print("NOT IMPLEMENTED YET!: ");
 }
@@ -129,13 +150,15 @@ void DeBug::location() {
 
 // ------------------------------- Public Methods ------------------------------
 
-void DeBug::debugBegin() {
+void DeBug::debugBegin(void) {
 
     if (telnet) {
         TelnetStream.begin();
         Serial.println("\n\rTelnetStream enabled");
         TelnetStream.println("TelnetStream enabled");
     }
+
+    printStatus();
 
 }
 
@@ -155,24 +178,27 @@ void DeBug::preambleOnOff(bool flag) {
 }
 
 
-void DeBug::printInfo() {
+void DeBug::printInfo(void) {
+    char string[20];
 
     traceMsg(INFO, "Information concerning ESP & flash memory chip:");
 
+    sprintf(string, "%03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+    traceMsg(INFO, "\tESP8266 IP address = ", string);
     traceMsg(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
     traceMsg(INFO, "\tESP8266 chip ID (HEX) = %X\n\r", ESP.getChipId(), HEX);
-    traceMsg(INFO, "\t\Chip ID (HEX): %X\n\r", ESP.getFlashChipId(), HEX);
-    traceMsg(INFO, "\t\Chip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize(), DEC);
-    traceMsg(INFO, "\t\Chip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize(), DEC);
-    traceMsg(INFO, "\t\Chip Speed: %d Hz\n\r", ESP.getFlashChipSpeed(), DEC);
-    traceMsg(INFO, "\t\Chip Mode: %d\n\r", ESP.getFlashChipMode(), DEC);
-    traceMsg(INFO, "\t\Free Heap Memory: %d bytes\n\r", ESP.getFreeHeap(), DEC);
-    traceMsg(INFO, "\t\Heap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation(), DEC);  // 0% is clean, more than ~50% is not harmless
+    traceMsg(INFO, "\tChip ID (HEX): %X\n\r", ESP.getFlashChipId(), HEX);
+    traceMsg(INFO, "\tChip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize(), DEC);
+    traceMsg(INFO, "\tChip Size (what compiler set): %d bits\n\r", ESP.getFlashChipSize(), DEC);
+    traceMsg(INFO, "\tChip Speed: %d Hz\n\r", ESP.getFlashChipSpeed(), DEC);
+    traceMsg(INFO, "\tChip Mode: %d\n\r", ESP.getFlashChipMode(), DEC);
+    traceMsg(INFO, "\tFree Heap Memory: %d bytes\n\r", ESP.getFreeHeap(), DEC);
+    traceMsg(INFO, "\tHeap Fragmentation: %d%%\n\r", ESP.getHeapFragmentation(), DEC);  // 0% is clean, more than ~50% is not harmless
 
 }
 
 
-void DeBug::TelnetHandler() {
+void DeBug::TelnetHandler(void) {
 
     switch (TelnetStream.read()) {
         case 'R':   // reboot the esp8266
@@ -190,17 +216,55 @@ void DeBug::TelnetHandler() {
             TelnetStream.println("\n\rDropping telnet connection ... bye bye");
             Serial.flush();
             TelnetStream.flush();
-            Serial.end();
             TelnetStream.stop();
             break;
         case 's':   // toggle on/off serial trace messages
             serial = !serial;
+            printStatus();
             break;
         case 't':   // toggle on/off telnet trace messages
             telnet = !telnet;
+            printStatus();
             break;
         case 'p':   // toggle on/off preamble for trace messages
             preamble = !preamble;
+            printStatus();
+            break;
+        default:
+            break;
+    }
+
+    switch (Serial.read()) {
+        case 'R':   // reboot the esp8266
+            Serial.println("\n\rRebooting ...");
+            TelnetStream.println("\n\rRebooting ...");
+            Serial.flush();
+            TelnetStream.flush();
+            Serial.end();
+            TelnetStream.stop();
+            delay(100);
+            ESP.reset();
+            break;
+        case 'C':   // drop telnet connection to esp8266
+            Serial.println("\n\rDropping telnet connection ... bye bye");
+            TelnetStream.println("\n\rDropping telnet connection ... bye bye");
+            Serial.flush();
+            TelnetStream.flush();
+            TelnetStream.stop();
+            break;
+        case 's':   // toggle on/off serial trace messages
+            serial = !serial;
+            printStatus();
+            break;
+        case 't':   // toggle on/off telnet trace messages
+            telnet = !telnet;
+            printStatus();
+            break;
+        case 'p':   // toggle on/off preamble for trace messages
+            preamble = !preamble;
+            printStatus();
+            break;
+        default:
             break;
     }
 
@@ -327,6 +391,7 @@ template void DeBug::traceMsg<int>(int, char*, int);
 template void DeBug::traceMsg<char*>(int, char*, char*);
 template void DeBug::traceMsg<String>(int, char*, String);
 template void DeBug::traceMsg<IPAddress>(int, char*, IPAddress);
+template void DeBug::traceMsg<char const*>(int, char*, char const*);
 template void DeBug::traceMsg<wl_status_t>(int, char*, wl_status_t);
 template void DeBug::traceMsg<unsigned char>(int, char*, unsigned char);
 template void DeBug::traceMsg<FlashMode_t, int>(int, char*, FlashMode_t, int);

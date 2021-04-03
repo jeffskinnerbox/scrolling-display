@@ -2,7 +2,7 @@
 /*------------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.0.2
+Version:      0.9.0
 
 DESCRIPTION:
     Demonstration program showing the the use of the MD_Parola library display
@@ -41,22 +41,25 @@ USAGE:
 
 REFERENCE MATERIALS:
     * MD_MAX72XX library can be found at https://github.com/MajicDesigns/MD_MAX72XX
+    https://lastminuteengineers.com/esp8266-ota-updates-arduino-ide/
+    https://randomnerdtutorials.com/esp8266-ota-updates-with-arduino-ide-over-the-air/
 
 SOURCES:
     Code adapted from https://github.com/MajicDesigns/MD_Parola/tree/master/examples/Parola_Scrolling_ESP8266
+    Code adapted from https://randomnerdtutorials.com/esp8266-ota-updates-with-arduino-ide-over-the-air/
+    https://tttapa.github.io/ESP8266/Chap13%20-%20OTA.html
+    ~/.arduino15/packages/esp8266/hardware/esp8266/2.5.2/libraries/ArduinoOTA/examples/BasicOTA/BasicOTA.ino
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
 
 ------------------------------------------------------------------------------*/
 
-//#define DEBUG  true       // activate trace message printing for debugging on serial
-//#define TELNET false       // activate trace message printing for debugging via telnet
+#define TDEBUG  true       // activate trace message printing for debugging
 
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
 
 // found in Arduino libraries (~/Arduino/libraries)
 
@@ -67,7 +70,8 @@ CREATED BY:
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // this project's include files
-#include "debug.h"
+#include "Ota.h"
+#include "Debug.h"
 #include "secrets.h"
 #include "WiFiHandler.h"
 #include "MessageStore.h"
@@ -100,8 +104,8 @@ const uint8_t INVERSE_SET = 0;      // set/reset the display to inverse
 const uint16_t SCROLLPAUSE = 2000;  // ms of pause after finished displaying message
 
 
-// for trace messages/debugging, construct object DB as class DeBug
-extern DeBug DB;
+extern DeBug DB;        // declare object DB as external, and member of class DeBug
+extern Ota OTA;         // declare object OTA as external, and member of class Ota
 
 // Parola object constructor for software SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
@@ -176,7 +180,9 @@ char *err2Str(wl_status_t code) {
     case WL_CONNECTED:      return("CONNECTED");      break; // successful connection is established
     case WL_CONNECT_FAILED: return("CONNECT_FAILED"); break; // password is incorrect
     case WL_DISCONNECTED:   return("CONNECT_FAILED"); break; // module is not configured in station mode
-    default: return("??");
+    default:
+        DEBUGTRACE(WARN, "Unknown code passed to *err2Str(): ", code);
+        return("??");
     }
 }
 
@@ -239,6 +245,9 @@ void loadmsg(void) {
 
     char string[BUF_SIZE];
 
+
+    DEBUGTRACE(INFO, "\r\nEntering loadmsg() for scrolling display");
+
     // clear all old messages
     DEBUGTRACE(INFO, "Populating message queue with messages...");
     Msg.clearQueue();
@@ -287,8 +296,7 @@ void loadmsg(void) {
     //delay(2000);
     yield();                                         // prevent the watchdog timer doing a reboot
 
-    DEBUGTRACE(INFO, "Exiting loadmsg()...");
-    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
+    DEBUGTRACE(INFO, "Exiting loadmsg() for scrolling display\r\n");
 
 }
 
@@ -303,18 +311,18 @@ void setup() {
     int top = Msg.topQueue();
     int size = Msg.sizeQueue();
 
+    // always start Serial first so it can be used by DeBug
     Serial.begin(9600);
     while (!Serial) {}                        // wait for serial port to connect
 
     DEBUGSETUP();
     DEBUGPRINT("\n\r");
+    OTA.setupOTA();
 
-    DEBUGPRINT("\n\r");
-    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
+    DEBUGTRACE(INFO, "\r\n\n--------------------------------------------------------------------------------");
     DEBUGTRACE(INFO, "Entering setup() for scrolling display");
 
     DEBUGTRACE(INFO, "\tApplication Version = ", version);
-    DEBUGINFO();
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
@@ -340,7 +348,7 @@ void setup() {
     Msg.clear();
 
     // attempt to connect and initialise WiFi network
-    if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
+    if (WT.wifiConnect(HOSTNAME, WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
         sprintf(string, "WiFi connected successfully to SSID %s.", WIFISSID);
         Msg.addQueue(string);
         //tout = THREE_SECOND + millis();              // milliseconds of time to display message
@@ -356,10 +364,14 @@ void setup() {
     } else
         errorHandler(1);
 
+    // load the messages to be displayed
     loadmsg();
 
+    // provide some useful information about the microprocessor
+    DEBUGINFO();
+
     DEBUGTRACE(INFO, "Exiting setup() for scrolling display");
-    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------");
+    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------\r\n\n");
 
 }
 
@@ -371,6 +383,7 @@ void loop() {
     static int size = Msg.size();
 
     DEBUGLOOP();
+    OTA.loopOTA();
 
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')

@@ -36,15 +36,19 @@
 #-------------------------------------------------------------------------------
 
 
-TOPTARGETS := build clean              # only goals are to do build or clean
+TOPTARGETS = build clean               # only goals are to do build or clean
 
 SUBDIRS := $(wildcard */.)             # create list of all subdirectories as targets
 
 #-------------------------------------------------------------------------------
 
-$(TOPTARGETS): $(SUBDIRS)              # targets are subdirectories
+# explicitly declare these target to be phony
+.PHONY: $(TOPTARGETS) $(SUBDIRS)
 
-.PHONY: $(TOPTARGETS) $(SUBDIRS)       # explicitly declare these target to be phony
+all: build
+
+$(TOPTARGETS): $(SUBDIRS)              # targets are subdirectories
 
 $(SUBDIRS):                            # pass your goal to subdirectory makefile
 	$(MAKE) -C $@ $(MAKECMDGOALS)
+	#$(MAKE) -C $@ build

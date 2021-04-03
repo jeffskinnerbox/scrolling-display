@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.8.0
+Version:      0.9.0
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
@@ -39,8 +39,6 @@ CREATED BY:
 
 #pragma once                // compiler to skip subsequent includes of this file
 
-#define DEBUG true          // include DeBug trace message code in compile
-
 #define INFO       0        // index into labels for printing information trace message
 #define WARN       1        // index into labels for printing warning trace message
 #define ERROR      2        // index into labels for printing error trace message
@@ -60,6 +58,7 @@ class DeBug {
 
     //--------------- private methods --------------
     void location();
+    void printStatus();
 
   public:
     //-- constructors & destructors for the class --
@@ -88,31 +87,62 @@ class DeBug {
 // -----------------------------------------------------------------------------
 
 
-// use this to create a labeled trace message
-#define DEBUGTRACE(lev, ...) \
-    do { if (DEBUG) DB.traceMsg(lev, __VA_ARGS__); } while(0)
+#ifdef TDEBUG
+/*// use this to create a labeled trace message*/
+//#define DEBUGTRACE(lev, ...) \
+    //do { if (TDEBUG) DB.traceMsg(lev, __VA_ARGS__); } while(0)
 
-// use this to print an unlabeled message
-#define DEBUGPRINT(...) \
-    do { if (DEBUG) DB.printMsg(__VA_ARGS__); } while(0)
+//// use this to print an unlabeled message
+//#define DEBUGPRINT(...) \
+    //do { if (TDEBUG) DB.printMsg(__VA_ARGS__); } while(0)
 
-// use this to turn on/off trace messages within the programss flow
-#define DEBUGON(s, t, p) \
-    do { if (DEBUG) { DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p); } } while(0)
+//// use this to turn on/off trace messages within the programss flow
+//#define DEBUGON(s, t, p) \
+    //do { if (TDEBUG) { DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p); } } while(0)
 
-// use this to print information concerning ESP & flash memory chip
-#define DEBUGINFO(...) \
-    do { if (DEBUG) DB.printInfo(); } while(0)
+//// use this to print information concerning ESP & flash memory chip
+//#define DEBUGINFO(...) \
+    //do { if (TDEBUG) DB.printInfo(); } while(0)
 
-// NOT IMPLEMENTED YET: will provide file name + function name + line number
-#define DEBUGLOCATION() \
-    do { if (DEBUG) Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__); } while(0)
+//// NOT IMPLEMENTED YET: will provide file name + function name + line number
+//#define DEBUGLOCATION() \
+    //do { if (TDEBUG) Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__); } while(0)
 
-// place this macro within the setup() function
-#define DEBUGSETUP() \
-    do { if (DEBUG) DB.debugBegin(); } while(0)
+//// place this macro within the setup() function
+//#define DEBUGSETUP() \
+    //do { if (TDEBUG) DB.debugBegin(); } while(0)
 
-// place this macro within the loop() function
-#define DEBUGLOOP() \
-    do { if (DEBUG) DB.TelnetHandler(); } while(0)
+//// place this macro within the loop() function
+//#define DEBUGLOOP() \
+    /*do { if (TDEBUG) DB.TelnetHandler(); } while(0)*/
 
+    // use this to create a labeled trace message
+    #define DEBUGTRACE(lev, ...) DB.traceMsg(lev, __VA_ARGS__);
+
+    // use this to print an unlabeled message
+    #define DEBUGPRINT(...) DB.printMsg(__VA_ARGS__);
+
+    // use this to turn on/off trace messages within the programs flow
+    #define DEBUGON(s, t, p) DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p);
+
+    // use this to print information concerning ESP & flash memory chip
+    #define DEBUGINFO(...) DB.printInfo();
+
+    // NOT IMPLEMENTED YET: will provide file name + function name + line number
+    #define DEBUGLOCATION() Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__);
+
+    // place this macro within the setup() function, after Serial.begin()
+    #define DEBUGSETUP() DB.debugBegin();
+
+    // place this macro within the loop() function
+    #define DEBUGLOOP() DB.TelnetHandler();
+
+#else
+    #define DEBUGTRACE(lev, ...)
+    #define DEBUGPRINT(...)
+    #define DEBUGON(s, t, p)
+    #define DEBUGINFO(...)
+    #define DEBUGLOCATION()
+    #define DEBUGSETUP()
+    #define DEBUGLOOP()
+#endif
