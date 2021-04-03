@@ -30,7 +30,7 @@ CREATED BY:
 
 // project include files
 #include "Ota.h"
-#include "Debug.h"
+#include "DeBug.h"
 #include "secrets.h"
 
 // variables for blinking an LED

@@ -30,7 +30,7 @@ CREATED BY:
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // this project's include files
-#include "Debug.h"
+#include "DeBug.h"
 #include "MessageStore.h"
 
 

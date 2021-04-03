@@ -45,7 +45,7 @@ CREATED BY:
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // for trace messages/debugging, found in this directory
-#include "Debug.h"
+#include "DeBug.h"
 
 #define COLS      30        // max characters in labels
 #define ROWS       5        // number of labels (see list in constructor below)
