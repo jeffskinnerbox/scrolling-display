@@ -38,8 +38,6 @@
 #
 #-------------------------------------------------------------------------------
 
-DEBUG ?= 0
-
 # Use Bash shell instead of the default /bin/sh
 SHELL := /bin/bash
 
@@ -66,7 +64,7 @@ FQBN = $(PACKAGE):$(ARCH):$(BOARD)
 ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/2.6.1/esptool.py
 
 # string within names given to .bin and .elf files
-VAR = $(shell echo $(FQBN) | tr ':' '.')
+VAR := $(shell echo $(FQBN) | tr ':' '.')
 
 # path for temp-storage of binary, object, and core.a files
 BUILD = /tmp/$(PROG)
@@ -93,13 +91,14 @@ UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 ESPOTATOOL = /home/jeff/.arduino15/packages/esp8266/hardware/esp8266/2.5.2/tools/espota.py
 
 # set ota password, ip address, and port for device
-OTAPASS = "123"
-OTAIP = $(shell (avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | grep $(PROG).local | cut -d\; -f8 | uniq))
-OTAPORT = $(shell (avahi-browse _arduino._tcp --resolve --parsable --terminate 2>/dev/null | grep -F "=;" | grep $(PROG).local | cut -d\; -f9 | uniq))
+OTAHOSTNAME := $(shell grep OTAHOSTNAME secrets.h | cut -d" " -f3 | awk '{print substr($$0, 2, length($$0) - 2)}')
+OTAPASS := $(shell grep OTAPASSWORD secrets.h | cut -d" " -f3 | awk '{print substr($$0, 2, length($$0) - 2)}')
+OTAPORT = $(shell grep OTAPORT secrets.h | cut -d" " -f3)
+OTAIP := $(shell ping -c1 $(OTAHOSTNAME).local | grep "bytes from" | cut -d " " -f5 | awk '{ print substr($$0, 2) }' | awk '{ print substr( $$0, 1, length($$0)-2 ) }')
 
 # ota firmware flasher and flags
 UPLOAD_OTA = python2 $(ESPOTATOOL)
-UPLOAD_OTA_FLAGS = -d -i $(OTAIP) -p $(OTAPORT) -a $(OTAPASS) -f $(PROG).$(PACKAGE).$(ARCH).$(BOARD).bin
+UPLOAD_OTA_FLAGS = -d -i $(OTAIP) -p $(OTAPORT) -a $(OTAPASS) -f $(PROG).$(VAR).bin
 
 #-------------------------------------------------------------------------------
 
@@ -127,7 +126,7 @@ help:
 	@echo '   make clean        delete *.bin, *.elf, *.hex files'
 	@echo '   make help         print this help message and exit'
 	@echo ' '
-	@echo 'Set the DEBUG variable to 1 to enable debugging (e.g. make DEBUG=1)'
+	@echo 'Pass the option "--debug" to enable trace messaging (e.g. make --debug build)'
 	@echo ' '
 
 build:                                          # build the binary executable
@@ -137,8 +136,14 @@ upload:                                         # flash the binary executable vi
 	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
 
 upload-ota:                                     # flash the binary executable via ota
-	$(DIR)/answerbot $(OTAIP) 23
-	sleep 3
+	@echo VAR = $(VAR)
+	@echo OTAIP = $(OTAIP)
+	@echo OTAPASS = $(OTAPASS)
+	@echo OTAPORT = $(OTAPORT)
+	@echo OTAHOSTNAME = $(OTAHOSTNAME)
+	@echo UPLOAD_OTA_FLAGS = $(UPLOAD_OTA_FLAGS)
+	$(CURDIR)/answerbot $(OTAIP) 23             # using telnet, reboot the device to do OTA
+	sleep 10                                    # wait until device is ready for OTA start
 	$(UPLOAD_OTA) $(UPLOAD_OTA_FLAGS)
 
 erase:                                          # erase the entire flash
@@ -150,4 +155,5 @@ size:                                           # determine the flash size
 clean:                                          # delete all binaries and object files
 	rm -r --force $(BUILD)
 	rm --force *.bin *.elf *.hex
+
 

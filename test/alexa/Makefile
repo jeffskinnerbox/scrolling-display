@@ -30,7 +30,7 @@
 SHELL := /bin/bash
 
 # name of program being created
-PROG = mDNS
+PROG = alexa
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266
@@ -80,16 +80,16 @@ UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 all: build upload                               # build and then upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(CURDIR)
+	#$(CC) $(CC_FLAGS) $(CURDIR)
 
 upload: 										# flash the binary executable
-	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
+	#$(UPLOAD) $(UPLOAD_FLAGS) $(CURDIR)
 
 erase:                                          # erase the entire flash
-	$(ESPTOOL) erase_flash --port $(PORT)
+	#$(ESPTOOL) erase_flash --port $(PORT)
 
 size:                                           # determine the flash size
-	$(ESPTOOL) flash_id --port $(PORT)
+	#$(ESPTOOL) flash_id --port $(PORT)
 
 clean:                                          # delete all binaries and object files
 	rm -r --force $(BUILD)

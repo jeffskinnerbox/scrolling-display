@@ -26,6 +26,9 @@
 #
 #-------------------------------------------------------------------------------
 
+# Use Bash shell instead of the default /bin/sh
+SHELL := /bin/bash
+
 # name of program being created
 PROG = encoder
 
@@ -37,19 +40,19 @@ BOARD =   nodemcuv2
 # serial port used by the board
 PORT = /dev/ttyUSB0
 
+#------------------------- names, tools, flags, paths --------------------------
+
 # optional verbose compile/upload flag
 #VERBOSE = -v
-
-#-------------------------------------------------------------------------------
 
 # fully qualified board name (FQBN)
 FQBN = $(PACKAGE):$(ARCH):$(BOARD)
 
-# location of the esptool used for flashing
+# location of the esptool used for usb flashing
 ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/2.6.1/esptool.py
 
 # string within names given to .bin and .elf files
-VAR = $(shell echo $(FQBN) | tr ':' '.')
+VAR := $(shell echo $(FQBN) | tr ':' '.')
 
 # path for temp-storage of binary, object, and core.a files
 BUILD = /tmp/$(PROG)
@@ -58,16 +61,58 @@ BUILD_PATH = $(BUILD)/build
 # paths to libraries and include files
 LIBS = "/home/jeff/src/arduino/sketchbooks/libraries"
 
+#---------------------------------- compiler -----------------------------------
+
 # compiler and compiler flags
 CC = arduino-cli compile
 CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-path=$(BUILD) --libraries $(LIBS)
 
-# firmware flasher and flags
-UPLOAD = arduino-cli upload
-UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
+#--------------------------------- usb upload ----------------------------------
 
-# current directory during a GNUmake file run (not equal to bash pwd)
-DIR := ${CURDIR}
+# usb firmware flasher and flags
+UPLOAD_USB = arduino-cli upload
+UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
+
+##--------------------------------- ota upload ----------------------------------
+## name of program being created
+#PROG = encoder
+
+## type of package, architecture, and board in use
+#PACKAGE = esp8266
+#ARCH =    esp8266
+#BOARD =   nodemcuv2
+
+## serial port used by the board
+#PORT = /dev/ttyUSB0
+
+## optional verbose compile/upload flag
+##VERBOSE = -v
+
+##-------------------------------------------------------------------------------
+
+## fully qualified board name (FQBN)
+#FQBN = $(PACKAGE):$(ARCH):$(BOARD)
+
+## location of the esptool used for flashing
+#ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/2.6.1/esptool.py
+
+## string within names given to .bin and .elf files
+#VAR = $(shell echo $(FQBN) | tr ':' '.')
+
+## path for temp-storage of binary, object, and core.a files
+#BUILD = /tmp/$(PROG)
+#BUILD_PATH = $(BUILD)/build
+
+## paths to libraries and include files
+#LIBS = "/home/jeff/src/arduino/sketchbooks/libraries"
+
+## compiler and compiler flags
+#CC = arduino-cli compile
+#CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-path=$(BUILD) --libraries $(LIBS)
+
+## firmware flasher and flags
+#UPLOAD = arduino-cli upload
+#UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
 #-------------------------------------------------------------------------------
 
@@ -76,10 +121,10 @@ DIR := ${CURDIR}
 all: build upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(DIR)
+	$(CC) $(CC_FLAGS) $(CURDIR)
 
 upload: 										# flash the binary executable
-	$(UPLOAD) $(UPLOAD_FLAGS) $(DIR)
+	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)
