@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.0
+Version:      0.9.1
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
@@ -57,8 +57,9 @@ class DeBug {
     int rows = 0;            // number of labels
 
     //--------------- private methods --------------
-    void location();
-    void printStatus();
+    void setLables(void);
+    void location(void);
+    void printStatus(void);
 
   public:
     //-- constructors & destructors for the class --
@@ -67,11 +68,11 @@ class DeBug {
     ~DeBug(void);
 
     //--------------- public methods ---------------
-    void debugBegin(void);
+    void SetupHandler(void);
+    void LoopHandler(void);
     void debugOnOff(bool);
     void telnetOnOff(bool);
     void preambleOnOff(bool);
-    void TelnetHandler(void);
     void printInfo(void);
 
     template<typename T> void printMsg(T);
@@ -131,11 +132,11 @@ class DeBug {
     // NOT IMPLEMENTED YET: will provide file name + function name + line number
     #define DEBUGLOCATION() Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__);
 
-    // place this macro within the setup() function, after Serial.begin()
-    #define DEBUGSETUP() DB.debugBegin();
+    // place this macro within the setup() function, must be after Serial.begin()
+    #define DEBUGSETUP() DB.SetupHandler();
 
     // place this macro within the loop() function
-    #define DEBUGLOOP() DB.TelnetHandler();
+    #define DEBUGLOOP() DB.LoopHandler();
 
 #else
     #define DEBUGTRACE(lev, ...)

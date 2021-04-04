@@ -2,7 +2,7 @@
 /*------------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.0
+Version:      0.9.1
 
 DESCRIPTION:
     This object calls implements two data circular queue, aka ring buffer, for holding the messages that will appear on the scrolling display.

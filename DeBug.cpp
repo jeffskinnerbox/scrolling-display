@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.0
+Version:      0.9.1
 
 DESCRIPTION:
 
@@ -72,11 +72,8 @@ DeBug::DeBug(void) {
     }
 
     // initialize trace message labels
-    label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
-    label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
-    label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
-    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
-    label[UNLABELED] =  "";                             // no labels
+    setLables();
+
 }
 
 
@@ -98,11 +95,7 @@ DeBug::DeBug(bool s, bool t, bool p) {
     }
 
     // initialize trace message labels
-    label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
-    label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
-    label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
-    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
-    label[UNLABELED] =  "";                             // no labels
+    setLables();
 
 }
 
@@ -118,6 +111,19 @@ DeBug::~DeBug(void) {
 
 // ------------------------------ Private Methods ------------------------------
 
+// setup lables
+void DeBug::setLables(void) {
+
+    // initialize trace message labels
+    label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
+    label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
+    label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
+    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
+    label[UNLABELED] =  "";                             // no labels
+
+}
+
+
 // print status of Debug object
 void DeBug::printStatus(void) {
 
@@ -128,14 +134,6 @@ void DeBug::printStatus(void) {
     TelnetStream.printf("Serial print flag = %s\r\n", serial ? "true" : "false");
     TelnetStream.printf("Telnet print flag = %s\r\n", telnet ? "true" : "false");
     TelnetStream.printf("Preamble print flag = %s\r\n", preamble ? "true" : "false");
-
-/*    Serial.println("Serial print flag = " + String(serial));*/
-    //Serial.println("Telnet print flag = " + String(telnet));
-    //Serial.println("Preamble print flag = " + String(preamble));
-
-    //TelnetStream.println("Serial print flag = " + String(serial));
-    //TelnetStream.println("Telnet print flag = " + String(telnet));
-    /*TelnetStream.println("Preamble print flag = " + String(preamble));*/
 
 }
 
@@ -150,7 +148,7 @@ void DeBug::location(void) {
 
 // ------------------------------- Public Methods ------------------------------
 
-void DeBug::debugBegin(void) {
+void DeBug::SetupHandler(void) {
 
     if (telnet) {
         TelnetStream.begin();
@@ -198,7 +196,7 @@ void DeBug::printInfo(void) {
 }
 
 
-void DeBug::TelnetHandler(void) {
+void DeBug::LoopHandler(void) {
 
     switch (TelnetStream.read()) {
         case 'R':   // reboot the esp8266
