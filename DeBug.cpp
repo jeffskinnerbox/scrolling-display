@@ -184,6 +184,7 @@ void DeBug::printInfo(void) {
     sprintf(string, "%03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     traceMsg(INFO, "\tESP8266 IP address = ", string);
     traceMsg(INFO, "\tESP8266 MAC address = ", WiFi.macAddress());
+    traceMsg(INFO, "\tESP8266 Hostname = ", WiFi.hostname());
     traceMsg(INFO, "\tESP8266 chip ID (HEX) = %X\n\r", ESP.getChipId(), HEX);
     traceMsg(INFO, "\tChip ID (HEX): %X\n\r", ESP.getFlashChipId(), HEX);
     traceMsg(INFO, "\tChip Real Size (from chip): %d bits\n\r", ESP.getFlashChipRealSize(), DEC);
