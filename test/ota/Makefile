@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------------------
 #
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      1.0.1
+# Version:      1.0.2
 #
 # USAGE
 #	To build the executable and flash the device
@@ -41,6 +41,11 @@ SHELL := /bin/bash                     # use bash shell instead of the default /
 TOPTARGETS := build clean              # only goals are to do are build or clean
 
 SUBDIRS := $(wildcard */.)             # create list of all subdirectories as targets
+
+# print values of makefile variables
+#$(info $$SUBDIRS = [${SUBDIRS}])
+#$(info $$TOPTARGETS = [${TOPTARGETS}])
+#$(info $$MAKECMDGOALS = [${MAKECMDGOALS}])
 
 #-------------------------------------------------------------------------------
 

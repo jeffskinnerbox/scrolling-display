@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------------------
 #
 # Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-# Version:      1.0.0
+# Version:      1.0.2
 #
 # USAGE
 #	To build the executable and flash the device
