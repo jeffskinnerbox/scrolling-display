@@ -67,3 +67,7 @@ Icon?
 ehthumbs.db
 Thumbs.db
 
+# bash tool git-secret stores private data inside a git repo
+.gitsecret/keys/random_seed
+!*.secret
+
