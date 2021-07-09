@@ -67,7 +67,7 @@ UPLOAD = arduino-cli upload
 UPLOAD_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 
 # current directory during a GNUmake file run (not equal to bash pwd)
-DIR := ${CURDIR}
+#DIR := ${CURDIR}
 
 #-------------------------------------------------------------------------------
 
@@ -76,10 +76,10 @@ DIR := ${CURDIR}
 all: build upload                               # build and then upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(DIR)
+	$(CC) $(CC_FLAGS) $(CURPWD)
 
 upload: 										# flash the binary executable
-	$(UPLOAD) $(UPLOAD_FLAGS) $(DIR)
+	$(UPLOAD) $(UPLOAD_FLAGS) $(CURPWD)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)

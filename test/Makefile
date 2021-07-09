@@ -42,6 +42,11 @@ TOPTARGETS := build clean              # only goals are to do are build or clean
 
 SUBDIRS := $(wildcard */.)             # create list of all subdirectories as targets
 
+# print values of makefile variables
+#$(info $$SUBDIRS = [${SUBDIRS}])
+#$(info $$TOPTARGETS = [${TOPTARGETS}])
+#$(info $$MAKECMDGOALS = [${MAKECMDGOALS}])
+
 #-------------------------------------------------------------------------------
 
 default:                               # default target/goal when none is provided

@@ -80,10 +80,10 @@ UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 all: build upload                               # build and then upload
 
 build: 											# build the binary executable
-	#$(CC) $(CC_FLAGS) $(CURDIR)
+	#$(CC) $(CC_FLAGS) $(CURPWD)
 
 upload: 										# flash the binary executable
-	#$(UPLOAD) $(UPLOAD_FLAGS) $(CURDIR)
+	#$(UPLOAD) $(UPLOAD_FLAGS) $(CURPWD)
 
 erase:                                          # erase the entire flash
 	#$(ESPTOOL) erase_flash --port $(PORT)
