@@ -24,14 +24,22 @@ PHYSICAL DESIGN:
         Connections for ESP8266 hardware SPI are:
         MAX72XX Pin    ESP8266 Pin    Notes / Comments
         Vcc              3v3           LED matrices seem to work at 3.3V
-        GND              GND           GND
+        GND              GND           Ground
         DIN              D7            HSPID or HMOSI
         CS or LD         D8            HSPICS or HCS
         CLK              D5            CLK or HCLK
 
 MONITOR:
-    screen /dev/ttyUSB0 9600,cs8cls
-    to terminate Cntr-a :quit
+    To monitor the scrolling display's activities on the NodeMCU serial ports while operating,
+    connection the USB port to a Linux computer and execute the following:
+
+        screen /dev/ttyUSB0 9600,cs8cls
+
+    To terminate monitoring, enter: CNTR-a :quit
+
+        telet test-ota.local
+
+    To terminate monitoring, enter: Ctrl-] quit
 
 TESTING:
     xxxxxxxxxx
