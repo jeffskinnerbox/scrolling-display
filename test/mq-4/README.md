@@ -11,6 +11,7 @@ Version:      0.4.0
 
 * [ANAVI Gas Detector by Anavi Technology: An ESP8266-powered, open source, Wi-Fi dev board for monitoring air quality and detecting dangerous gases](https://www.crowdsupply.com/anavi-technology/gas-detector)
 * [ANAVI Gas Detector Default Arduino Sketch](https://github.com/AnaviTechnology/anavi-gas-detector-sw)
+* [Remote Hazardous Gas Station and Monitor](https://hackaday.io/project/180859-joker-remote-hazardous-gas-station-and-monitor)
 
 ## BME680 Environmental Sensor
 * [ESP32: BME680 Environmental Sensor using Arduino IDE (Gas, Pressure, Humidity, Temperature)](https://randomnerdtutorials.com/esp32-bme680-sensor-arduino/)
