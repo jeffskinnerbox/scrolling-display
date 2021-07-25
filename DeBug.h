@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.3
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
@@ -43,7 +43,11 @@ CREATED BY:
 #define WARN       1        // index into labels for printing warning trace message
 #define ERROR      2        // index into labels for printing error trace message
 #define FATAL      3        // index into labels for printing fatal trace message
-#define UNLABELED  4        // index into labels for printing unformatted text
+#define NOOP       4        // index into labels for printing operation not implemented yet
+#define UNLABELED  5        // index into labels for printing unformatted text
+
+#define LABEL_COLS 30       // max characters in labels
+#define LABEL_ROWS 6        // number of labels (see list in constructor below)
 
 
 class DeBug {
@@ -58,8 +62,6 @@ class DeBug {
 
     //--------------- private methods --------------
     void setLables(void);
-    void location(void);
-    void printStatus(void);
 
   public:
     //-- constructors & destructors for the class --
@@ -69,11 +71,14 @@ class DeBug {
 
     //--------------- public methods ---------------
     void SetupHandler(void);
+    void SetupHandler(bool, bool, bool);
     void LoopHandler(void);
     void debugOnOff(bool);
     void telnetOnOff(bool);
     void preambleOnOff(bool);
+    void printStatus(void);
     void printInfo(void);
+    void location(void);
 
     template<typename T> void printMsg(T);
     template<typename T, typename U> void printMsg(T, U);
@@ -126,11 +131,14 @@ class DeBug {
     // use this to turn on/off trace messages within the programs flow
     #define DEBUGON(s, t, p) DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p);
 
+    // use this to print information concerning status of DeBug object
+    #define DEBUGSTATUS() DB.printStatus();
+
     // use this to print information concerning ESP & flash memory chip
     #define DEBUGINFO(...) DB.printInfo();
 
     // NOT IMPLEMENTED YET: will provide file name + function name + line number
-    #define DEBUGLOCATION() Serial.printf("%s, %s, %d: \t", __FILE__, __FUNCTION__, __LINE__);
+    #define DEBUGLOCATION() { DB.location(); Serial.printf("%s, %s, %d: \t\n\r", __FILE__, __FUNCTION__, __LINE__); }
 
     // place this macro within the setup() function, must be after Serial.begin()
     #define DEBUGSETUP() DB.SetupHandler();
@@ -142,6 +150,7 @@ class DeBug {
     #define DEBUGTRACE(lev, ...)
     #define DEBUGPRINT(...)
     #define DEBUGON(s, t, p)
+    #define DEBUGSTATUS()
     #define DEBUGINFO(...)
     #define DEBUGLOCATION()
     #define DEBUGSETUP()
