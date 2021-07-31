@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.3
+Version:      0.9.5
 
 DESCRIPTION:
 
@@ -9,7 +9,8 @@ PHYSICAL DESIGN:
     Just ESP8266, nothing else required
 
 MONITOR:
-    Make sure SERIAL = true and TELNET = true
+    For full monitoring, make sure serial = true and relnet = true when you
+    create the DeBug object (as done at the end of this file).
 
     sudo arp-scan 192.168.1.200/24
     sudo arp-scan 192.168.1.200/24 | grep Espressif
@@ -18,7 +19,7 @@ MONITOR:
     screen /dev/ttyUSB0 9600,cs8cls
     to terminate Ctrl-a :quit
 
-    telnet scrolling-display.local
+    telnet ntp-clock.local
     telnet 192.168.1.44
     telnet ESP_24F9FD.fios-router.home.
     telnet ESP_24F9FD
@@ -124,28 +125,18 @@ void DeBug::setLables(void) {
 // print status of Debug object
 void DeBug::printStatus(void) {
 
-    /*Serial.printf("Serial print flag = %s\r\n", serial ? "true" : "false");*/
-    //Serial.printf("Telnet print flag = %s\r\n", telnet ? "true" : "false");
-    //Serial.printf("Preamble print flag = %s\r\n", preamble ? "true" : "false");
-
-    //TelnetStream.printf("Serial print flag = %s\r\n", serial ? "true" : "false");
-    //TelnetStream.printf("Telnet print flag = %s\r\n", telnet ? "true" : "false");
-    /*TelnetStream.printf("Preamble print flag = %s\r\n", preamble ? "true" : "false");*/
-
     traceMsg(INFO, "Current state of DeBug object:");
 
-    traceMsg(INFO, "\tSerial print flag = ", serial ? "true" : "false");
-    traceMsg(INFO, "\tTelnet print flag = ", telnet ? "true" : "false");
-    traceMsg(INFO, "\tPreamble print flag = ", preamble ? "true" : "false");
+    traceMsg(INFO, "\tSerial trace message print = ", serial ? "true" : "false");
+    traceMsg(INFO, "\tTelnet trace message print = ", telnet ? "true" : "false");
+    traceMsg(INFO, "\tPreamble on trace message = ", preamble ? "true" : "false");
 
 }
 
 
 // print file name, function name, and line number
 void DeBug::location(void) {
-/*    if (serial) Serial.print("NOT IMPLEMENTED YET!: ");*/
-    /*if (telnet) TelnetStream.print("NOT IMPLEMENTED YET!: ");*/
-    traceMsg(NOOP, "NOT IMPLEMENTED YET: will provide file name + function name + line number as a preamble");
+    traceMsg(NOOP, "NOT IMPLEMENTED YET: Plan to provide file name + function name + line number as a preamble to trace message");
 }
 
 
@@ -158,12 +149,8 @@ void DeBug::SetupHandler(void) {
 
     if (telnet) {
         TelnetStream.begin();
-/*        Serial.println("\n\rTelnetStream enabled");*/
-        /*TelnetStream.println("TelnetStream enabled");*/
-        printMsg("TelnetStream enabled for telnet\n\r");
+        traceMsg(INFO, "TelnetStream enabled for telnet");
     }
-
-    //printStatus();        // list what DeBug parameters are set
 
 }
 
@@ -175,8 +162,6 @@ void DeBug::SetupHandler(bool ser, bool tel, bool pre) {
     preamble = pre;
 
     printMsg("\n\n\r");   // make sure you have a clean line after reboot
-
-    //printStatus();        // list what DeBug parameters are set
 
 }
 
@@ -197,12 +182,9 @@ void DeBug::preambleOnOff(bool flag) {
 
 
 void DeBug::printInfo(void) {
-    //char string[20];
 
     traceMsg(INFO, "Information concerning ESP & flash memory chips:");
 
-    //sprintf(string, "%03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-    //traceMsg(INFO, "\tESP8266 IP Address = ", string);
     traceMsg(INFO, "\tESP8266 IP Address = ", WiFi.localIP());
     traceMsg(INFO, "\tESP8266 MAC Address = ", WiFi.macAddress());
     traceMsg(INFO, "\tESP8266 DHCP Hostname = ", WiFi.hostname());
@@ -224,9 +206,7 @@ void DeBug::LoopHandler(void) {
 
     switch (TelnetStream.read()) {
         case 'R':   // reboot the esp8266
-/*            Serial.println("\n\rRebooting ...");*/
-            /*TelnetStream.println("\n\rRebooting ...");*/
-            printMsg("\n\rRebooting ...");
+            traceMsg(INFO, "Rebooting ...");
             if (serial) Serial.flush();
             if (serial) Serial.end();
             if (telnet) TelnetStream.flush();
@@ -235,22 +215,23 @@ void DeBug::LoopHandler(void) {
             ESP.reset();
             break;
         case 'C':   // drop telnet connection to esp8266
-/*            Serial.println("\n\rDropping telnet connection ... bye bye");*/
-            /*TelnetStream.println("\n\rDropping telnet connection ... bye bye");*/
-            printMsg("\n\rDropping telnet connection ... bye bye");
+            traceMsg(INFO, "Dropping telnet connection ... bye bye");
             Serial.flush();
             TelnetStream.flush();
             TelnetStream.stop();
             break;
         case 's':   // toggle on/off serial trace messages
+            traceMsg(INFO, "Toggle on/off serial trace messages");
             serial = !serial;
             printStatus();
             break;
         case 't':   // toggle on/off telnet trace messages
+            traceMsg(INFO, "Toggle on/off telnet trace messages");
             telnet = !telnet;
             printStatus();
             break;
         case 'p':   // toggle on/off preamble for trace messages
+            traceMsg(INFO, "Toggle on/off preamble for trace messages");
             preamble = !preamble;
             printStatus();
             break;
@@ -260,33 +241,36 @@ void DeBug::LoopHandler(void) {
 
     switch (Serial.read()) {
         case 'R':   // reboot the esp8266
-/*            Serial.println("\n\rRebooting ...");*/
-            /*TelnetStream.println("\n\rRebooting ...");*/
-            printMsg("\n\rRebooting ...");
-            Serial.flush();
-            TelnetStream.flush();
-            Serial.end();
-            TelnetStream.stop();
+            traceMsg(INFO, "Rebooting ...");
+/*            Serial.flush();*/
+            //TelnetStream.flush();
+            //Serial.end();
+            /*TelnetStream.stop();*/
+            if (serial) Serial.flush();
+            if (serial) Serial.end();
+            if (telnet) TelnetStream.flush();
+            if (telnet) TelnetStream.stop();
             delay(100);
             ESP.reset();
             break;
         case 'C':   // drop telnet connection to esp8266
-/*            Serial.println("\n\rDropping telnet connection ... bye bye");*/
-            /*TelnetStream.println("\n\rDropping telnet connection ... bye bye");*/
-            printMsg("\n\rDropping telnet connection ... bye bye");
+            traceMsg(INFO, "Dropping telnet connection ... bye bye");
             Serial.flush();
             TelnetStream.flush();
             TelnetStream.stop();
             break;
         case 's':   // toggle on/off serial trace messages
+            traceMsg(INFO, "Toggle on/off serial trace messages");
             serial = !serial;
             printStatus();
             break;
         case 't':   // toggle on/off telnet trace messages
+            traceMsg(INFO, "Toggle on/off telnet trace messages");
             telnet = !telnet;
             printStatus();
             break;
         case 'p':   // toggle on/off preamble for trace messages
+            traceMsg(INFO, "Toggle on/off preamble for trace messages");
             preamble = !preamble;
             printStatus();
             break;
@@ -296,6 +280,9 @@ void DeBug::LoopHandler(void) {
 
 }
 
+
+
+// ------------------ Explicitly Declare All Needed Functions ------------------
 
 template<typename T>
 void DeBug::printMsg(T var) {
@@ -405,7 +392,7 @@ void DeBug::traceMsg(int lev, char *str, T var, U format) {
 
 
 
-// ------------------ Explicitly Declare All Needed Functions ------------------
+// ----------------- Templatize Additionally Needed Functions ------------------
 
 template void DeBug::printMsg<int>(int);
 template void DeBug::printMsg<char*>(char*);
@@ -416,6 +403,7 @@ template void DeBug::printMsg<unsigned int, int>(unsigned int, int);
 template void DeBug::traceMsg<int>(int, char*, int);
 template void DeBug::traceMsg<char*>(int, char*, char*);
 template void DeBug::traceMsg<String>(int, char*, String);
+template void DeBug::traceMsg<int, int>(int, char*, int, int);
 template void DeBug::traceMsg<IPAddress>(int, char*, IPAddress);
 template void DeBug::traceMsg<char const*>(int, char*, char const*);
 template void DeBug::traceMsg<wl_status_t>(int, char*, wl_status_t);
@@ -424,8 +412,12 @@ template void DeBug::traceMsg<unsigned char>(int, char*, unsigned char);
 template void DeBug::traceMsg<unsigned long>(int, char*, unsigned long);
 template void DeBug::traceMsg<StringSumHelper>(int, char*, StringSumHelper);
 template void DeBug::traceMsg<FlashMode_t, int>(int, char*, FlashMode_t, int);
+template void DeBug::traceMsg<int, char const*>(int, char*, int, char const*);
 template void DeBug::traceMsg<unsigned int, int>(int, char*, unsigned int, int);
 template void DeBug::traceMsg<unsigned char, int>(int, char*, unsigned char, int);
+template void DeBug::traceMsg<char*, char const*>(int, char*, char*, char const*);
+template void DeBug::traceMsg<char const*, char*>(int, char*, char const*, char*);
+
 
 
 // --------------------------- Construct DeBug Object --------------------------

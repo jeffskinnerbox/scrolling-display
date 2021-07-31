@@ -1,8 +1,7 @@
 
 /*------------------------------------------------------------------------------
-
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.5
 
 DESCRIPTION:
 
@@ -10,29 +9,48 @@ REFERENCE MATERIALS:
 
 CREATED BY:
     jeffskinnerbox@yahoo.com
-
 ------------------------------------------------------------------------------*/
 
 
 #pragma once                        // compiler to skip subsequent includes of this file
 
+// ESP8266 libraries (~/.arduino15/packages/esp8266)
+#include <WiFiUdp.h>
+#include <ESP8266WiFi.h>
 
-class WiFiTools {
+
+class WiFiHandler {
   private:
-    char *hostname = NULL;           // memory array used to store hostname
+    //-------------- private variables -------------
     char *ssid = NULL;               // memory array used to store wifi ssid
     char *password = NULL;           // memory array used to store wifi password
     unsigned long timeout;           // time out for wifi access request
 
-  public:
-    // constructors & destructors for the class
-    WiFiTools(void);
-    WiFiTools(char *, char *, char *, unsigned long);
-    ~WiFiTools(void);
+    // udp parameters
+    unsigned int UDPport = 2390;     // local port to listen for UDP packets
+    WiFiUDP udp;                     // A UDP object to send/receive packets
 
-    // public methods
-    bool wifiConnect(char *, char *, char *, unsigned long);
-    //bool wifiHostname(char *);
-    void wifiTerminate(void);
+  public:
+    //-- constructors & destructors for the class --
+    WiFiHandler(void);
+    ~WiFiHandler(void);
+
+    //--------------- public methods ---------------
+    // public methods for wifi
     void wifiScan(void);
+    void wifiTerminate(void);
+    bool wifiConnect(char *, char *, unsigned long);
+
+    // public methods for udp
+    bool udpStart(void);
+    void udpStop(void);
+    bool udpCheck(void);
+    void udpSetPort(unsigned int);
+    int udpRead(byte *, unsigned int);
+    bool udpRequest(IPAddress&, unsigned int, byte *, unsigned int);
 };
+
+
+// -----------------------------------------------------------------------------
+
+

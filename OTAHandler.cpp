@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.5
 
 DESCRIPTION:
 
@@ -29,27 +29,27 @@ CREATED BY:
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // project include files
-#include "Ota.h"
 #include "DeBug.h"
 #include "secrets.h"
+#include "OTAHandler.h"
 
 // variables for blinking an LED
-#define PCBLED D0            // ESP8266 Pin to which onboard LED is connected
-#define STDBLKRATE 1000      // interval at which to blink LED (milliseconds)
-#define OTABLKRATE 200       // interval at which to blink LED (milliseconds)
+#define PCBLED D0                // ESP8266 Pin to which onboard LED is connected
+#define STDBLKRATE 1000          // interval at which to blink LED (milliseconds)
+#define OTABLKRATE 200           // interval at which to blink LED (milliseconds)
 
 // variables for OTA management
-#define MAXTIME 15000UL      // max time to wait for arduino ota handler to engage (15 seconds)
+#define MAXTIME 15000UL          // max time to wait for arduino ota handler to engage (15 seconds)
 
 
-extern DeBug DB;        // declare object DB as external, and member of class DeBug
+extern DeBug DB;                 // declare object DB as external, and member of class DeBug
 
 
 
 // ------------------------ Constructors & Destructors -------------------------
 
 // default constructors for the class
-Ota::Ota(void) {
+OTAHandler::OTAHandler(void) {
     ota_flag = true;             // if true, engage the arduino ota handler
     max_time = MAXTIME;          // max time to wait for arduino ota handler to engage (15 seconds)
     blink_rate = OTABLKRATE;     // interval at which to blink LED (milliseconds)
@@ -57,21 +57,21 @@ Ota::Ota(void) {
 }
 
 
-Ota::Ota(bool o, unsigned long m, unsigned long b, unsigned long s) {
-    ota_flag = o;       // if true, engage the arduino ota handler
-    max_time = m;       // max time to wait for arduino ota handler to engage (15 seconds)
-    blink_rate = b;     // interval at which to blink LED (milliseconds)
-    standard_rate = s;  // interval at which to blink LED (milliseconds)
+OTAHandler::OTAHandler(bool o, unsigned long m, unsigned long b, unsigned long s) {
+    ota_flag = o;                // if true, engage the arduino ota handler
+    max_time = m;                // max time to wait for arduino ota handler to engage (15 seconds)
+    blink_rate = b;              // interval at which to blink LED (milliseconds)
+    standard_rate = s;           // interval at which to blink LED (milliseconds)
 }
 
 
-Ota::~Ota(void) {
+OTAHandler::~OTAHandler(void) {
 }
 
 
 // ------------------------------ Private Methods ------------------------------
 
-void Ota::blinkLED(unsigned long rate) {
+void OTAHandler::blinkLED(unsigned long rate) {
     unsigned long currentTime = millis();
     static unsigned long previousTime = millis();
 
@@ -84,25 +84,28 @@ void Ota::blinkLED(unsigned long rate) {
 }
 
 
-// print status of Ota object
-void Ota::printStatus(void) {
+// print status of OTAHandler object
+void OTAHandler::printStatus(void) {
 
-    DEBUGTRACE(INFO, "Current state of Ota object: ");
+    DEBUGTRACE(INFO, "Current status of OTAHandler object: ");
 
     DEBUGTRACE(INFO, "\tOTA flag = ", ota_flag ? "true" : "false");
     DEBUGTRACE(INFO, "\tMax Time = ", max_time ? "true" : "false");
     DEBUGTRACE(INFO, "\tBlink Rate = ", blink_rate ? "true" : "false");
     DEBUGTRACE(INFO, "\tStandard Rate = ", standard_rate ? "true" : "false");
 
-/*    DEBUGTRACE(INFO, "\tOTA flag = " + String(ota_flag));*/
-    //DEBUGTRACE(INFO, "\tMax Time = " + String(max_time));
-    //DEBUGTRACE(INFO, "\tBlink Rate = " + String(blink_rate));
-    /*DEBUGTRACE(INFO, "\tStandard Rate = " + String(standard_rate));*/
+    DEBUGTRACE(INFO, "\tOTAPORT = ", OTAPORT);
+    DEBUGTRACE(INFO, "\tOTAHOSTNAME = ", OTAHOSTNAME);
+    DEBUGTRACE(INFO, "\tOTAPASSWORD = ", OTAPASSWORD);
+
+    DEBUGTRACE(INFO, "\tHostname = ", ArduinoOTA.getHostname() + ".local");
+    DEBUGTRACE(INFO, "\tIP address = ", WiFi.localIP());
+    DEBUGTRACE(INFO, "\tOTA port = ", String(OTAPORT));
 
 }
 
 
-void Ota::TelnetStreamHandler(void) {
+void OTAHandler::TelnetStreamHandler(void) {
 
     switch (TelnetStream.read()) {
         case 'r':   // reboot the esp8266
@@ -129,7 +132,7 @@ void Ota::TelnetStreamHandler(void) {
 
 // ------------------------------- Public Methods ------------------------------
 
-void Ota::setupOTA(void) {
+void OTAHandler::setupOTA(void) {
 
     pinMode(PCBLED, OUTPUT);                           // set led pin as output so you can blink it
 
@@ -150,7 +153,7 @@ void Ota::setupOTA(void) {
             // NOTE: if updating SPIFFS, this would be the place to unmount SPIFFS using SPIFFS.end()
         }
 
-        Serial.println("Started updating " + type);
+        Serial.println("Started OTA updating " + type);
     });
 
     ArduinoOTA.onEnd([]() { Serial.println("\n\rUpdating ended"); });
@@ -175,7 +178,7 @@ void Ota::setupOTA(void) {
 }
 
 
-void Ota::loopOTA(void) {
+void OTAHandler::loopOTA(void) {
     unsigned long currentTime = millis();
     static unsigned long previousTime = millis();
     static unsigned long elapsedTime, i = 0;
@@ -184,6 +187,7 @@ void Ota::loopOTA(void) {
 
     // if ota is being requested, activate the handler
     if (ota_flag) {
+        DEBUGTRACE(INFO, "Entered OTA update state");
         while (currentTime - previousTime < max_time) {
             ArduinoOTA.handle();     // OTA handler, look for OTA update request
             currentTime = millis();
@@ -191,11 +195,9 @@ void Ota::loopOTA(void) {
             delay(10);
         }
         ota_flag = false;
-        Serial.println("\n\rESP8266 OTA update is disabled.  ota_flag = " + String(ota_flag));
-        TelnetStream.println("\n\rESP8266 OTA update is disabled.  ota_flag = " + String(ota_flag));
-        blinkLED(standard_rate);            // blink led at standard rate (ota update disabled)
+        blinkLED(standard_rate);     // blink led at standard rate (ota update disabled)
+        DEBUGTRACE(INFO, "Exited OTA update state");
     }
-
 
 }
 
@@ -203,6 +205,6 @@ void Ota::loopOTA(void) {
 
 // ---------------------------- Construct OTA Object ---------------------------
 
-// for over-the-air firmware updates, construct object OTA as class Ota
-Ota OTA = Ota(true, 15000UL, 200, 1000);
+// for over-the-air firmware updates, construct object OTA as class OTAHandler
+OTAHandler OTA = OTAHandler(true, 15000UL, 100, 1000);
 

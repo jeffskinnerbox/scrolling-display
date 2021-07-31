@@ -78,9 +78,9 @@ CREATED BY:
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
 
 // this project's include files
-#include "Ota.h"
 #include "DeBug.h"
 #include "secrets.h"
+#include "OTAHandler.h"
 #include "WiFiHandler.h"
 #include "MessageStore.h"
 
@@ -112,14 +112,14 @@ const uint8_t INVERSE_SET = 0;      // set/reset the display to inverse
 const uint16_t SCROLLPAUSE = 2000;  // ms of pause after finished displaying message
 
 
-extern DeBug DB;        // declare object DB as external, and member of class DeBug
-extern Ota OTA;         // declare object OTA as external, and member of class Ota
+extern DeBug DB;         // declare object DB as external, and member of class DeBug
+extern OTAHandler OTA;   // declare object OTA as external, and member of class OTAHandler
 
 // Parola object constructor for software SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
 // WiFiTools object constructor
-WiFiTools WT = WiFiTools();
+WiFiHandler WT = WiFiHandler();
 
 // MessageStore object constructor for storing the contents of the display
 //MessageStore Msg = MessageStore(5, 5, 80);
@@ -356,7 +356,7 @@ void setup() {
     Msg.clear();
 
     // attempt to connect and initialise WiFi network
-    if (WT.wifiConnect(HOSTNAME, WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
+    if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
         sprintf(string, "WiFi connected successfully to SSID %s.", WIFISSID);
         Msg.addQueue(string);
         //tout = THREE_SECOND + millis();              // milliseconds of time to display message

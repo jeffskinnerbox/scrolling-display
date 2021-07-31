@@ -23,7 +23,7 @@
 #       telnet test-ota.local
 #       to terminate Ctrl-a quit
 #
-#   makefile syntax
+#   Makefile Syntax
 #       =  set the variable
 #       ?= set the variable only if it's not set/doesn't have a value
 #       := set variable as the output an executed shell script
@@ -94,7 +94,7 @@ ESPOTATOOL = /home/jeff/.arduino15/packages/esp8266/hardware/esp8266/2.5.2/tools
 # set ota password, ip address, and port for device
 OTAHOSTNAME := $(shell grep OTAHOSTNAME secrets.h | cut -d" " -f3 | awk '{print substr($$0, 2, length($$0) - 2)}')
 OTAPASS := $(shell grep OTAPASSWORD secrets.h | cut -d" " -f3 | awk '{print substr($$0, 2, length($$0) - 2)}')
-OTAPORT = $(shell grep OTAPORT secrets.h | cut -d" " -f3)
+OTAPORT := $(shell grep OTAPORT secrets.h | cut -d" " -f3)
 OTAIP := $(shell ping -c1 $(OTAHOSTNAME).local | grep "bytes from" | cut -d " " -f5 | awk '{ print substr($$0, 2) }' | awk '{ print substr( $$0, 1, length($$0)-2 ) }')
 
 # ota firmware flasher and flags
@@ -113,7 +113,7 @@ all-ota: build upload-ota                       # build and then upload via ota
 
 help:
 	@echo ' '
-	@echo 'Makefile for OTA Test'
+	@echo 'Makefile for scroll-display'
 	@echo ' '
 	@echo 'Usage:'
 	@echo '   make              create all files and flash device via usb'

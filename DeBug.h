@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.3
+Version:      0.9.5
 
 DESCRIPTION:
     Debugging routings that print trace messages on serial port
@@ -80,12 +80,12 @@ class DeBug {
     void printInfo(void);
     void location(void);
 
-    template<typename T> void printMsg(T);
-    template<typename T, typename U> void printMsg(T, U);
-    template<typename T, typename U, typename Z> void printMsg(T*, U, Z);
     void traceMsg(int, char*);
+    template<typename T> void printMsg(T);
     template<typename T> void traceMsg(int, char*, T);
+    template<typename T, typename U> void printMsg(T, U);
     template<typename T, typename U> void traceMsg(int, char*, T, U);
+    template<typename T, typename U, typename Z> void printMsg(T*, U, Z);
 
 };
 
@@ -102,7 +102,7 @@ class DeBug {
 //#define DEBUGPRINT(...) \
     //do { if (TDEBUG) DB.printMsg(__VA_ARGS__); } while(0)
 
-//// use this to turn on/off trace messages within the programss flow
+//// use this to turn on/off trace messages within the programs flow
 //#define DEBUGON(s, t, p) \
     //do { if (TDEBUG) { DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p); } } while(0)
 
@@ -156,3 +156,8 @@ class DeBug {
     #define DEBUGSETUP()
     #define DEBUGLOOP()
 #endif
+
+
+// -----------------------------------------------------------------------------
+
+

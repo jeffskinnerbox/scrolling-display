@@ -1,6 +1,6 @@
 <!--
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.5
 -->
 
 
@@ -10,6 +10,26 @@ Version:      0.9.1
 * `#define DEBUGLOCATION()` - prints file name + function name + line number
 * `#define DEBUGSETUP()` - place this macro within the setup() function
 * `#define DEBUGLOOP()` - place this macro within the loop() function
+
+# Troubleshooting
+If your not getting any DeBug trace message out,
+first thing to check for is this at the top of the file:
+
+```c++
+#define TDEBUG  true       // activate trace message printing for debugging
+```
+
+Also make sure you start `Serial` before you initate `DeBug`, like this:
+
+```c++
+// start serial usb i/o services
+Serial.begin(9600);
+while (!Serial) {}          // wait for serial port to connect
+
+DEBUGSETUP();               // should be right after 'Serial.begin'
+OTA.setupOTA();             // should follow 'DEBUGSETUP()'
+```
+
 
 # Debug Trace Message Format
 Debugging routings that print trace messages on serial port
