@@ -11,12 +11,12 @@ CREATED BY:
     jeffskinnerbox@yahoo.com
 ------------------------------------------------------------------------------*/
 
-
 #pragma once                        // compiler to skip subsequent includes of this file
 
+
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
-#include <WiFiUdp.h>
-#include <ESP8266WiFi.h>
+//#include <WiFiUdp.h>
+//#include <ESP8266WiFi.h>
 
 
 class WiFiHandler {

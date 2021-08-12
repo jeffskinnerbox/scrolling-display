@@ -27,7 +27,8 @@ CREATED BY:
 #include "DeBug.h"
 #include "WiFiHandler.h"
 
-#define BUF 25
+#define BUF1 25
+#define BUF2 50
 
 extern DeBug DB;        // declare object DB as external, it is instantiated in DeBug.cpp
 
@@ -36,8 +37,8 @@ extern DeBug DB;        // declare object DB as external, it is instantiated in 
 // Constructor to create WiFiHandler
 WiFiHandler::WiFiHandler(void) {
 
-    ssid = new char[BUF];
-    password = new char[BUF];
+    ssid = new char[BUF1];
+    password = new char[BUF1];
     timeout = 10000;              // time out for wifi access request
 
 }
@@ -98,18 +99,48 @@ void WiFiHandler::wifiTerminate() {
 
 // scan for nearby networks
 void WiFiHandler::wifiScan() {
+    byte numSsid;
+    char buffer[BUF2];
+    String st;
+
     DEBUGTRACE(INFO, "------- Starting Network Scan --------");
-    byte numSsid = WiFi.scanNetworks();
+
+    numSsid = WiFi.scanNetworks();
 
     // print the list of networks seen
     DEBUGTRACE(INFO, "Total number of SSIDs found: ", numSsid);
+    snprintf(buffer, BUF2, "\t%-20s\t%s\t%s", "SSID", "RSSI", "Encryp_Type");
+    DEBUGTRACE(INFO, buffer);
 
-    // print the name of each network found
-    for (int thisNet = 0; thisNet<numSsid; thisNet++) {
-        DEBUGTRACE(INFO, "   ", WiFi.SSID(thisNet));
+    // print the name and characteristics of each network found
+    for (int thisNet = 0; thisNet < numSsid; thisNet++) {
+        st = WiFi.SSID(thisNet);     // convert from sting object to character string
+        switch(WiFi.encryptionType(thisNet)) {
+            case 2:
+                snprintf(buffer, BUF2, "\t%-20s\t%d\t%s", st.c_str(), WiFi.RSSI(thisNet), "TKIP (WPA)");
+                break;
+            case 4:
+                snprintf(buffer, BUF2, "\t%-20s\t%d\t%s", st.c_str(), WiFi.RSSI(thisNet), "CCMP (WPA)");
+                break;
+            case 5:
+                snprintf(buffer, BUF2, "\t%-20s\t%d\t%s", st.c_str(), WiFi.RSSI(thisNet), "WEP");
+                break;
+            case 7:
+                snprintf(buffer, BUF2, "\t%-20s\t%d\t%s", st.c_str(), WiFi.RSSI(thisNet), "NONE");
+                break;
+            case 8:
+                snprintf(buffer, BUF2, "\t%-20s\t%d\t%s", st.c_str(), WiFi.RSSI(thisNet), "AUTO");
+                break;
+            default:
+                DEBUGTRACE(ERROR, "Returned improper encryption type during WiFi scan.");
+                break;
+        }
+
+        DEBUGTRACE(INFO, buffer);
     }
 
     DEBUGTRACE(INFO, "------- Network Scan Completed -------");
+    delay(5000);   // TAKE THIS OUT!!
 
 }
 
