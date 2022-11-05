@@ -4,17 +4,9 @@ Version:      0.9.5
 -->
 
 
-# Check this Out
-* Consider converting to C++ print statements ...  [Tips for formatting when printing to console from C++](https://opensource.com/article/21/11/c-stdcout-cheat-sheet)
-* [Perform unit tests using GoogleTest and CTest](https://opensource.com/article/22/1/unit-testing-googletest-ctest)
-
-
-
-
-
 * `#define DEBUGTRACE(lev, ...)` - use this to create a labeled trace message
 * `#define DEBUGPRINT(...)` - use this to print an unlabeled message
-* `#define DEBUGON(s, t, p)` - use this to turn on/off trace messages within the programs flow
+* `#define DEBUGON(s, t, p)` - use this to turn on/off trace messages within the programss flow
 * `#define DEBUGLOCATION()` - prints file name + function name + line number
 * `#define DEBUGSETUP()` - place this macro within the setup() function
 * `#define DEBUGLOOP()` - place this macro within the loop() function

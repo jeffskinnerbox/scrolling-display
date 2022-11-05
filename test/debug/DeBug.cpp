@@ -115,12 +115,13 @@ DeBug::~DeBug(void) {
 void DeBug::setLables(void) {
 
     // initialize trace message labels
-    label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
-    label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
-    label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
-    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
-    label[NOOP] =       "\e[1;35mNO-OP:   \e[m";        // bold purple font
-    label[UNLABELED] =  "";                             // no labels
+    label[INFO] =       "\e[1;32mINFO:    \e[m";           // bold green font
+    label[WARN] =       "\e[1;33mWARNING: \e[m";           // bold yellow font
+    label[ERROR] =      "\e[1;31mERROR:   \e[m";           // bold red font
+    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";     // bold White font on red background
+    label[NOOP] =       "\e[1;35mNO-OP:   \e[m";           // bold purple font
+    label[HEADING] =    "\e[1;37m\e[40m\n\rHEADING:\e[m";  // bold white font on black background
+    label[UNLABELED] =  "";                                // no labels
 
 }
 
@@ -287,6 +288,8 @@ void DeBug::LoopHandler(void) {
 
 // ------------------ Explicitly Declare All Needed Functions ------------------
 
+// -------------------------- Print Message Functions --------------------------
+
 template<typename T>
 void DeBug::printMsg(T var) {
 
@@ -328,6 +331,9 @@ void DeBug::printMsg(T *str, U var, Z format) {
     }
 }
 
+
+
+// -------------------------- Trace Message Functions --------------------------
 
 void DeBug::traceMsg(int lev, char *str) {
 
@@ -423,7 +429,7 @@ template void DeBug::traceMsg<char const*, char*>(int, char*, char const*, char*
 
 //template void DeBug::traceMsg<char* (*)(char const*, int)>(int, char*, char* (*)(char const*, int));
 //template void DeBug::traceMsg(int, char*, T) [with T = char* (*)(const char*, int)];
-
+//template void DeBug::traceMsg<char const*, char const*>(int, char*, char const*, char const*);
 
 
 // --------------------------- Construct DeBug Object --------------------------

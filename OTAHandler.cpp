@@ -16,6 +16,7 @@ CREATED BY:
 
 #define TDEBUG  true       // activate trace message printing for debugging
 
+
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <Arduino.h>
 #include <ArduinoOTA.h>

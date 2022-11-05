@@ -2,7 +2,7 @@
 /*------------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.5
 
 DESCRIPTION:
     Demonstration program showing the the use of the MD_Parola library display
@@ -36,13 +36,32 @@ MONITOR:
         screen /dev/ttyUSB0 9600,cs8cls
 
     To terminate monitoring, enter: CNTR-a :quit
+    To stop the screen scrolling, enter: CNTR-a :
 
-        telet test-ota.local
+    To monitor using telnet, ececute the following:
 
-    To terminate monitoring, enter: Ctrl-] quit
+        telnet ESP_24F9FB          # using esp8266 hostname ('ESP_' + chip ID)
+        telnet 192.168.1.47        # using esp8266 ip address
+        telnet scrolling-display.local
 
-TESTING:
-    xxxxxxxxxx
+    To terminate telnet monitoring, enter: Ctrl-] quit
+
+    To find the device on your LAN:
+
+        sudo arp-scan 192.168.1.200/24 | grep Espressif
+
+TESTING
+    For testing, you may want to "see" the messages posted to the display.
+
+    To test the MQTT capabilities, use a public MQTT broker site
+    and Mosquitto clients like this:
+
+        mosquitto_sub -v -h broker.mqtt-dashboard.com -t "outTopic-ntp-clock/time"
+        mosquitto_sub -v -h broker.mqtt-dashboard.com -t "outTopic-test-scrolling-display/msg"
+
+        mosquitto_pub -h broker.mqtt-dashboard.com -t "inTopic-test-scrolling-display/msg-queue" -m "test message"
+        mosquitto_pub -h broker.mqtt-dashboard.com -t "inTopic-test-scrolling-display/command" -m "2"
+
 
 USAGE:
     xxxxxxxxxx
@@ -65,8 +84,10 @@ CREATED BY:
 
 #define TDEBUG  true       // activate trace message printing for debugging
 
+
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <SPI.h>
+#include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 
 // found in Arduino libraries (~/Arduino/libraries)
@@ -76,13 +97,22 @@ CREATED BY:
 #include <MD_MAX72xx.h>
 
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
+#include <PubSubClient.h>
 
 // this project's include files
 #include "DeBug.h"
 #include "secrets.h"
 #include "OTAHandler.h"
 #include "WiFiHandler.h"
+#include "MQTTHandler.h"
 #include "MessageStore.h"
+#include "LinkedList.h"      // TAKE THIS OUT
+
+//---------------------------- Static Scoped Macros ----------------------------
+
+// version stamp
+#define VER "scrolling-display" " - "  __DATE__ " at " __TIME__
+static char version[] = VER;
 
 #define ONE_SECOND    1000UL        // milliseconds in one second
 #define TWO_SECOND    2000UL        // milliseconds in two second
@@ -91,12 +121,25 @@ CREATED BY:
 #define ONE_HOUR      3600000UL     // milliseconds in one hour
 #define ONE_DAY       85400000UL    // milliseconds in one day
 
+// error codes
+#define NOWIFI        1             // can't get wifi connection
+#define UNKNMQTT      2             // error code meaning don't understand mqtt command request
+
 // Define the hardware interface and PINs used for wiring
 // NOTE: These pin numbers are for ESO8266 hardware SPI
 #define HARDWARE_TYPE MD_MAX72XX::ICSTATION_HW    // values are: PAROLA, GENERIC, ICSTATION, FC16
 #define CLK_PIN   D5    // or SCK
 #define DATA_PIN  D7    // or MOSI
 #define CS_PIN    D8    // or SS
+
+//-------------------------- Static Scoped Variables ---------------------------
+
+// Update these with values suitable for your wifi and mqtt broker
+static char* wifi_ssid = WIFISSID;
+static char* wifi_password = WIFIPASS;
+static unsigned long wifi_time = WIFITIME;
+static char* mqtt_server = MQTTSERVER;
+static int mqtt_port = MQTTPORT;
 
 // display text effects
 const textPosition_t SCROLLALIGN = PA_CENTER;        // how to align the text (e.g. PA_LEFT)
@@ -118,17 +161,20 @@ extern OTAHandler OTA;   // declare object OTA as external, and member of class 
 // Parola object constructor for software SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
-// WiFiTools object constructor
+// wifi and mqtt handlers / object constructor
 WiFiHandler WT = WiFiHandler();
+MQTTHandler handlerMQTT = MQTTHandler(mqtt_server, mqtt_port);
 
 // MessageStore object constructor for storing the contents of the display
-//MessageStore Msg = MessageStore(5, 5, 80);
-MessageStore Msg = MessageStore();
+MessageStore Msg = MessageStore(5, 5, 80);
 
-// version stamp
-#define VER "scrolling-display" " - "  __DATE__ " at " __TIME__
-char version[] = VER;
 
+
+//------------------------------- MQTT Parameters ------------------------------
+
+// MQTT message buffer for publishing and subscription
+static const int MSGSIZE = 80;                 // size of mqtt message buffer
+static char msg[MSGSIZE];                      // buffer to hold mqtt messages
 
 
 //--------------------------- WiFi and Web Stuff ???? --------------------------
@@ -206,7 +252,7 @@ uint8_t htoi(char c) {
 //--------------------- Error Message Handler for Display ----------------------
 
 // handle errors by displaying a code and then taking action (e.g. restart)
-void errorHandler(int error) {
+void errorHandler(int error_code, char *msg) {
 
     int i = 0;
     unsigned long tout;                           // time-out time
@@ -214,9 +260,13 @@ void errorHandler(int error) {
     int top = Msg.topQueue();
     int size = Msg.sizeQueue();
 
-    switch(error) {
-        case 1:
-            DEBUGTRACE(FATAL, "Can't go on without WiFi connection.  Press reset twice to fix.");
+    DEBUGTRACE(INFO, "In errorHandsler() and error_code = %d", error_code);
+
+    switch(error_code) {
+        case NOWIFI:
+            DEBUGTRACE(ERROR, msg);
+            DEBUGTRACE(FATAL, "An automated restart will be requested.");
+            handlerMQTT.publish(ERRORTOPIC, msg, false);
             Msg.clear();
             Msg.addQueue("Can't go on without WiFi connection.");
             Msg.addQueue("Press reset twice to fix.");
@@ -225,25 +275,88 @@ void errorHandler(int error) {
             while (millis() < tout) {
                 if (P.displayAnimate()) {
                     if (Msg.getQueue(top + cycle)[0] != '\0')
-                        P.displayText(Msg.getQueue(top + cycle), SCROLLALIGN, SCROLLSPEED, SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
+                        P.displayText(Msg.getQueue(top + cycle), SCROLLALIGN, SCROLLSPEED,
+                                SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
                     cycle = (cycle + 1) % size; // prepare index into msg[] for next pass
                 }
-                yield();                          // prevent the watchdog timer doing a reboot
+                yield();                        // prevent the watchdog timer from doing a reboot
             }
 
             // nothing can be done so restart
             DEBUGTRACE(FATAL, "Nothing can be done.  Doing an automatic restart.");
             Serial.flush();                  // make sure serial messages are posted
-            ESP.reset();
+            ESP.reset();                     // nothing can be done so restart
             break;
         default:
             // nothing can be done so restart
-            DEBUGTRACE(ERROR, "Unknown error code in errorHandler: ", error);
+            DEBUGTRACE(ERROR, "Unknown error code in errorHandler: ", error_code);
             DEBUGTRACE(FATAL, "Nothing can be done.  Doing an automatic restart.");
+            handlerMQTT.publish(ERRORTOPIC, "Unknown error code in errorHandler", false);
             Serial.flush();                  // make sure serial messages are posted
-            ESP.reset();
+            ESP.reset();                     // nothing can be done so restart
     }
 }
+
+
+
+//-------------------------------- MQTT Routines -------------------------------
+
+void SubscriptionCallback(char* topic, byte* payload, unsigned int length) {
+
+    DEBUGPRINT("\r\n");
+    DEBUGTRACE(INFO, "Message arrived on topic = ", topic);
+
+    snprintf(msg, length + 1, "%s", payload);
+    DEBUGTRACE(INFO, "MQTT message = ", msg);
+
+    /*switch((char)payload[0]) {*/
+        /*case '1':          // toggle the nodemcu red LED to blinking or off*/
+            /*if (blinkLED) {*/
+                /*blinkLED = false;*/
+                /*nodemcuLED = HIGH;*/
+                /*digitalWrite(LED, nodemcuLED);   // make sure nodmcu red led is 'off'*/
+            /*} else {*/
+                /*blinkLED = true;*/
+            /*}*/
+            /*break;*/
+        /*case '2':          // write to topic how much the clock has drifted from the ntp time server*/
+            /*TimeDriftCheck();*/
+            /*break;*/
+        /*case '3':          // forced time refresh*/
+            /*TimeRefresh(NULL);*/
+            /*break;*/
+        /*default:*/
+            /*errorHandler(UNKNMQTT, "MQTT message unknown.  No action taken.");*/
+    /*}*/
+}
+
+
+/*bool MQTTPublishMsg(char *topic, char* payload) {*/
+
+    /*// if not connect to mqtt broker, then reconnect*/
+    /*if (!handlerMQTT.connected()) {*/
+        /*handlerMQTT.reconnect();*/
+    /*}*/
+
+    /*// publish message*/
+    /*handlerMQTT.publish(topic, payload, true);*/
+
+/*    // if not connect to mqtt broker, then reconnect*/
+    /*if (!handlerMQTT.connected()) {*/
+        /*handlerMQTT.reconnect();*/
+    /*}*/
+
+    /*// format message for sending*/
+    /*if (status24hour)*/
+        /*snprintf(msg, MSGSIZE, "%02d:%02d:%02d", displayHours, displayMinutes, displaySeconds);*/
+    /*else*/
+        /*snprintf(msg, MSGSIZE, "%02d:%02d:%02d%s", displayHours, displayMinutes, displaySeconds, displayAMPM);*/
+
+    /*// publish message*/
+    /*handlerMQTT.publish(TIMETOPIC, msg, true);*/
+
+/*}*/
+
 
 
 
@@ -253,58 +366,52 @@ void loadmsg(void) {
 
     char string[BUF_SIZE];
 
+    DEBUGTRACE(INFO, "------------------------------ Entering loadmsg() ------------------------------");
 
-    DEBUGTRACE(INFO, "\r\nEntering loadmsg() for scrolling display");
+    DEBUGTRACE(INFO, "Populating message queue with messages...");
 
     // clear all old messages
-    DEBUGTRACE(INFO, "Populating message queue with messages...");
-    Msg.clearQueue();
-    Msg.printQueue();
+    Msg.clear();
 
     // 1st message in simple store is the wifi IP address
-    sprintf(string, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+    snprintf(string, BUF_SIZE, "IP Address is %03d.%03d.%03d.%03d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     Msg.addStore(string);
-    Msg.printStore();
+    //Msg.printStore();
 
     // 1st message is gibberish
     Msg.addQueue("#1 message in circular queue!!");
-    Msg.printQueue();
+    //Msg.printQueue();
 
     // 2nd message is gibberish
     Msg.addQueue("#2 The rain falls mainly on the plane in Spain");
-    Msg.printQueue();
+    //Msg.printQueue();
 
     // 3rd message is gibberish
     Msg.addQueue("#3 What is the weather outside right now?  What about inside?");
-    Msg.printQueue();
-    //delay(2000);
-    yield();                                         // prevent the watchdog timer doing a reboot
+    //Msg.printQueue();
+    //yield();                                         // prevent the watchdog timer doing a reboot
 
     // 4th message is gibberish
     Msg.addQueue("#4 short message");
-    Msg.printQueue();
-    //delay(2000);
-    yield();                                         // prevent the watchdog timer doing a reboot
+    //Msg.printQueue();
+    //yield();                                         // prevent the watchdog timer doing a reboot
 
     // 5th message is gibberish
     Msg.addQueue("#5 loooooooooooong message");
-    Msg.printQueue();
-    //delay(2000);
-    yield();                                         // prevent the watchdog timer doing a reboot
+    //Msg.printQueue();
+    //yield();                                         // prevent the watchdog timer doing a reboot
 
     // 6th message is gibberish
     Msg.addQueue("#6 Push off the oldest message");
-    Msg.printQueue();
-    //delay(2000);
-    yield();                                         // prevent the watchdog timer doing a reboot
+    //Msg.printQueue();
+    //yield();                                         // prevent the watchdog timer doing a reboot
 
     // 7th message is gibberish
     Msg.addQueue("#7 This message should push off the next oldest message");
-    Msg.printQueue();
-    //delay(2000);
-    yield();                                         // prevent the watchdog timer doing a reboot
+    //Msg.printQueue();
+    //yield();                                         // prevent the watchdog timer doing a reboot
 
-    DEBUGTRACE(INFO, "Exiting loadmsg() for scrolling display\r\n");
+    DEBUGTRACE(INFO, "------------------------------- Exiting loadmsg() ------------------------------");
 
 }
 
@@ -314,23 +421,21 @@ void loadmsg(void) {
 
 void setup() {
     char string[BUF_SIZE];
-    unsigned long tout;                       // time-out time
-    int cycle = 0;                            // message number being displayed
+    unsigned long tout;                                  // time-out time
+    int cycle = 0;                                       // message number being displayed
     int top = Msg.topQueue();
     int size = Msg.sizeQueue();
 
     // always start Serial first so it can be used by DeBug
     Serial.begin(9600);
-    while (!Serial) {}                        // wait for serial port to connect
+    while (!Serial) {}                                   // wait for serial port to connect
 
-    DEBUGSETUP();
-    DEBUGPRINT("\n\r");
-    OTA.setupOTA();
-
-    DEBUGTRACE(INFO, "\r\n\n--------------------------------------------------------------------------------");
-    DEBUGTRACE(INFO, "Entering setup() for scrolling display");
-
-    DEBUGTRACE(INFO, "\tApplication Version = ", version);
+    DEBUGSETUP();                                        // should be right after 'Serial.begin'
+    DEBUGTRACE(INFO, "--------------------------------- In setup() -----------------------------------");
+    DEBUGTRACE(INFO, "Application Version = ", version);
+    DEBUGLOCATION();                                     // just a test stub for the "location" feature
+    DEBUGSTATUS();                                       // provide information about debug status flags
+    DEBUGINFO();                                         // provide some useful information about the microprocessor
 
     // initialize the display (aka Parola object)
     P.begin();                                           // initialize the display and data object
@@ -352,12 +457,9 @@ void setup() {
     // scan for wifi access points
     WT.wifiScan();
 
-    // initialize all your display messages to null
-    Msg.clear();
-
     // attempt to connect and initialise WiFi network
     if (WT.wifiConnect(WIFISSID, WIFIPASS, WIFITIME)) {       // connecting to wifi
-        sprintf(string, "WiFi connected successfully to SSID %s.", WIFISSID);
+        snprintf(string, BUF_SIZE, "WiFi connected successfully to SSID %s.", WIFISSID);
         Msg.addQueue(string);
         //tout = THREE_SECOND + millis();              // milliseconds of time to display message
         tout = ONE_SECOND + millis();                  // milliseconds of time to display message
@@ -370,22 +472,27 @@ void setup() {
             yield();                                   // prevent the watchdog timer doing a reboot
         }
     } else
-        errorHandler(1);
+        errorHandler(NOWIFI, "Can't go on without WiFi connection. Press reset to try again.");
 
-    // load the messages to be displayed
-    loadmsg();
+    OTA.setupOTA();            // should always follow 'DEBUGSETUP()' and after wifi is up
 
-    // provide some useful information about the microprocessor
-    DEBUGINFO();
+    handlerMQTT.reconnect();   // connect to mqtt broker
+    handlerMQTT.setServer(mqtt_server, mqtt_port); // set your mqtt broker to be used
+    handlerMQTT.subscribe(MSGQUEUETOPIC);  // subscribe to a topic of interest
+    handlerMQTT.setCallback(SubscriptionCallback); // set the callback for subscribe topic
 
-    DEBUGTRACE(INFO, "Exiting setup() for scrolling display");
-    DEBUGTRACE(INFO, "--------------------------------------------------------------------------------\r\n\n");
+    loadmsg();                 // load the messages to be displayed
+
+    LinkedList LL = LinkedList();    // TAKE THIS OUT
+    LL.testcases();                  // TAKE THIS OUT
+
+    DEBUGTRACE(INFO, "------------------------------- Entering loop() --------------------------------");
 
 }
 
 
 void loop() {
-
+    char string[BUF_SIZE];
     static int cycle = 0;                      // message number being displayed
     static int top = Msg.top();
     static int size = Msg.size();
@@ -396,7 +503,9 @@ void loop() {
     if (P.displayAnimate()) {
         if (Msg.get(top + cycle)[0] != '\0')
             P.displayText(Msg.get(top + cycle), SCROLLALIGN, SCROLLSPEED, SCROLLPAUSE, SCROLLEFFECTIN, SCROLLEFFECTOUT);
-            DEBUGTRACE(INFO, "Posting to display message = ", Msg.get(top + cycle));
+            snprintf(string, BUF_SIZE, "Posting to display message[%d] = %s", cycle, Msg.get(top + cycle));
+            DEBUGTRACE(INFO, string);
+            handlerMQTT.publish(MSGDISTOPIC, Msg.get(top + cycle), false);
         cycle = (cycle + 1) % size;            // prepare index into msg[] for next pass
     }
 

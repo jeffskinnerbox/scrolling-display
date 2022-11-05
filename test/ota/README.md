@@ -12,6 +12,8 @@ Version:      0.4.0
 ----
 
 
+* [How To Easily Set Up Secure OTA Firmware Updates on ESP32](https://hackaday.com/2021/11/29/how-to-easily-set-up-secure-ota-firmware-updates-on-esp32/)
+
 * [ESP8266 Over The Air (OTA) Programming Without Reset Using Arduino IDE (Mac OSX and Windows)](https://www.youtube.com/watch?v=3aB85PuOQhY&t=20s)
 * [ESP8266 Arduino Core: OTA Updates](https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html)
 

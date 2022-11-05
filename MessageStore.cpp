@@ -2,7 +2,7 @@
 /*------------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.5
 
 DESCRIPTION:
     This object implements two data structure in a single array.
@@ -20,6 +20,7 @@ CREATED BY:
 
 #define TDEBUG  false       // activate trace message printing for debugging
 
+
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 
 // found in Arduino libraries (~/src/arduino/libraries)
@@ -28,13 +29,17 @@ CREATED BY:
 // found in Arduino libraries (~/Arduino/libraries)
 
 // found in Arduino Sketchbooks libraries (~/src/arduino/sketchbooks/libraries)
+#include <PubSubClient.h>
 
 // this project's include files
 #include "DeBug.h"
+#include "secrets.h"
+#include "MQTTHandler.h"
 #include "MessageStore.h"
 
 
-extern DeBug DB;        // declare object DB as external, and member of class DeBug
+extern DeBug DB;                 // declare object DB as external, and member of class DeBug
+extern MQTTHandler handlerMQTT;  // declare object handlerMQTT as external, it is instantiated in scrolling-display.ino
 
 
 // ------------------------ Constructors & Destructors -------------------------
@@ -64,14 +69,7 @@ MessageStore::MessageStore(int str_size, int que_size, int buf_size) {
             array[i] = array[0] + i * cols;
     }
 
-    DEBUGTRACE(INFO, "store_size = ", store_size);
-    DEBUGTRACE(INFO, "queue_size = ", queue_size);
-    DEBUGTRACE(INFO, "total_size = ", total_size);
-    DEBUGTRACE(INFO, "buffer_size = ", buffer_size);
-    DEBUGTRACE(INFO, "store_top = ", store_top);
-    DEBUGTRACE(INFO, "queue_top = ", queue_top);
-    DEBUGTRACE(INFO, "queue_front = ", queue_front);
-    DEBUGTRACE(INFO, "queue_rear = ", queue_rear);
+    //print();
 
 }
 
@@ -100,14 +98,7 @@ MessageStore::MessageStore(void) {
             array[i] = array[0] + i * cols;
     }
 
-    DEBUGTRACE(INFO, "store_size = ", store_size);
-    DEBUGTRACE(INFO, "queue_size = ", queue_size);
-    DEBUGTRACE(INFO, "total_size = ", total_size);
-    DEBUGTRACE(INFO, "buffer_size = ", buffer_size);
-    DEBUGTRACE(INFO, "store_top = ", store_top);
-    DEBUGTRACE(INFO, "queue_top = ", queue_top);
-    DEBUGTRACE(INFO, "queue_front = ", queue_front);
-    DEBUGTRACE(INFO, "queue_rear = ", queue_rear);
+    //print();
 
 }
 
@@ -193,35 +184,40 @@ bool  MessageStore::enQueue(char *str) {
 
     else if (queue_front == -1) {                // insert first element
         queue_front = queue_rear = queue_top;
-        sprintf(array[queue_rear], str);
+        //sprintf(array[queue_rear], str);
     }
 
     else if (queue_rear == queue_top + queue_size - 1 && queue_front != queue_top) {
         queue_rear = queue_top;
-        sprintf(array[queue_rear], str);
+        //sprintf(array[queue_rear], str);
     }
 
     else {
         queue_rear++;
-        sprintf(array[queue_rear], str);
+        //sprintf(array[queue_rear], str);
     }
+
+    sprintf(array[queue_rear], str);
+    handlerMQTT.publish(MSGADDTOPIC, array[queue_rear], false);
 
     return true;
 
 }
 
 // function deletes an element from the circular queue at the front position
-char *MessageStore::deQueue(void) {
+bool MessageStore::deQueue(void) {
 
     char *data;
 
     if (queue_front == -1) {
         DEBUGTRACE(INFO, "Queue is empty.");
-        return NULL;
+        return false;
     }
 
     data = array[queue_front];
+    handlerMQTT.publish(MSGREMOVETOPIC, array[queue_front], false);
     array[queue_front][0] = '\0';
+
     if (queue_front == queue_rear) {
         queue_front = -1;
         queue_rear = -1;
@@ -231,7 +227,7 @@ char *MessageStore::deQueue(void) {
     else
         queue_front++;
 
-    return data;
+    return true;
 
 }
 
@@ -242,10 +238,14 @@ char *MessageStore::deQueue(void) {
 // Function to clear the contents of the simple store
 void MessageStore::clearStore(void) {
 
-    for (int i = store_top; i < store_top + store_size; i++)
-        array[i][0] = '\0';
+    DEBUGTRACE(INFO, "Simple store is being cleared.");
 
-    DEBUGTRACE(INFO, "Simple store has been cleared.");
+    for (int i = store_top; i < store_top + store_size; i++) {
+        if (array[i][0] != '\0') {
+            handlerMQTT.publish(MSGREMOVETOPIC, array[i], false);
+            array[i][0] = '\0';
+        }
+    }
 
 }
 
@@ -261,14 +261,14 @@ void MessageStore::printStore(void) {
                 cnt++;
 
     // print headings
-    DEBUGTRACE(INFO, "Number of elements in Simple Store are: ", cnt);
-    DEBUGTRACE(INFO, "store_top = ", store_top);
-    DEBUGTRACE(INFO, "store_size = ", store_size);
+    DB.traceMsg(INFO, "Number of elements in Simple Store are: ", cnt);
+    DB.traceMsg(INFO, "store_top = ", store_top);
+    DB.traceMsg(INFO, "store_size = ", store_size);
 
     // print the simple store contents
     for (int i = store_top; i < store_top + store_size; i++)
         if (array[i][0] != '\0')
-            DEBUGTRACE(INFO, "  ", array[i]);
+            DB.traceMsg(INFO, "  ", array[i]);
 
 }
 
@@ -293,8 +293,8 @@ bool MessageStore::addStore(char *str) {
         DEBUGTRACE(INFO, "Failed to add message to Store. Store is full.");
         return false;
     } else {
-        DEBUGTRACE(INFO, "Successfully adding message to Store.");
         sprintf(array[index], str);
+        DEBUGTRACE(INFO, "Successfully adding message to Store.");
     }
 
     //EXEC(printStore())
@@ -318,8 +318,8 @@ bool MessageStore::addStore(char *str, int index) {
         DEBUGTRACE(ERROR, "Failed to add message to Store. Bad index.  index = ", index);
         return false;
     } else {
-        DEBUGTRACE(INFO, "Successfully adding message to Store.");
         sprintf(array[index], str);
+        DEBUGTRACE(INFO, "Successfully adding message to Store.");
     }
 
     //EXEC(printStore())
@@ -371,12 +371,16 @@ int MessageStore::sizeStore(void) {
 // Function to clear the contents of the circular queue
 void MessageStore::clearQueue(void) {
 
-    for (int i = queue_top; i < queue_top + queue_size; i++)
-        array[i][0] = '\0';
+    DEBUGTRACE(INFO, "Circular queue is being cleared.");
+
+    for (int i = queue_top; i < queue_top + queue_size; i++) {
+        if (array[i][0] != '\0') {
+            handlerMQTT.publish(MSGREMOVETOPIC, array[i], false);
+            array[i][0] = '\0';
+        }
+    }
 
     queue_front = queue_rear = -1;
-
-    DEBUGTRACE(INFO, "Circular queue has been cleared.");
 
 }
 
@@ -393,16 +397,16 @@ void MessageStore::printQueue(void) {
                 cnt++;
 
     // print controlling parameters
-    DEBUGTRACE(INFO, "Number of elements in Queue are: ", cnt);
-    DEBUGTRACE(INFO, "queue_top = ", queue_top);
-    DEBUGTRACE(INFO, "queue_size = ", queue_size);
-    DEBUGTRACE(INFO, "queue_front = ", queue_front);
-    DEBUGTRACE(INFO, "queue_rear = ", queue_rear);
+    DB.traceMsg(INFO, "Number of elements in Queue are: ", cnt);
+    DB.traceMsg(INFO, "queue_top = ", queue_top);
+    DB.traceMsg(INFO, "queue_size = ", queue_size);
+    DB.traceMsg(INFO, "queue_front = ", queue_front);
+    DB.traceMsg(INFO, "queue_rear = ", queue_rear);
 
     // print the queue contents
     for (int i = queue_top; i < queue_top + queue_size; i++)
         if (array[i][0] != '\0')
-            DEBUGTRACE(INFO, "  ", array[i]);
+            DB.traceMsg(INFO, "  ", array[i]);
 }
 
 
@@ -418,10 +422,10 @@ bool MessageStore::addQueue(char *str) {
         return false;
     }
 
-
     if ((queue_front == queue_top && queue_rear == queue_top + queue_size - 1) || (queue_rear == (queue_top + queue_front - 1)%(queue_size - 1))) {
-        char *string = deQueue();
-        DEBUGTRACE(INFO, "Queue is full. Removing element from circular queue = ", string);
+        deQueue();
+        DEBUGTRACE(INFO, "Queue is full. Removing one element from circular queue.");
+        DEBUGTRACE(INFO, "Element added to circular queue = ", str);
         return enQueue(str);
     } else {
         DEBUGTRACE(INFO, "Element added to circular queue = ", str);
@@ -470,10 +474,20 @@ int MessageStore::size(void) {
 
 
 void MessageStore::clear(void) {
+
+    DEBUGTRACE(INFO, "Entire message store is being cleared.");
+
+/*    for (int i = store_top; i < store_size + queue_size; i++)*/
+        /*array[i][0] = '\0';*/
+
     for (int i = store_top; i < store_size + queue_size; i++)
-        array[i][0] = '\0';
+        if (array[i][0] != '\0') {
+            handlerMQTT.publish(MSGREMOVETOPIC, array[i], false);
+            array[i][0] = '\0';
+        }
 
     queue_front = queue_rear = -1;
+
 }
 
 
@@ -490,7 +504,7 @@ char *MessageStore::get(int index) {
 
 
 void MessageStore::print(void) {
-
+    char string[BUF_SIZE];
     int cnt;
 
     // count non-null elements
@@ -500,19 +514,22 @@ void MessageStore::print(void) {
                 cnt++;
 
     // print controlling parameters
-    DEBUGTRACE(INFO, "Number of elements in MessageStore are: ", cnt);
-    DEBUGTRACE(INFO, "store_size = ", store_size);
-    DEBUGTRACE(INFO, "queue_size = ", queue_size);
-    DEBUGTRACE(INFO, "total_size = ", total_size);
-    DEBUGTRACE(INFO, "buffer_size = ", buffer_size);
-    DEBUGTRACE(INFO, "store_top = ", store_top);
-    DEBUGTRACE(INFO, "queue_top = ", queue_top);
-    DEBUGTRACE(INFO, "queue_front = ", queue_front);
-    DEBUGTRACE(INFO, "queue_rear = ", queue_rear);
+    DB.traceMsg(INFO, "Number of elements in MessageStore are: ", cnt);
+    DB.traceMsg(INFO, "store_size = ", store_size);
+    DB.traceMsg(INFO, "queue_size = ", queue_size);
+    DB.traceMsg(INFO, "total_size = ", total_size);
+    DB.traceMsg(INFO, "buffer_size = ", buffer_size);
+    DB.traceMsg(INFO, "store_top = ", store_top);
+    DB.traceMsg(INFO, "queue_top = ", queue_top);
+    DB.traceMsg(INFO, "queue_front = ", queue_front);
+    DB.traceMsg(INFO, "queue_rear = ", queue_rear);
 
     // print the queue contents
     for (int i = store_top; i < store_size + queue_size; i++)
-        if (array[i][0] != '\0')
-            DEBUGTRACE(INFO, "  ", array[i]);
+        if (array[i][0] != '\0') {
+            snprintf(string, BUF_SIZE, "array[%d] = %s", i, array[i]);
+            DB.traceMsg(INFO, string);
+    }
+
 }
 

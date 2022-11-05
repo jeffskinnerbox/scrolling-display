@@ -38,6 +38,7 @@ class WiFiHandler {
     //--------------- public methods ---------------
     // public methods for wifi
     void wifiScan(void);
+    void wifiScan(int, int);
     void wifiTerminate(void);
     bool wifiConnect(char *, char *, unsigned long);
 

@@ -2,7 +2,7 @@
 /*------------------------------------------------------------------------------
 
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.5
 
 DESCRIPTION:
     This object calls implements two data circular queue, aka ring buffer, for holding the messages that will appear on the scrolling display.
@@ -17,8 +17,8 @@ CREATED BY:
 
 ------------------------------------------------------------------------------*/
 
-
 #pragma once                        // compiler to skip subsequent includes of this file
+
 
 #define STORE_SIZE  5               // default size of message store
 #define QUEUE_SIZE  5               // default size of message queue
@@ -42,7 +42,7 @@ class MessageStore {
     int indexQueue(void);
     int countQueue(void);
     bool enQueue(char *);
-    char *deQueue(void);
+    bool deQueue(void);
 
   public:
     // constructors & destructors for the class

@@ -14,6 +14,7 @@ CREATED BY:
 
 #define TDEBUG  true       // activate trace message printing for debugging
 
+
 // ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
@@ -97,7 +98,7 @@ void WiFiHandler::wifiTerminate() {
 }
 
 
-// scan for nearby networks
+// perfrom a single scan for nearby networks
 void WiFiHandler::wifiScan() {
     byte numSsid;
     char buffer[BUF2];
@@ -106,6 +107,10 @@ void WiFiHandler::wifiScan() {
     DEBUGTRACE(INFO, "------- Starting Network Scan --------");
 
     numSsid = WiFi.scanNetworks();
+    if (numSsid == 0) {
+        DEBUGTRACE(INFO, "\tNo WiFi networks found.");
+        return;
+    }
 
     // print the list of networks seen
     DEBUGTRACE(INFO, "Total number of SSIDs found: ", numSsid);
@@ -142,6 +147,20 @@ void WiFiHandler::wifiScan() {
     DEBUGTRACE(INFO, "------- Network Scan Completed -------");
     delay(5000);   // TAKE THIS OUT!!
 
+}
+
+
+// perfrom multiple scan for nearby networks, remove redundent scans, delay a few
+// milli-seconds between scans, and then return a structure containing all that you found
+void WiFiHandler::wifiScan(int scan_cnt, int delay) {
+    struct wifiAPlist {
+        char ssid[20];
+        int rssi;
+        char encryp[15];
+        wifiAPlist *next;
+    };
+
+    DEBUGTRACE(NOOP, "Not implemented yet");
 }
 
 

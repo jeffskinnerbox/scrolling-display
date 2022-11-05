@@ -1,6 +1,6 @@
 <!--
 Maintainer:   jeffskinnerbox@yahoo.com / www.jeffskinnerbox.me
-Version:      0.9.1
+Version:      0.9.5
 -->
 
 
@@ -10,6 +10,10 @@ Version:      0.9.1
 
 
 ----
+
+
+* [WiFiManager with ESP32 - Stop Hard-coding WiFi Credentials!](https://www.youtube.com/watch?v=VnfX9YJbaU8&t=674s)
+* [ESP32 WiFiManager – Easy WiFi Provisioning](https://dronebotworkshop.com/wifimanager/)
 
 
 # DESCRIPTION
@@ -237,6 +241,8 @@ make upload
 
 --------
 
+
+* [5 Best Practices for Over-the-Air (OTA) Updates](https://www.iotcentral.io/blog/5-best-practices-for-over-the-air-ota-updates)
 
 Important advice on sketch design...
 
