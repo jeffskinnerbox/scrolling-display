@@ -301,7 +301,8 @@ void errorHandler(int error_code, char *msg) {
 
 //-------------------------------- MQTT Routines -------------------------------
 
-void SubscriptionCallback(char* topic, byte* payload, unsigned int length) {
+//void SubscriptionCallback(char* topic, byte* payload, unsigned int length) {
+void SubscriptionCallback(char* topic, unsigned char* payload, unsigned int length) {
 
     DEBUGPRINT("\r\n");
     DEBUGTRACE(INFO, "Message arrived on topic = ", topic);

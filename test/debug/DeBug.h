@@ -10,7 +10,7 @@ DESCRIPTION:
     Serial.println(val, format)
 
     val: the value to print. Allowed data types: any data type.
-    format: specifies the number base (for integral data types) or number of decimal places (for floating point types).
+format: specifies the number base (for integral data types) or number of decimal places (for floating point types).
 
     The code here assumes you are using the C99 C programming language standard (see https://en.wikipedia.org/wiki/C99).
     The variable argument list notation is used within macros and this is not supported in versions earlier than C99.
@@ -49,7 +49,7 @@ CREATED BY:
 #define UNLABELED  6        // index into labels for printing unformatted text
 
 #define LABEL_COLS 30       // max characters in labels
-#define LABEL_ROWS 7        // number of labels (see list in constructor below)
+#define LABEL_ROWS 6        // number of labels (see list in constructor below)
 
 
 class DeBug {
@@ -82,13 +82,12 @@ class DeBug {
     void printInfo(void);
     void location(void);
 
-    template<typename T> void printMsg(T);
-    template<typename T, typename U> void printMsg(T, U);
-    template<typename T, typename U, typename Z> void printMsg(T*, U, Z);
-
     void traceMsg(int, char*);
+    template<typename T> void printMsg(T);
     template<typename T> void traceMsg(int, char*, T);
+    template<typename T, typename U> void printMsg(T, U);
     template<typename T, typename U> void traceMsg(int, char*, T, U);
+    template<typename T, typename U, typename Z> void printMsg(T*, U, Z);
 
 };
 
@@ -132,13 +131,13 @@ class DeBug {
     #define DEBUGPRINT(...) DB.printMsg(__VA_ARGS__);
 
     // use this to turn on/off trace messages within the programs flow
-    #define DEBUGON(s, t, p) { DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p); }
+    #define DEBUGON(s, t, p) DB.debugOnOff(s); DB.telnetOnOff(t); DB.preambleOnOff(p);
 
     // use this to print information concerning status of DeBug object
     #define DEBUGSTATUS() DB.printStatus();
 
     // use this to print information concerning ESP & flash memory chip
-    #define DEBUGINFO() DB.printInfo();
+    #define DEBUGINFO(...) DB.printInfo();
 
     // NOT IMPLEMENTED YET: will provide file name + function name + line number
     #define DEBUGLOCATION() { DB.location(); Serial.printf("%s, %s, %d: \t\n\r", __FILE__, __FUNCTION__, __LINE__); }
@@ -154,7 +153,7 @@ class DeBug {
     #define DEBUGPRINT(...)
     #define DEBUGON(s, t, p)
     #define DEBUGSTATUS()
-    #define DEBUGINFO()
+    #define DEBUGINFO(...)
     #define DEBUGLOCATION()
     #define DEBUGSETUP()
     #define DEBUGLOOP()

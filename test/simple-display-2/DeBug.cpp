@@ -117,13 +117,12 @@ DeBug::~DeBug(void) {
 void DeBug::setLables(void) {
 
     // initialize trace message labels
-    label[INFO] =       "\e[1;32mINFO:    \e[m";           // bold green font
-    label[WARN] =       "\e[1;33mWARNING: \e[m";           // bold yellow font
-    label[ERROR] =      "\e[1;31mERROR:   \e[m";           // bold red font
-    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";     // bold White font on red background
-    label[NOOP] =       "\e[1;35mNO-OP:   \e[m";           // bold purple font
-    label[HEADING] =    "\e[1;37m\e[40m\n\rHEADING:\e[m";  // bold white font on black background
-    label[UNLABELED] =  "";                                // no labels
+    label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
+    label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
+    label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
+    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
+    label[NOOP] =       "\e[1;35mNO-OP:   \e[m";        // bold purple font
+    label[UNLABELED] =  "";                             // no labels
 
 }
 

@@ -30,7 +30,7 @@
 SHELL := /bin/bash
 
 # name of program being created
-PROG = encoder
+PROG = sprites
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266
@@ -49,7 +49,7 @@ PORT = /dev/ttyUSB0
 FQBN = $(PACKAGE):$(ARCH):$(BOARD)
 
 # location of the esptool used for usb flashing
-ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/2.6.1/esptool.py
+ESPTOOL = /home/jeff/.arduino15/packages/esp32/tools/esptool_py/4.2.1/esptool.py
 
 # string within names given to .bin and .elf files
 VAR := $(shell echo $(FQBN) | tr ':' '.')
@@ -71,7 +71,7 @@ CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-pa
 
 # usb firmware flasher and flags
 UPLOAD_USB = arduino-cli upload
-UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
+UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT) --input-dir $(BUILD_PATH)
 
 ##--------------------------------- ota upload ----------------------------------
 ## name of program being created
@@ -119,6 +119,28 @@ UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 .PHONY: build upload clean erase size
 
 all: build upload
+
+all-ota: build upload-ota                       # build and then upload via ota
+
+help:
+	@echo ' '
+	@echo 'Makefile for scroll-display'
+	@echo ' '
+	@echo 'Usage:'
+	@echo '   make              create all files and flash device via usb'
+	@echo '   make all          create all files and flash device via usb'
+	@echo '   make all-ota      create all files and flash device via ota'
+	@echo '   make build        compile the code and create the *.elf file'
+	@echo '   make upload       create the *.bin file and flash device via usb'
+	@echo '   make upload-ota   create the *.bin file and flash device via ota'
+	@echo '   make erase        erease the entire flash from the device and exit'
+	@echo '   make size         print the flash size within the device and exit'
+	@echo '   make clean        delete *.bin, *.elf, *.hex files'
+	@echo '   make help         print this help message and exit'
+	@echo ' '
+	@echo 'Pass the option "--debug" to enable trace messaging (e.g. make --debug build)'
+	@echo ' '
+
 
 build: 											# build the binary executable
 	$(CC) $(CC_FLAGS) $(CURDIR)

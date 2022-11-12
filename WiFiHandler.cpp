@@ -100,7 +100,8 @@ void WiFiHandler::wifiTerminate() {
 
 // perfrom a single scan for nearby networks
 void WiFiHandler::wifiScan() {
-    byte numSsid;
+    //byte numSsid;
+    unsigned char numSsid;
     char buffer[BUF2];
     String st;
 
@@ -208,7 +209,8 @@ bool WiFiHandler::udpCheck(void) {
 }
 
 
-bool WiFiHandler::udpRequest(IPAddress& address, unsigned int port, byte *packetbuffer, unsigned int len) {
+//bool WiFiHandler::udpRequest(IPAddress& address, unsigned int port, byte *packetbuffer, unsigned int len) {
+bool WiFiHandler::udpRequest(IPAddress& address, unsigned int port, unsigned char *packetbuffer, unsigned int len) {
     unsigned int rtn1, rtn2, bytes_rtn;
 
     rtn1 = udp.beginPacket(address, port);      // request IP address and port
@@ -228,7 +230,8 @@ bool WiFiHandler::udpRequest(IPAddress& address, unsigned int port, byte *packet
 }
 
 
-int WiFiHandler::udpRead(byte *packetbuffer, unsigned int len) {
+//int WiFiHandler::udpRead(byte *packetbuffer, unsigned int len) {
+int WiFiHandler::udpRead(unsigned char *packetbuffer, unsigned int len) {
     int rtn;
 
     // This function can only be successfully called after WiFiUDP.parsePacket()

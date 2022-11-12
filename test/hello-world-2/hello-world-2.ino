@@ -68,7 +68,7 @@ MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);                    
 
 // messages to be displayed
 const char *msg[] = {
-    "Hello World!",
+    "Hello World 2!",
     "One more time .... Hello World!",
     "OK ... I'll try it another time!",
 };

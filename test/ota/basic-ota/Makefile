@@ -71,7 +71,7 @@ CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-pa
 
 # usb firmware flasher and flags
 UPLOAD_USB = arduino-cli upload
-UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
+UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT) --input-dir $(BUILD_PATH)
 
 #-------------------------------------------------------------------------------
 
@@ -80,10 +80,10 @@ UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
 all: build upload                               # build and then upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(CURDIR)
+	$(CC) $(CC_FLAGS) $(CURPWD)
 
 upload: build 									# flash the binary executable
-	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
+	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURPWD)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)
@@ -92,5 +92,4 @@ size:                                           # determine the flash size
 	$(ESPTOOL) flash_id --port $(PORT)
 
 clean:                                          # delete all binaries and object files
-	rm -r --force $(BUILD)
-	rm --force *.bin *.elf *.hex
+	rm -r --force $(BUILD) *.bin *.elf *.hex

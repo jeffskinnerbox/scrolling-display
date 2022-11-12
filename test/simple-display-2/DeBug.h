@@ -45,8 +45,7 @@ CREATED BY:
 #define ERROR      2        // index into labels for printing error trace message
 #define FATAL      3        // index into labels for printing fatal trace message
 #define NOOP       4        // index into labels for printing operation not implemented yet
-#define HEADING    5        // index into labels for printing a simple heading for organizing output
-#define UNLABELED  6        // index into labels for printing unformatted text
+#define UNLABELED  5        // index into labels for printing unformatted text
 
 #define LABEL_COLS 30       // max characters in labels
 #define LABEL_ROWS 6        // number of labels (see list in constructor below)

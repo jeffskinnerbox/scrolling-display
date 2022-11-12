@@ -78,7 +78,7 @@ void setup() {
     INFOD("ESP8266 chip ID = ", ESP.getChipId());
 
     P.begin();
-    P.displayText("Hello World!", PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
+    P.displayText("Hello World 1!", PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
 
     Serial.println("Exit setup()");
 }

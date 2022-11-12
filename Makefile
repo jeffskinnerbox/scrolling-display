@@ -84,7 +84,7 @@ CC_FLAGS = $(VERBOSE) --fqbn $(FQBN) --build-path=$(BUILD_PATH) --build-cache-pa
 
 # usb firmware flasher and flags
 UPLOAD_USB = arduino-cli upload
-UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT)
+UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT) --input-dir $(BUILD_PATH)
 
 #--------------------------------- ota upload ----------------------------------
 
@@ -134,7 +134,7 @@ build:                                          # build the binary executable
 	$(CC) $(CC_FLAGS) $(CURDIR)
 
 upload:                                         # flash the binary executable via usb
-	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
+	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(DURDIR)
 
 upload-ota:                                     # flash the binary executable via ota
 	@echo VAR = $(VAR)
@@ -154,7 +154,5 @@ size:                                           # determine the flash size
 	$(ESPTOOL) flash_id --port $(PORT)
 
 clean:                                          # delete all binaries and object files
-	rm -r --force $(BUILD)
-	rm --force *.bin *.elf *.hex
-
+	rm -r --force $(BUILD) *.bin *.elf *.hex
 

@@ -36,10 +36,12 @@ CREATED BY:
 
 #define TDEBUG  false       // activate trace message printing for debugging
 
-
 // found in ESP8266 libraries (~/.arduino15/packages/esp8266)
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+
+//#include <WString.h>         // needed to forward declaration of 'class StringSumHelper'
+//class StringSumHelper;
 
 // found in Arduino libraries (~/Arduino/libraries)
 #include <TelnetStream.h>
@@ -115,12 +117,13 @@ DeBug::~DeBug(void) {
 void DeBug::setLables(void) {
 
     // initialize trace message labels
-    label[INFO] =       "\e[1;32mINFO:    \e[m";        // bold green font
-    label[WARN] =       "\e[1;33mWARNING: \e[m";        // bold yellow font
-    label[ERROR] =      "\e[1;31mERROR:   \e[m";        // bold red font
-    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";  // bold White font on red background
-    label[NOOP] =       "\e[1;35mNO-OP:   \e[m";        // bold purple font
-    label[UNLABELED] =  "";                             // no labels
+    label[INFO] =       "\e[1;32mINFO:    \e[m";           // bold green font
+    label[WARN] =       "\e[1;33mWARNING: \e[m";           // bold yellow font
+    label[ERROR] =      "\e[1;31mERROR:   \e[m";           // bold red font
+    label[FATAL] =      "\e[1;37m\e[41mFATAL:\e[m   ";     // bold White font on red background
+    label[NOOP] =       "\e[1;35mNO-OP:   \e[m";           // bold purple font
+    label[HEADING] =    "\e[1;37m\e[40m\n\rHEADING:\e[m";  // bold white font on black background
+    label[UNLABELED] =  "";                                // no labels
 
 }
 
@@ -413,7 +416,6 @@ template void DeBug::traceMsg<wl_status_t>(int, char*, wl_status_t);
 template void DeBug::traceMsg<unsigned int>(int, char*, unsigned int);
 template void DeBug::traceMsg<unsigned char>(int, char*, unsigned char);
 template void DeBug::traceMsg<unsigned long>(int, char*, unsigned long);
-template void DeBug::traceMsg<StringSumHelper>(int, char*, StringSumHelper);
 template void DeBug::traceMsg<FlashMode_t, int>(int, char*, FlashMode_t, int);
 template void DeBug::traceMsg<int, char const*>(int, char*, int, char const*);
 template void DeBug::traceMsg<unsigned int, int>(int, char*, unsigned int, int);
@@ -421,8 +423,9 @@ template void DeBug::traceMsg<unsigned char, int>(int, char*, unsigned char, int
 template void DeBug::traceMsg<char*, char const*>(int, char*, char*, char const*);
 template void DeBug::traceMsg<char const*, char*>(int, char*, char const*, char*);
 
-//template void DeBug::traceMsg<char* (*)(char const*, int)>(int, char*, char* (*)(char const*, int));
+//template void DeBug::traceMsg<StringSumHelper>(int, char*, StringSumHelper);
 //template void DeBug::traceMsg(int, char*, T) [with T = char* (*)(const char*, int)];
+//template void DeBug::traceMsg<char* (*)(char const*, int)>(int, char*, char* (*)(char const*, int));
 
 
 

@@ -12,7 +12,7 @@
 #	    make upload
 #
 #	makefile syntax
-#	    = set the variable
+#	    = set the varialbe
 #	    ?= set the variable only if it's not set/doesn't have a value
 #	    := set variable as the output an executed shell script
 #	    += is used for appending more text to variables
@@ -26,11 +26,12 @@
 #
 #-------------------------------------------------------------------------------
 
+
 # Use Bash shell instead of the default /bin/sh
 SHELL := /bin/bash
 
 # name of program being created
-PROG = mq-4
+PROG = simple-display-2
 
 # type of package, architecture, and board in use
 PACKAGE = esp8266
@@ -75,15 +76,15 @@ UPLOAD_USB_FLAGS = $(VERBOSE) --fqbn $(FQBN) --port $(PORT) --input-dir $(BUILD_
 
 #-------------------------------------------------------------------------------
 
-.PHONY: build upload clean erase size           # explicitly declare these target to be phony
+.PHONY: build upload clean erase size
 
-all: build upload                               # build and then upload
+all: build upload
 
 build: 											# build the binary executable
-	$(CC) $(CC_FLAGS) $(CURPWD)
+	$(CC) $(CC_FLAGS) $(CURDIR)
 
 upload: 										# flash the binary executable
-	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURPWD)
+	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
 
 erase:                                          # erase the entire flash
 	$(ESPTOOL) erase_flash --port $(PORT)
@@ -93,4 +94,3 @@ size:                                           # determine the flash size
 
 clean:                                          # delete all binaries and object files
 	rm -r --force $(BUILD) *.bin *.elf *.hex
-

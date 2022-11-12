@@ -47,8 +47,10 @@ class WiFiHandler {
     void udpStop(void);
     bool udpCheck(void);
     void udpSetPort(unsigned int);
-    int udpRead(byte *, unsigned int);
-    bool udpRequest(IPAddress&, unsigned int, byte *, unsigned int);
+    //int udpRead(byte *, unsigned int);
+    int udpRead(unsigned char *, unsigned int);
+    //bool udpRequest(IPAddress&, unsigned int, byte *, unsigned int);
+    bool udpRequest(IPAddress&, unsigned int, unsigned char *, unsigned int);
 };
 
 
