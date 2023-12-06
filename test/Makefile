@@ -58,3 +58,5 @@ $(TOPTARGETS): $(SUBDIRS)              # targets are subdirectories
 
 $(SUBDIRS):                            # pass your goal to subdirectory makefile
 	$(MAKE) -C $@ $(MAKECMDGOALS)
+	@echo -e "\n\n------------------------------------------------------------------------------------------\n\n"
+

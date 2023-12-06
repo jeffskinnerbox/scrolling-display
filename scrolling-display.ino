@@ -35,8 +35,8 @@ MONITOR:
 
         screen /dev/ttyUSB0 9600,cs8cls
 
-    To terminate monitoring, enter: CNTR-a :quit
-    To stop the screen scrolling, enter: CNTR-a :
+    To terminate monitoring, enter: `CNTR-a :quit`.
+    To stop the screen scrolling, enter: `CNTR-a :`.
 
     To monitor using telnet, ececute the following:
 
@@ -44,7 +44,7 @@ MONITOR:
         telnet 192.168.1.47        # using esp8266 ip address
         telnet scrolling-display.local
 
-    To terminate telnet monitoring, enter: Ctrl-] quit
+    To terminate telnet monitoring, enter: `Ctrl-] quit`.
 
     To find the device on your LAN:
 
@@ -90,8 +90,6 @@ CREATED BY:
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 
-// found in Arduino libraries (~/Arduino/libraries)
-
 // found in Arduino libraries (~/src/arduino/libraries)
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
@@ -114,6 +112,7 @@ CREATED BY:
 #define VER "scrolling-display" " - "  __DATE__ " at " __TIME__
 static char version[] = VER;
 
+// time intervals
 #define ONE_SECOND    1000UL        // milliseconds in one second
 #define TWO_SECOND    2000UL        // milliseconds in two second
 #define THREE_SECOND  3000UL        // milliseconds in three second
@@ -367,7 +366,7 @@ void loadmsg(void) {
 
     char string[BUF_SIZE];
 
-    DEBUGTRACE(INFO, "------------------------------ Entering loadmsg() ------------------------------");
+    DEBUGTRACE(HEADING, "------------------------------ Entering loadmsg() ------------------------------");
 
     DEBUGTRACE(INFO, "Populating message queue with messages...");
 
@@ -412,7 +411,7 @@ void loadmsg(void) {
     //Msg.printQueue();
     //yield();                                         // prevent the watchdog timer doing a reboot
 
-    DEBUGTRACE(INFO, "------------------------------- Exiting loadmsg() ------------------------------");
+    DEBUGTRACE(HEADING, "------------------------------- Exiting loadmsg() ------------------------------");
 
 }
 

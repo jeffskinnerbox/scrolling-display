@@ -134,7 +134,7 @@ build:                                          # build the binary executable
 	$(CC) $(CC_FLAGS) $(CURDIR)
 
 upload:                                         # flash the binary executable via usb
-	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(DURDIR)
+	$(UPLOAD_USB) $(UPLOAD_USB_FLAGS) $(CURDIR)
 
 upload-ota:                                     # flash the binary executable via ota
 	@echo VAR = $(VAR)

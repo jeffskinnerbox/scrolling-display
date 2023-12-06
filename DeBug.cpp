@@ -218,7 +218,8 @@ void DeBug::LoopHandler(void) {
             if (telnet) TelnetStream.flush();
             if (telnet) TelnetStream.stop();
             delay(100);
-            ESP.reset();
+            //ESP.reset();
+            ESP.restart();
             break;
         case 'C':   // drop telnet connection to esp8266
             traceMsg(INFO, "Dropping telnet connection ... bye bye");
@@ -257,7 +258,8 @@ void DeBug::LoopHandler(void) {
             if (telnet) TelnetStream.flush();
             if (telnet) TelnetStream.stop();
             delay(100);
-            ESP.reset();
+            //ESP.reset();
+            ESP.restart();
             break;
         case 'C':   // drop telnet connection to esp8266
             traceMsg(INFO, "Dropping telnet connection ... bye bye");
